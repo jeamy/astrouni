@@ -1,0 +1,11 @@
+/media/data/programming/v004beta/build/CMakeFiles/edit_cache.dir
+/media/data/programming/v004beta/build/CMakeFiles/rebuild_cache.dir
+/media/data/programming/v004beta/build/core/CMakeFiles/astrocore.dir
+/media/data/programming/v004beta/build/core/CMakeFiles/edit_cache.dir
+/media/data/programming/v004beta/build/core/CMakeFiles/rebuild_cache.dir
+/media/data/programming/v004beta/build/apps/cli/CMakeFiles/astrocli.dir
+/media/data/programming/v004beta/build/apps/cli/CMakeFiles/edit_cache.dir
+/media/data/programming/v004beta/build/apps/cli/CMakeFiles/rebuild_cache.dir
+/media/data/programming/v004beta/build/apps/gui/CMakeFiles/astro_gui.dir
+/media/data/programming/v004beta/build/apps/gui/CMakeFiles/edit_cache.dir
+/media/data/programming/v004beta/build/apps/gui/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,42 @@
+NAME            AstroUni
+
+DESCRIPTION     'AstroUnivers v0.04Beta'
+
+EXETYPE         WINDOWS
+
+WINSTUB            'WINSTUB.EXE'
+
+CODE            PRELOAD MOVEABLE DISCARDABLE
+DATA            PRELOAD MOVEABLE MULTIPLE
+
+HEAPSIZE        8096
+STACKSIZE       8096
+
+
+EXPORTS         MainWndProc     @1
+				RadixWndProc    @2
+				TransitWndProc  @3 
+				DlgRadix        @4 
+				DlgTransit		@5 
+				DlgDDProc       @6
+				DlgDGProc       @7
+				DlgPHProc	    @8 
+				DlgFarben       @9 
+				DlgOrbenEin     @10
+				DlgTransEin     @11
+				DlgAspekte      @12
+				DlgCalc         @13
+				DlgRuck         @14
+				DlgODProc       @15
+				DlgPErfassen    @16
+				DlgOrtAuswahl   @17
+				DlgHausAuswahl  @18
+				DlgHoroAuswahl  @19
+				DlgAbort        @20
+				DlgAbortProc    @21
+;                DlgComposit    @22
+				SubLB           @23
+				SubEdit         @24
+				SubText         @25
+				SubTransitText  @26
+				SubFarbtxt      @27

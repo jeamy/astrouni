@@ -1,0 +1,14 @@
+NAME            AstroUni
+
+DESCRIPTION     'AstroUnivers v0.04Beta'
+
+EXETYPE         WINDOWS
+
+;WINSTUB            'WINSTUB.EXE'
+
+CODE            PRELOAD MOVEABLE DISCARDABLE
+DATA            PRELOAD MOVEABLE MULTIPLE
+
+HEAPSIZE        8096
+STACKSIZE       8096
+
