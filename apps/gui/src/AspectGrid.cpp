@@ -119,14 +119,20 @@ void AspectGrid::CalculateAspects(const std::array<astrocore::PlanetPosition, 21
 
 void AspectGrid::DrawAspectSymbol(int row, int col, astrocore::AspectType aspect, double orb)
 {
+    // First check if row and column are within valid range
+    if (row < 0 || row >= GetNumberRows() || col < 0 || col >= GetNumberCols()) {
+        // Out of bounds, don't attempt to draw
+        return;
+    }
+
     // Set cell background color based on aspect type
     wxColour bgColor;
     switch (aspect) {
         case astrocore::AspectType::Conjunction:
-            bgColor = wxColour(255, 255, 200);  // Light yellow
+            bgColor = wxColour(255, 200, 200);  // Light red
             break;
         case astrocore::AspectType::Opposition:
-            bgColor = wxColour(255, 200, 200);  // Light red
+            bgColor = wxColour(255, 150, 150);  // Medium red
             break;
         case astrocore::AspectType::Trine:
             bgColor = wxColour(200, 255, 200);  // Light green
@@ -135,43 +141,48 @@ void AspectGrid::DrawAspectSymbol(int row, int col, astrocore::AspectType aspect
             bgColor = wxColour(200, 200, 255);  // Light blue
             break;
         case astrocore::AspectType::Sextile:
-            bgColor = wxColour(200, 255, 255);  // Light cyan
+            bgColor = wxColour(255, 255, 200);  // Light yellow
             break;
         default:
             bgColor = *wxWHITE;
             break;
     }
     
-    // Set cell background color
-    SetCellBackgroundColour(row, col, bgColor);
-    
-    // Set cell value to aspect symbol
-    wxString aspectSymbol;
-    switch (aspect) {
-        case astrocore::AspectType::Conjunction:
-            aspectSymbol = "☌";  // Conjunction symbol
-            break;
-        case astrocore::AspectType::Opposition:
-            aspectSymbol = "☍";  // Opposition symbol
-            break;
-        case astrocore::AspectType::Trine:
-            aspectSymbol = "△";  // Trine symbol
-            break;
-        case astrocore::AspectType::Square:
-            aspectSymbol = "□";  // Square symbol
-            break;
-        case astrocore::AspectType::Sextile:
-            aspectSymbol = "⚹";  // Sextile symbol
-            break;
-        default:
-            aspectSymbol = "";
-            break;
+    try {
+        // Set cell background color
+        SetCellBackgroundColour(row, col, bgColor);
+        
+        // Set cell value to aspect symbol
+        wxString aspectSymbol;
+        switch (aspect) {
+            case astrocore::AspectType::Conjunction:
+                aspectSymbol = "☌";  // Conjunction symbol
+                break;
+            case astrocore::AspectType::Opposition:
+                aspectSymbol = "☍";  // Opposition symbol
+                break;
+            case astrocore::AspectType::Trine:
+                aspectSymbol = "△";  // Trine symbol
+                break;
+            case astrocore::AspectType::Square:
+                aspectSymbol = "□";  // Square symbol
+                break;
+            case astrocore::AspectType::Sextile:
+                aspectSymbol = "⚹";  // Sextile symbol
+                break;
+            default:
+                aspectSymbol = "";
+                break;
+        }
+        
+        // Add orb information
+        wxString cellValue = aspectSymbol + "\n" + wxString::Format("%.1f°", std::abs(orb));
+        SetCellValue(row, col, cellValue);
+        SetCellAlignment(row, col, wxALIGN_CENTER, wxALIGN_CENTER);
+    } catch (const std::exception& e) {
+        // Log error but don't crash
+        wxLogError("Error drawing aspect symbol: %s", e.what());
     }
-    
-    // Add orb information
-    wxString cellValue = aspectSymbol + "\n" + wxString::Format("%.1f°", std::abs(orb));
-    SetCellValue(row, col, cellValue);
-    SetCellAlignment(row, col, wxALIGN_CENTER, wxALIGN_CENTER);
 }
 
 wxString AspectGrid::GetPlanetName(astrocore::PlanetId planet)
@@ -218,26 +229,39 @@ void AspectGrid::ShowDemoAspects(double asc, double mc, double orbDeg, const std
     // Clear all cell values and colors
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
-            SetCellValue(i, j, "");
-            SetCellBackgroundColour(i, j, *wxWHITE);
+            try {
+                SetCellValue(i, j, "");
+                SetCellBackgroundColour(i, j, *wxWHITE);
+            } catch (const std::exception& e) {
+                wxLogError("Error clearing cell (%d,%d): %s", i, j, e.what());
+            }
         }
     }
     
     // Re-initialize planet symbols in the first row and column
     int planetCount = static_cast<int>(m_planets.size());
-    for (int i = 0; i < planetCount && i < rows && i < cols; ++i) {
+    for (int i = 0; i < planetCount; ++i) {
+        // Skip if out of bounds
+        if (i + 1 >= rows || i + 1 >= cols) {
+            continue;
+        }
+        
         astrocore::PlanetId planet = m_planets[i];
         wxString planetName = GetPlanetName(planet);
         
-        // Set the planet symbol in the first column
-        SetCellValue(i + 1, 0, planetName);
-        SetCellAlignment(i + 1, 0, wxALIGN_CENTER, wxALIGN_CENTER);
-        SetCellBackgroundColour(i + 1, 0, wxColour(240, 240, 240));
-        
-        // Set the planet symbol in the first row
-        SetCellValue(0, i + 1, planetName);
-        SetCellAlignment(0, i + 1, wxALIGN_CENTER, wxALIGN_CENTER);
-        SetCellBackgroundColour(0, i + 1, wxColour(240, 240, 240));
+        try {
+            // Set the planet symbol in the first column
+            SetCellValue(i + 1, 0, planetName);
+            SetCellAlignment(i + 1, 0, wxALIGN_CENTER, wxALIGN_CENTER);
+            SetCellBackgroundColour(i + 1, 0, wxColour(240, 240, 240));
+            
+            // Set the planet symbol in the first row
+            SetCellValue(0, i + 1, planetName);
+            SetCellAlignment(0, i + 1, wxALIGN_CENTER, wxALIGN_CENTER);
+            SetCellBackgroundColour(0, i + 1, wxColour(240, 240, 240));
+        } catch (const std::exception& e) {
+            wxLogError("Error setting planet symbol for planet %d: %s", i, e.what());
+        }
     }
     
     // Create demo points at significant angles from Asc and MC
@@ -304,7 +328,7 @@ void AspectGrid::ShowDemoAspects(double asc, double mc, double orbDeg, const std
                 int col = 1 + static_cast<int>(j);
                 
                 // Safety check to prevent out-of-bounds access
-                if (row < GetNumberRows() && col < GetNumberCols()) {
+                if (row >= 0 && row < GetNumberRows() && col >= 0 && col < GetNumberCols()) {
                     // Draw the aspect symbol
                     DrawAspectSymbol(row, col, aspect.type, aspect.deltaDeg);
                 }
@@ -325,7 +349,7 @@ void AspectGrid::ShowDemoAspects(double asc, double mc, double orbDeg, const std
             int planetIndex = static_cast<int>(planetId);
             
             // Skip if planet index is out of bounds or position is invalid
-            if (planetIndex >= positions.size() || !positions[planetIndex].valid) {
+            if (planetIndex < 0 || static_cast<size_t>(planetIndex) >= positions.size() || !positions[planetIndex].valid) {
                 continue;
             }
             
@@ -342,7 +366,7 @@ void AspectGrid::ShowDemoAspects(double asc, double mc, double orbDeg, const std
                 int col = j + 1; // +1 to account for header column
                 
                 // Safety check to prevent out-of-bounds access
-                if (row < GetNumberRows() && col < GetNumberCols()) {
+                if (row >= 0 && row < GetNumberRows() && col >= 0 && col < GetNumberCols()) {
                     // Draw the aspect symbol
                     DrawAspectSymbol(row, col, aspect.type, aspect.deltaDeg);
                 }
