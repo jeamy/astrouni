@@ -1,3 +1,0 @@
-/media/data/programming/v004beta/build/_deps/googletest-subbuild/CMakeFiles/googletest-populate.dir
-/media/data/programming/v004beta/build/_deps/googletest-subbuild/CMakeFiles/edit_cache.dir
-/media/data/programming/v004beta/build/_deps/googletest-subbuild/CMakeFiles/rebuild_cache.dir

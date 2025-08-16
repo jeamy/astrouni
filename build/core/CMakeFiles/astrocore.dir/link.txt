@@ -1,2 +1,0 @@
-/usr/bin/ar qc libastrocore.a CMakeFiles/astrocore.dir/src/api.cpp.o CMakeFiles/astrocore.dir/src/planets.cpp.o CMakeFiles/astrocore.dir/src/ephemeris.cpp.o
-/usr/bin/ranlib libastrocore.a
