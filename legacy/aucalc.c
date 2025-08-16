@@ -340,7 +340,7 @@ void vKoch(RADIX* Radix)
 {
   double dA1, dA2, dA3, dKN, dD, dX;
   short i;
-
+  
   dA1 = sin(Radix->RA)*TAN(Radix->dBreite)*TAN(Radix->OB);
   dA1 = asin(dA1);
   for (i = 0; i < 12; i++) {
@@ -570,8 +570,8 @@ short sCalcHauser(RADIX * Radix)
 
   if (fabs(Radix->dBreite) > (DEGVIER-AXE)/DEG2RAD &&
 		   Radix->cHausSys<TYP_EQUAL) {
-//	MessageBox(0, "Häuserberechnung nach %s\n\
-//	             für diese Breitengrade nicht gegeignet.\n\
+//	MessageBox(0, "Hï¿½userberechnung nach %s\n\
+//	             fï¿½r diese Breitengrade nicht gegeignet.\n\
 //            	 Verwende Equal.", Radix->pszHausSys, NULL, MB_OK);
 	  return ERR_HOUSE;
   }
@@ -823,7 +823,7 @@ short sCalcChart(RADIX * Radix, RADIX* RadixV, short sTyp)
 	Radix->pdPlanet[oEP] = dSpitzeEP(Radix);
 	for (i = 0; i < 12; i++)
 	  Radix->pdPlanet[cuspLo + i] = Radix->pdHaus[i];
-	if (!us.fHouseAngle) {              //Aspecte nur fr Haupth„ueser
+	if (!us.fHouseAngle) {              //Aspecte nur fï¿½r Haupthï¿½ueser
 	  Radix->pdPlanet[oAsc] = Radix->ASC;
 	  Radix->pdPlanet[oMC]  = Radix->MC;
 	  Radix->pdPlanet[oDes] = dMod(Radix->ASC + DEGHALB);

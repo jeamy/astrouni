@@ -75,8 +75,8 @@ short sPrintAsp(HDC hDC, RADIX* Radix, short sFactor)
  Radix->AstroFontRec->lfWidth = (short)((double)Radix->AstroFontRec->lfHeight/2.3);
  DeleteObject(SelectObject(hDC, CreateFontIndirect(Radix->AstroFontRec)));
 
- xAdd=(short)((double)LOWORD(GetTextExtent(hDC, "ª", 1))*1.8);
- yAdd=(short)((double)HIWORD(GetTextExtent(hDC, "ª", 1))*1.6);
+ xAdd=(short)((double)LOWORD(GetTextExtent(hDC, "ï¿½", 1))*1.8);
+ yAdd=(short)((double)HIWORD(GetTextExtent(hDC, "ï¿½", 1))*1.6);
  xBAdd=(short)((double)xAdd/2);
  yBAdd=(short)((double)yAdd/4);
 
@@ -209,8 +209,8 @@ Radix->AstroFontRec->lfWidth = (short)((double)Radix->AstroFontRec->lfHeight/2.3
 DeleteObject(SelectObject(hDC, CreateFontIndirect(Radix->AstroFontRec)));
 
 xAdd=LOWORD(GetTextExtent(hDC, "W", 1));
-xAddGrad=LOWORD((GetTextExtent(hDC, "00°00'00\"", 9)));
-xAddHaus=LOWORD((GetTextExtent(hDC, "Ñ10", 3)));
+xAddGrad=LOWORD((GetTextExtent(hDC, "00ï¿½00'00\"", 9)));
+xAddHaus=LOWORD((GetTextExtent(hDC, "ï¿½10", 3)));
 xAddQuali=LOWORD(GetTextExtent(hDC, QU_BEWEGLICH_TXT, strlen(QU_BEWEGLICH_TXT)));
 sZeilenAbst=HIWORD(GetTextExtent(hDC, "W", 1));
 
@@ -226,14 +226,14 @@ yText+=sZeilenAbst/2;
 for  (sA=0; sA<Radix->sAnzahlPlanet; sA++){
     yText+=sZeilenAbst;
     if ( (Radix->psPlanetTyp[sA]&P_TYP_RUCK) )
-       TextOut(hDC, xText-xAdd/2, yText, "œ", 1);
+       TextOut(hDC, xText-xAdd/2, yText, "ï¿½", 1);
 	TextOut(hDC, xText, yText, szLNANamen[sA], strlen(szLNANamen[sA]));
     vGrad2GMS(dDeg2Dez(Radix->pdPlanet[sA]), &sGrad, &sMinuten, &sSekunden);
-    sprintf(szBuffer,"%02dÙ%02d'%02d\"", sGrad, sMinuten, sSekunden);
+    sprintf(szBuffer,"%02dï¿½%02d'%02d\"", sGrad, sMinuten, sSekunden);
 	TextOut(hDC, xText+xAdd, yText, szBuffer, strlen(szBuffer));
 	TextOut(hDC, xText+xAdd+xAddGrad, yText, szANamen[Radix->pszStzPlanet[sA]],
 				 strlen(szANamen[Radix->pszStzPlanet[sA]]));
-    sprintf(szBuffer," in Ñ%d", Radix->pszInHaus[sA]);
+    sprintf(szBuffer," in ï¿½%d", Radix->pszInHaus[sA]);
 	TextOut(hDC, xText+2*xAdd+xAddGrad, yText, szBuffer, strlen(szBuffer));
 } /*endfor*/
 yPlanet=yText;
@@ -246,10 +246,10 @@ if ( Radix->lPaintFlag&DRW_HAUS ) {
 	yText+=sZeilenAbst/2;
 	for (sA=0; sA<MAX_HAUS; sA++){
 	     yText+=sZeilenAbst;
-	     sprintf(szBuffer,"Ñ%d", sA+1);
+	     sprintf(szBuffer,"ï¿½%d", sA+1);
 	  	 TextOut(hDC, xText, yText, szBuffer, strlen(szBuffer));
 	 	 vGrad2GMS(dDeg2Dez(Radix->pdHaus[sA]), &sGrad, &sMinuten, &sSekunden);
-	     sprintf(szBuffer,"%02dÙ%02d'%02d\"", sGrad, sMinuten, sSekunden);
+	     sprintf(szBuffer,"%02dï¿½%02d'%02d\"", sGrad, sMinuten, sSekunden);
 	  	 TextOut(hDC, xText+xAdd/2+xAddHaus, yText, szBuffer, strlen(szBuffer));
 	  	 TextOut(hDC, xText+xAdd+xAddHaus+xAddGrad, yText, szANamen[Radix->pszStzHaus[sA]],
 		 	strlen(szANamen[Radix->pszStzHaus[sA]]));
@@ -278,14 +278,14 @@ if (Radix->lRadixCount) {
 	for  (sA=0; sA<plRadix->sAnzahlPlanet; sA++){
 	    yText+=sZeilenAbst;
 	    if ( (plRadix->psPlanetTyp[sA]&P_TYP_RUCK) )
-	       TextOut(hDC, xText-xAdd/2, yText, "œ", 1);
+	       TextOut(hDC, xText-xAdd/2, yText, "ï¿½", 1);
 		TextOut(hDC, xText, yText, szLNANamen[sA], strlen(szLNANamen[sA]));
 	    vGrad2GMS(dDeg2Dez(plRadix->pdPlanet[sA]), &sGrad, &sMinuten, &sSekunden);
-	    sprintf(szBuffer,"%02dÙ%02d'%02d\"", sGrad, sMinuten, sSekunden);
+	    sprintf(szBuffer,"%02dï¿½%02d'%02d\"", sGrad, sMinuten, sSekunden);
 		TextOut(hDC, xText+xAdd, yText, szBuffer, strlen(szBuffer));
 		TextOut(hDC, xText+xAdd+xAddGrad, yText, szANamen[plRadix->pszStzPlanet[sA]],
 				 strlen(szANamen[plRadix->pszStzPlanet[sA]]));
-	    sprintf(szBuffer," in Ñ%d", plRadix->pszInHaus[sA]);
+	    sprintf(szBuffer," in ï¿½%d", plRadix->pszInHaus[sA]);
 		TextOut(hDC, xText+2*xAdd+xAddGrad, yText, szBuffer, strlen(szBuffer));
 	} /*endfor*/
 } /* endif */
@@ -330,7 +330,7 @@ short sPrintText(HDC hDC, RADIX * Radix, short sFactor)
   xText=sMpX-sRadius-2*sDruber;
   yText=3*sDruber;
   SetTextAlign( hDC, TA_LEFT );
-  sprintf(szBuffer, "%s für %s %s", szHoroTyp[plRadix->cHoroTyp],
+  sprintf(szBuffer, "%s fï¿½r %s %s", szHoroTyp[plRadix->cHoroTyp],
 	  			Radix->pszVorName,	Radix->pszName );
   TextOut(hDC, xText, yText, szBuffer, strlen(szBuffer));
 
@@ -349,12 +349,12 @@ short sPrintText(HDC hDC, RADIX * Radix, short sFactor)
   sprintf(szBuffer, "%s nach %s", HAUSSYS_TXT, szHausTyp[Radix->cHausSys]);
   TextOut(hDC, xText, yText, szBuffer, strlen(szBuffer));
   yText+=sZeilenAbst;
-  sprintf(szBuffer, "Länge: %2.2f Breite: %2.2f ", Radix->rFix.dLange,
+  sprintf(szBuffer, "Lï¿½nge: %2.2f Breite: %2.2f ", Radix->rFix.dLange,
   						Radix->rFix.dBreite);
   TextOut(hDC, xText, yText, szBuffer, strlen(szBuffer));
   if (Radix->lRadixCount){
 	 yText+=sZeilenAbst;
-     sprintf(szBuffer, "Länge: %2.2f Breite: %2.2f ", plRadix->rFix.dLange, plRadix->rFix.dBreite);
+     sprintf(szBuffer, "Lï¿½nge: %2.2f Breite: %2.2f ", plRadix->rFix.dLange, plRadix->rFix.dBreite);
 	 TextOut(hDC, xText, yText, szBuffer, strlen(szBuffer));
   } /* endif */
 

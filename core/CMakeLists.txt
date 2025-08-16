@@ -3,6 +3,7 @@ add_library(astrocore
   src/api.cpp
   src/planets.cpp
   src/ephemeris.cpp
+  src/houses.cpp
 )
 
 target_include_directories(astrocore

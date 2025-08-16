@@ -15,7 +15,7 @@ The application follows a layered architecture:
 ## Current Status
 
 The following components have been implemented:
-- Basic chart drawing with house cusps (Equal and Placidus systems)
+- Basic chart drawing with house cusps (Equal, Placidus, Koch, Porphyry, PorphyryNeo, Whole Sign, Campanus)
 - GUI menus (File, Chart, View, Help) with handlers
 - Date/time/timezone input dialog
 - Location input dialog
@@ -44,11 +44,28 @@ The following components have been implemented:
 - [x] Equal house system
 - [x] Placidus house system
 - [ ] Implement additional house systems:
-  - [ ] Koch
-  - [ ] Campanus
-  - [ ] Regiomontanus
-  - [ ] Porphyry
-  - [ ] Whole Sign
+  - [x] Koch (`legacy/astro.h: vKoch`)
+  - [x] Campanus (`legacy/astro.h: vCampanus`)
+  - [ ] Regiomontanus (`legacy/astro.h: vRegiomontanus`)
+  - [x] Porphyry (`legacy/astro.h: vPorphyry`, `vPorphyryNeo`)
+  - [x] Whole Sign (`legacy/astro.h: vWhole`)
+  - [ ] Topocentric (`legacy/astro.h: vTopocentric`)
+  - [ ] Meridian / Axial (`legacy/astro.h: vMeridian`)
+  - [ ] Morinus (`legacy/astro.h: vMorinus`)
+  - [ ] Equal (MC) / Equal Mid (`legacy/astro.h: vEqualMid`)
+  - [ ] Alcabitius (`legacy/astro.h: vAlcabitius`)
+
+Implementation plan for house systems:
+
+- __[API design]__ Add a `HouseSystem` enum and an `astrocore` API to compute 12 cusp longitudes and angles for a given date/time/location and system. Return structured data with MC/ASC and validity flags (for high-latitude failures).
+- __[Algorithm sources]__ Port or reimplement algorithms following the legacy signatures listed above in `legacy/astrouni.h` as references. Validate mathematics against known references for each system.
+- __[Edge cases]__ Handle high latitudes and dates where Placidus/Koch methods fail. Provide fallbacks (e.g., switch to Porphyry or report N/A) and surface warnings in the GUI status bar.
+- __[Normalization]__ Ensure cusps are normalized to [0, 360) and monotonically increasing per system rules, accounting for intercepted signs and wrap-around.
+- __[Precision]__ Use double precision with robust trigonometric handling; clamp numeric domains to avoid NaNs at extreme declinations and refractions.
+- __[Testing]__ Add unit tests covering multiple latitudes (0°, 45°, 60°, 66.5°, 70°), both hemispheres, and random dates. Include regression fixtures derived from the legacy implementation for each system.
+- __[GUI integration]__ Extend the existing house system selector to list all supported systems and refresh the chart upon change. If computation invalid, display a non-fatal notice and keep previous valid cusps highlighted.
+- __[CLI integration]__ Add a `--house-system` option accepting all enum values; print cusps as a table for verification.
+- __[Documentation]__ Document formulas, references, and limitations per system in Developer Docs, with links to tests.
 
 #### 1.4 Planetary Calculations
 - [x] Basic planetary positions (longitude/latitude)

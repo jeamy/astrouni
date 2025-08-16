@@ -57,8 +57,8 @@ Makefile
 *.code-workspace
 
 # Crash dumps / cores
-core
-*.core
+#core
+#*.core
 
 # wxWidgets cache (if any)
 *.gch
