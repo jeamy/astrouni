@@ -103,8 +103,23 @@ TEST(HousesUnifiedAPI, CampanusBasic) {
   EXPECT_NEAR(res.cuspDeg[0], res.ascDeg, 1e-6);
 }
 
-TEST(HousesRegiomontanus, Placeholder) {
-  GTEST_SKIP() << "Implement Regiomontanus system and validate asc/mc alignment and monotonic cusps";
+TEST(HousesUnifiedAPI, RegiomontanusBasic) {
+  Date d{2022,5,5};
+  Time t{14,15,0.0};
+  TimeZone tz{0.0, 0.0};
+  // Chicago
+  double lonDeg = -87.6298;
+  double latDeg = 41.8781;
+
+  auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, HouseSystem::Regiomontanus);
+  EXPECT_TRUE(res.valid);
+  for (int i = 0; i < 12; ++i) {
+    EXPECT_TRUE(std::isfinite(res.cuspDeg[i]));
+    EXPECT_GE(res.cuspDeg[i], 0.0);
+    EXPECT_LT(res.cuspDeg[i], 360.0);
+  }
+  // Asc alignment
+  EXPECT_NEAR(res.cuspDeg[0], res.ascDeg, 1e-6);
 }
 
 TEST(HousesUnifiedAPI, PorphyryBasic) {
@@ -175,20 +190,82 @@ TEST(HousesUnifiedAPI, WholeSignBasic) {
   EXPECT_TRUE(inSeg);
 }
 
-TEST(HousesTopocentric, Placeholder) {
-  GTEST_SKIP() << "Implement Topocentric; verify stability across mid/high latitudes";
+TEST(HousesUnifiedAPI, TopocentricBasic) {
+  Date d{2023,3,21};
+  Time t{10,0,0.0};
+  TimeZone tz{0.0, 0.0};
+  // Madrid
+  double lonDeg = -3.7038;
+  double latDeg = 40.4168;
+
+  auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, HouseSystem::Topocentric);
+  EXPECT_TRUE(res.valid);
+  for (int i = 0; i < 12; ++i) {
+    EXPECT_TRUE(std::isfinite(res.cuspDeg[i]));
+    EXPECT_GE(res.cuspDeg[i], 0.0);
+    EXPECT_LT(res.cuspDeg[i], 360.0);
+  }
+  EXPECT_NEAR(res.cuspDeg[0], res.ascDeg, 1e-6);
 }
 
-TEST(HousesMeridian, Placeholder) {
-  GTEST_SKIP() << "Implement Meridian (Axial) houses and validate properties";
+TEST(HousesUnifiedAPI, MeridianBasic) {
+  Date d{2022,9,23};
+  Time t{12,0,0.0};
+  TimeZone tz{0.0, 0.0};
+  // Rome
+  double lonDeg = 12.4964;
+  double latDeg = 41.9028;
+
+  auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, HouseSystem::Meridian);
+  EXPECT_TRUE(res.valid);
+  for (int i = 0; i < 12; ++i) {
+    EXPECT_TRUE(std::isfinite(res.cuspDeg[i]));
+    EXPECT_GE(res.cuspDeg[i], 0.0);
+    EXPECT_LT(res.cuspDeg[i], 360.0);
+  }
+  EXPECT_NEAR(res.cuspDeg[0], res.ascDeg, 1e-6);
 }
 
-TEST(HousesMorinus, Placeholder) {
-  GTEST_SKIP() << "Implement Morinus; validate cusp order and expected invariants";
+TEST(HousesUnifiedAPI, MorinusBasic) {
+  Date d{2021,12,1};
+  Time t{8,30,0.0};
+  TimeZone tz{0.0, 0.0};
+  // Tokyo
+  double lonDeg = 139.6917;
+  double latDeg = 35.6895;
+
+  auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, HouseSystem::Morinus);
+  EXPECT_TRUE(res.valid);
+  for (int i = 0; i < 12; ++i) {
+    EXPECT_TRUE(std::isfinite(res.cuspDeg[i]));
+    EXPECT_GE(res.cuspDeg[i], 0.0);
+    EXPECT_LT(res.cuspDeg[i], 360.0);
+  }
+  EXPECT_NEAR(res.cuspDeg[0], res.ascDeg, 1e-6);
 }
 
-TEST(HousesEqualMid, Placeholder) {
-  GTEST_SKIP() << "Implement Equal(MC)/Equal Mid; houses equal sized starting from MC";
+TEST(HousesUnifiedAPI, EqualMidBasic) {
+  Date d{2020,7,1};
+  Time t{16,0,0.0};
+  TimeZone tz{0.0, 0.0};
+  // Cape Town
+  double lonDeg = 18.4241;
+  double latDeg = -33.9249;
+
+  auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, HouseSystem::EqualMid);
+  EXPECT_TRUE(res.valid);
+  for (int i = 0; i < 12; ++i) {
+    EXPECT_TRUE(std::isfinite(res.cuspDeg[i]));
+    EXPECT_GE(res.cuspDeg[i], 0.0);
+    EXPECT_LT(res.cuspDeg[i], 360.0);
+  }
+  // Equal from MC: cusp10 equals MC, 30-degree spacing
+  EXPECT_NEAR(res.cuspDeg[9], res.mcDeg, 1e-6);
+  for (int i = 0; i < 12; ++i) {
+    double expected = std::fmod(res.cuspDeg[9] - 270.0 + i * 30.0, 360.0);
+    if (expected < 0) expected += 360.0;
+    EXPECT_NEAR(res.cuspDeg[i], expected, 1e-6);
+  }
 }
 
 TEST(HousesAlcabitius, Placeholder) {

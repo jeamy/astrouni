@@ -46,13 +46,13 @@ The following components have been implemented:
 - [ ] Implement additional house systems:
   - [x] Koch (`legacy/astro.h: vKoch`)
   - [x] Campanus (`legacy/astro.h: vCampanus`)
-  - [ ] Regiomontanus (`legacy/astro.h: vRegiomontanus`)
+  - [x] Regiomontanus (`legacy/astro.h: vRegiomontanus`)
   - [x] Porphyry (`legacy/astro.h: vPorphyry`, `vPorphyryNeo`)
   - [x] Whole Sign (`legacy/astro.h: vWhole`)
-  - [ ] Topocentric (`legacy/astro.h: vTopocentric`)
-  - [ ] Meridian / Axial (`legacy/astro.h: vMeridian`)
-  - [ ] Morinus (`legacy/astro.h: vMorinus`)
-  - [ ] Equal (MC) / Equal Mid (`legacy/astro.h: vEqualMid`)
+  - [x] Topocentric (`legacy/astro.h: vTopocentric`)
+  - [x] Meridian / Axial (`legacy/astro.h: vMeridian`)
+  - [x] Morinus (`legacy/astro.h: vMorinus`)
+  - [x] Equal (MC) / Equal Mid (`legacy/astro.h: vEqualMid`)
   - [ ] Alcabitius (`legacy/astro.h: vAlcabitius`)
 
 Implementation plan for house systems:

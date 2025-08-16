@@ -32,6 +32,79 @@ static inline double angle_wrap(double y, double x) {
   return a < 0 ? a + 2*M_PI : a;
 }
 
+// Meridian (Axial) house system translated from legacy vMeridian()
+static void meridian_house_cusps(double jd, double longitudeRad, double cuspsRad[12]) {
+  const double OB = mean_obliquity_rad(jd);
+  const double RA = lst_rad(jd, longitudeRad);
+  for (int i = 0; i < 12; ++i) {
+    double D = deg2rad(60.0 + 30.0 * static_cast<double>(i + 1));
+    double x = std::cos(RA + D) * std::cos(OB);
+    double y = std::sin(RA + D);
+    cuspsRad[i] = angle_wrap(y, x);
+  }
+}
+
+// Morinus house system translated from legacy vMorinus()
+static void morinus_house_cusps(double jd, double longitudeRad, double cuspsRad[12]) {
+  const double OB = mean_obliquity_rad(jd);
+  const double RA = lst_rad(jd, longitudeRad);
+  for (int i = 0; i < 12; ++i) {
+    double D = deg2rad(60.0 + 30.0 * static_cast<double>(i + 1));
+    double x = std::cos(RA + D);
+    double y = std::sin(RA + D) * std::cos(OB);
+    cuspsRad[i] = angle_wrap(y, x);
+  }
+}
+
+// Equal Mid (Equal from MC) translated from legacy vEqualMid()
+static void equal_mid_house_cusps(double mcRad, double cuspsRad[12]) {
+  // Start 270 degrees behind MC, then 30-degree steps
+  double base = wrap_rad(mcRad - deg2rad(270.0));
+  for (int i = 0; i < 12; ++i) {
+    cuspsRad[i] = wrap_rad(base + deg2rad(30.0 * i));
+  }
+}
+
+// Helper for Topocentric (translated from dSpitzeTopocentric)
+static double topo_spitze_longitude(double RA, double OB, double lat, double deltaRad) {
+  double OA = wrap_rad(RA + deltaRad);
+  double X = std::atan(std::tan(lat) / std::cos(OA));
+  double LO = std::atan(std::cos(X) * std::tan(OA) / std::cos(X + OB));
+  if (LO < 0.0) LO += M_PI;
+  if (std::sin(OA) < 0.0) LO += M_PI;
+  return LO; // radians
+}
+
+// Topocentric house system translated from legacy vTopocentric()
+static void topocentric_house_cusps(double jd, double longitudeRad, double latitudeRad, double mcRad, double cuspsRad[12]) {
+  const double OB = mean_obliquity_rad(jd);
+  const double RA = lst_rad(jd, longitudeRad);
+
+  // Precompute latitude adjustments
+  double tLat = std::tan(latitudeRad);
+  double p1 = std::atan(tLat / 3.0);
+  double p2 = std::atan(tLat / 1.5);
+
+  // Compute primary set (indices 0..5) in local frame
+  double prim[6];
+  prim[3] = wrap_rad(mcRad + M_PI); // IC opposite MC
+  prim[4] = wrap_rad(topo_spitze_longitude(RA, OB, p1, deg2rad(30.0)) + M_PI);
+  prim[5] = wrap_rad(topo_spitze_longitude(RA, OB, p2, deg2rad(60.0)) + M_PI);
+  prim[0] = topo_spitze_longitude(RA, OB, latitudeRad, deg2rad(90.0));
+  prim[1] = topo_spitze_longitude(RA, OB, p2, deg2rad(120.0));
+  prim[2] = topo_spitze_longitude(RA, OB, p1, deg2rad(150.0));
+
+  // Finalize by adding LST (sidereal) like legacy + wrap
+  for (int i = 0; i < 6; ++i) {
+    if (i == 3) {
+      cuspsRad[i] = prim[i]; // already absolute (mc+pi)
+    } else {
+      cuspsRad[i] = wrap_rad(prim[i] + RA);
+    }
+    cuspsRad[i + 6] = wrap_rad(cuspsRad[i] + M_PI);
+  }
+}
+
 // Koch system translated from legacy vKoch() using LST (RA), obliquity, latitude
 static void koch_house_cusps(double jd, double longitudeRad, double latitudeRad, double cuspsRad[12]) {
   const double OB = mean_obliquity_rad(jd);
@@ -67,6 +140,19 @@ static void campanus_house_cusps(double jd, double longitudeRad, double latitude
     if (std::sin(KO) < 0.0) DN += M_PI;
     double x = std::cos(RA + DN) * std::cos(OB) - std::sin(DN) * std::tan(latitudeRad) * std::sin(OB);
     double y = std::sin(RA + DN);
+    double ang = angle_wrap(y, x);
+    cuspsRad[i] = ang;
+  }
+}
+
+// Regiomontanus house cusps translated from legacy vRegiomontanus()
+static void regiomontanus_house_cusps(double jd, double longitudeRad, double latitudeRad, double cuspsRad[12]) {
+  const double OB = mean_obliquity_rad(jd);
+  const double RA = lst_rad(jd, longitudeRad);
+  for (int i = 0; i < 12; ++i) {
+    double D = deg2rad(60.0 + 30.0 * static_cast<double>(i + 1));
+    double x = std::cos(RA + D) * std::cos(OB) - std::sin(D) * std::tan(latitudeRad) * std::sin(OB);
+    double y = std::sin(RA + D);
     double ang = angle_wrap(y, x);
     cuspsRad[i] = ang;
   }
@@ -212,12 +298,68 @@ HouseCusps compute_house_cusps(const Date& d,
       out.valid = true;
       break;
     }
-    // Pending implementations
-    case HouseSystem::Regiomontanus:
-    case HouseSystem::Topocentric:
-    case HouseSystem::Meridian:
-    case HouseSystem::Morinus:
-    case HouseSystem::EqualMid:
+    case HouseSystem::Regiomontanus: {
+      regiomontanus_house_cusps(jd, lonRad, latRad, cuspsRad);
+      double degs[12];
+      for (int i = 0; i < 12; ++i) degs[i] = wrap_deg(rad2deg(cuspsRad[i]));
+      auto dist0 = min_distance_deg(degs[0], out.ascDeg);
+      auto dist6 = min_distance_deg(degs[6], out.ascDeg);
+      if (dist6 < dist0) {
+        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[(i + 6) % 12];
+      } else {
+        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[i];
+      }
+      out.valid = true;
+      break;
+    }
+    case HouseSystem::Topocentric: {
+      topocentric_house_cusps(jd, lonRad, latRad, mc, cuspsRad);
+      double degs[12];
+      for (int i = 0; i < 12; ++i) degs[i] = wrap_deg(rad2deg(cuspsRad[i]));
+      auto dist0 = min_distance_deg(degs[0], out.ascDeg);
+      auto dist6 = min_distance_deg(degs[6], out.ascDeg);
+      if (dist6 < dist0) {
+        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[(i + 6) % 12];
+      } else {
+        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[i];
+      }
+      out.valid = true;
+      break;
+    }
+    case HouseSystem::Meridian: {
+      meridian_house_cusps(jd, lonRad, cuspsRad);
+      double degs[12];
+      for (int i = 0; i < 12; ++i) degs[i] = wrap_deg(rad2deg(cuspsRad[i]));
+      auto dist0 = min_distance_deg(degs[0], out.ascDeg);
+      auto dist6 = min_distance_deg(degs[6], out.ascDeg);
+      if (dist6 < dist0) {
+        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[(i + 6) % 12];
+      } else {
+        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[i];
+      }
+      out.valid = true;
+      break;
+    }
+    case HouseSystem::Morinus: {
+      morinus_house_cusps(jd, lonRad, cuspsRad);
+      double degs[12];
+      for (int i = 0; i < 12; ++i) degs[i] = wrap_deg(rad2deg(cuspsRad[i]));
+      auto dist0 = min_distance_deg(degs[0], out.ascDeg);
+      auto dist6 = min_distance_deg(degs[6], out.ascDeg);
+      if (dist6 < dist0) {
+        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[(i + 6) % 12];
+      } else {
+        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[i];
+      }
+      out.valid = true;
+      break;
+    }
+    case HouseSystem::EqualMid: {
+      equal_mid_house_cusps(mc, cuspsRad);
+      for (int i = 0; i < 12; ++i) out.cuspDeg[i] = wrap_deg(rad2deg(cuspsRad[i]));
+      out.valid = true;
+      break;
+    }
     case HouseSystem::Alcabitius: {
       out.valid = false;
       out.warning = "House system not implemented yet";
