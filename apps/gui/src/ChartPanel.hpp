@@ -24,7 +24,6 @@ public:
   void SetLocation(double longitudeDeg, double latitudeDeg);
   void SetHouseSystem(HouseSystem hs);
   void SetAspectOrbDeg(double orbDeg);
-  void SetDemoAspects(bool enabled);
   void SetShowAxes(bool enabled);
   void SetShowLabels(bool enabled);
   void SetShowPlanets(bool enabled);
@@ -40,7 +39,6 @@ public:
   double GetLatitudeDeg() const { return m_latitudeDeg; }
   HouseSystem GetHouseSystem() const { return m_houseSystem; }
   double GetAspectOrbDeg() const { return m_aspectOrbDeg; }
-  bool GetDemoAspects() const { return m_demoAspects; }
   bool GetShowAxes() const { return m_showAxes; }
   bool GetShowLabels() const { return m_showLabels; }
   bool GetShowPlanets() const { return m_showPlanets; }
@@ -59,7 +57,6 @@ private:
   double m_latitudeDeg{52.52};
   HouseSystem m_houseSystem{HouseSystem::Equal};
   double m_aspectOrbDeg{3.0};
-  bool m_demoAspects{false};
   bool m_showAxes{true};
   bool m_showLabels{true};
   bool m_showPlanets{true};

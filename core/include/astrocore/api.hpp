@@ -58,6 +58,8 @@ double mean_obliquity_rad(double jd);
 
 struct Ecliptic { double lon; double lat; };      // radians
 struct Equatorial { double ra; double dec; };     // radians (ra in [0,2pi))
+struct Horizontal { double az; double alt; };     // radians (az in [0,2pi), alt in [-pi/2, +pi/2])
+struct Galactic { double lon; double lat; };      // radians (lon l in [0,2pi), lat b)
 
 // Convert ecliptic -> equatorial using provided obliquity (radians)
 Equatorial ecliptic_to_equatorial(const Ecliptic& ecl, double obliquityRad);
@@ -65,6 +67,16 @@ Equatorial ecliptic_to_equatorial(const Ecliptic& ecl, double obliquityRad);
 // Greenwich mean sidereal time and local sidereal time (radians; wrapped to [0,2pi))
 double gmst_rad(double jd);
 double lst_rad(double jd, double longitudeRad);
+
+// --- Additional coordinate conversions ---
+// Equatorial -> Horizontal for given observer latitude and local sidereal time (radians)
+Horizontal equatorial_to_horizontal(const Equatorial& eq, double latitudeRad, double lstRad);
+// Horizontal -> Equatorial for given observer latitude and local sidereal time (radians)
+Equatorial horizontal_to_equatorial(const Horizontal& hor, double latitudeRad, double lstRad);
+
+// Equatorial <-> Galactic (J2000) using standard rotation matrix
+Galactic equatorial_to_galactic(const Equatorial& eq);
+Equatorial galactic_to_equatorial(const Galactic& gal);
 
 // Simple aspect detection among common major aspects
 enum class AspectType { None, Conjunction, Opposition, Trine, Square, Sextile };

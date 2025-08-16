@@ -273,4 +273,107 @@ void placidus_house_cusps(double jd, double longitudeRad, double latitudeRad, do
   cuspsRad[8]  = wrap_two_pi(c3  + M_PI); // 9 opposite 3
 }
 
+// --- Additional coordinate conversions ---
+
+Horizontal equatorial_to_horizontal(const Equatorial& eq, double latitudeRad, double lstRad) {
+  // Hour angle H = LST - RA
+  double H = lstRad - eq.ra;
+  // Wrap to [-pi, pi] to improve numerical stability
+  H = std::remainder(H, 2.0 * M_PI);
+
+  const double sinphi = std::sin(latitudeRad);
+  const double cosphi = std::cos(latitudeRad);
+  const double sind  = std::sin(eq.dec);
+  const double cosd  = std::cos(eq.dec);
+  const double cosH  = std::cos(H);
+  const double sinH  = std::sin(H);
+
+  // Altitude
+  double sinAlt = sind * sinphi + cosd * cosphi * cosH;
+  sinAlt = std::clamp(sinAlt, -1.0, 1.0);
+  double alt = std::asin(sinAlt);
+
+  // Azimuth (measured from North towards East), robust atan2 form
+  double y = -cosd * sinH;
+  double x = sind * cosphi - cosd * sinphi * cosH;
+  double az = std::atan2(y, x);
+  if (az < 0) az += 2.0 * M_PI;
+
+  return Horizontal{az, alt};
+}
+
+Equatorial horizontal_to_equatorial(const Horizontal& hor, double latitudeRad, double lstRad) {
+  const double sinphi = std::sin(latitudeRad);
+  const double cosphi = std::cos(latitudeRad);
+  const double sinA = std::sin(hor.az);
+  const double cosA = std::cos(hor.az);
+  const double sinAlt = std::sin(hor.alt);
+  const double cosAlt = std::cos(hor.alt);
+
+  // Declination
+  double sind = sinAlt * sinphi + cosAlt * cosphi * cosA;
+  sind = std::clamp(sind, -1.0, 1.0);
+  double dec = std::asin(sind);
+
+  // Hour angle H
+  double y = -sinA * cosAlt;                     // = -cos d * sin H
+  double x = sinAlt - sinphi * sind;             // = cosphi * cos d * cos H
+  double H = std::atan2(y, x / cosphi);
+  H = std::remainder(H, 2.0 * M_PI);
+
+  double ra = lstRad - H;
+  if (ra < 0) ra += 2.0 * M_PI; else if (ra >= 2.0 * M_PI) ra = std::fmod(ra, 2.0 * M_PI);
+
+  return Equatorial{ra, dec};
+}
+
+// Rotation matrix from ICRS (J2000) equatorial to Galactic (from Hipparcos, as used by astropy)
+static inline void eq_to_gal_matrix(double R[3][3]) {
+  R[0][0] = -0.054875560136; R[0][1] = -0.873437090234; R[0][2] = -0.483835015547;
+  R[1][0] =  0.494109427876; R[1][1] = -0.444829629960; R[1][2] =  0.746982244497;
+  R[2][0] = -0.867666149019; R[2][1] = -0.198076373431; R[2][2] =  0.455983776175;
+}
+
+static inline void gal_to_eq_matrix(double RT[3][3]) {
+  // Inverse is transpose for pure rotation
+  double R[3][3]; eq_to_gal_matrix(R);
+  RT[0][0] = R[0][0]; RT[0][1] = R[1][0]; RT[0][2] = R[2][0];
+  RT[1][0] = R[0][1]; RT[1][1] = R[1][1]; RT[1][2] = R[2][1];
+  RT[2][0] = R[0][2]; RT[2][1] = R[1][2]; RT[2][2] = R[2][2];
+}
+
+Galactic equatorial_to_galactic(const Equatorial& eq) {
+  const double cosd = std::cos(eq.dec);
+  const double x = cosd * std::cos(eq.ra);
+  const double y = cosd * std::sin(eq.ra);
+  const double z = std::sin(eq.dec);
+
+  double R[3][3]; eq_to_gal_matrix(R);
+  double X = R[0][0]*x + R[0][1]*y + R[0][2]*z;
+  double Y = R[1][0]*x + R[1][1]*y + R[1][2]*z;
+  double Z = R[2][0]*x + R[2][1]*y + R[2][2]*z;
+
+  double lon = std::atan2(Y, X);
+  if (lon < 0) lon += 2.0 * M_PI;
+  double lat = std::asin(std::clamp(Z, -1.0, 1.0));
+  return Galactic{lon, lat};
+}
+
+Equatorial galactic_to_equatorial(const Galactic& gal) {
+  const double cosb = std::cos(gal.lat);
+  const double x = cosb * std::cos(gal.lon);
+  const double y = cosb * std::sin(gal.lon);
+  const double z = std::sin(gal.lat);
+
+  double RT[3][3]; gal_to_eq_matrix(RT);
+  double X = RT[0][0]*x + RT[0][1]*y + RT[0][2]*z;
+  double Y = RT[1][0]*x + RT[1][1]*y + RT[1][2]*z;
+  double Z = RT[2][0]*x + RT[2][1]*y + RT[2][2]*z;
+
+  double ra = std::atan2(Y, X);
+  if (ra < 0) ra += 2.0 * M_PI;
+  double dec = std::asin(std::clamp(Z, -1.0, 1.0));
+  return Equatorial{ra, dec};
+}
+
 } // namespace astrocore

@@ -1,0 +1,41 @@
+Start testing: Aug 16 21:40 CEST
+----------------------------------------------------------
+1/1 Testing: astro_tests_core
+1/1 Test: astro_tests_core
+Command: "/media/data/programming/v004beta/build/tests/astro_tests_core"
+Directory: /media/data/programming/v004beta/build/tests
+"astro_tests_core" start time: Aug 16 21:40 CEST
+Output:
+----------------------------------------------------------
+Running main() from /media/data/programming/v004beta/build/_deps/googletest-src/googletest/src/gtest_main.cc
+[==========] Running 4 tests from 3 test suites.
+[----------] Global test environment set-up.
+[----------] 1 test from JulianDayTest
+[ RUN      ] JulianDayTest.J2000NoonUTC
+[       OK ] JulianDayTest.J2000NoonUTC (0 ms)
+[----------] 1 test from JulianDayTest (0 ms total)
+
+[----------] 2 tests from DetectAspectTest
+[ RUN      ] DetectAspectTest.MajorAspectsWithinOrb
+[       OK ] DetectAspectTest.MajorAspectsWithinOrb (0 ms)
+[ RUN      ] DetectAspectTest.NoneOutsideOrb
+[       OK ] DetectAspectTest.NoneOutsideOrb (0 ms)
+[----------] 2 tests from DetectAspectTest (0 ms total)
+
+[----------] 1 test from CoordinateHelpersTest
+[ RUN      ] CoordinateHelpersTest.EqualHouseCuspsMonotonic
+[       OK ] CoordinateHelpersTest.EqualHouseCuspsMonotonic (0 ms)
+[----------] 1 test from CoordinateHelpersTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 4 tests from 3 test suites ran. (0 ms total)
+[  PASSED  ] 4 tests.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"astro_tests_core" end time: Aug 16 21:40 CEST
+"astro_tests_core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 16 21:40 CEST

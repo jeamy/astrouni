@@ -2,6 +2,8 @@
 #include <wx/graphics.h>
 #include <wx/dcbuffer.h>
 #include <map>
+#include <cmath>
+#include <cstdio>
 
 AspectGrid::AspectGrid(wxWindow* parent)
     : wxGrid(parent, wxID_ANY)
@@ -16,10 +18,9 @@ AspectGrid::AspectGrid(wxWindow* parent)
 
 void AspectGrid::InitializeGrid()
 {
-    // Create a grid with planets as rows and columns plus extra space for headers
+    // Create a square grid sized for planets with an extra header row/col at index 0
     int planetCount = static_cast<int>(m_planets.size());
-    // Add 1 for header row/column and extra space for potential demo points
-    int gridSize = planetCount + 10; // Extra space for demo points
+    int gridSize = planetCount + 1; // rows/cols: 0=header, 1..planetCount=planets
     CreateGrid(gridSize, gridSize);
     
     // Hide row and column labels
@@ -49,15 +50,15 @@ void AspectGrid::InitializeGrid()
         astrocore::PlanetId planet = m_planets[i];
         wxString planetName = GetPlanetName(planet);
         
-        // Set the planet symbol in the first column
-        SetCellValue(i, 0, planetName);
-        SetCellAlignment(i, 0, wxALIGN_CENTER, wxALIGN_CENTER);
-        SetCellBackgroundColour(i, 0, wxColour(240, 240, 240));
+        // Set the planet symbol in the first column (row header)
+        SetCellValue(i + 1, 0, planetName);
+        SetCellAlignment(i + 1, 0, wxALIGN_CENTER, wxALIGN_CENTER);
+        SetCellBackgroundColour(i + 1, 0, wxColour(240, 240, 240));
         
-        // Set the planet symbol in the first row
-        SetCellValue(0, i, planetName);
-        SetCellAlignment(0, i, wxALIGN_CENTER, wxALIGN_CENTER);
-        SetCellBackgroundColour(0, i, wxColour(240, 240, 240));
+        // Set the planet symbol in the first row (column header)
+        SetCellValue(0, i + 1, planetName);
+        SetCellAlignment(0, i + 1, wxALIGN_CENTER, wxALIGN_CENTER);
+        SetCellBackgroundColour(0, i + 1, wxColour(240, 240, 240));
     }
     
     // Initialize GlyphRenderer if needed
@@ -68,14 +69,25 @@ void AspectGrid::InitializeGrid()
 
 void AspectGrid::UpdateGrid(const std::array<astrocore::PlanetPosition, 21>& positions, double orbDeg)
 {
+    std::fprintf(stderr, "[AspectGrid] UpdateGrid enter (visible=%d, rows=%d, cols=%d)\n",
+                 m_visible ? 1 : 0, GetNumberRows(), GetNumberCols());
     if (!m_visible) {
+        std::fprintf(stderr, "[AspectGrid] not visible, skip\n");
         return;
+    }
+    if (GetNumberRows() == 0 || GetNumberCols() == 0) {
+        std::fprintf(stderr, "[AspectGrid] grid not initialized yet, InitializeGrid()\n");
+        InitializeGrid();
     }
     
     // Clear existing aspect cells
     int planetCount = static_cast<int>(m_planets.size());
-    for (int row = 1; row < planetCount; ++row) {
-        for (int col = 1; col < planetCount; ++col) {
+    if (planetCount <= 0) {
+        std::fprintf(stderr, "[AspectGrid] no planets configured\n");
+        return;
+    }
+    for (int row = 1; row <= planetCount; ++row) {
+        for (int col = 1; col <= planetCount; ++col) {
             if (row > col) {  // Only show aspects in the lower triangle
                 SetCellValue(row, col, "");
                 SetCellBackgroundColour(row, col, *wxWHITE);
@@ -84,22 +96,32 @@ void AspectGrid::UpdateGrid(const std::array<astrocore::PlanetPosition, 21>& pos
     }
     
     // Calculate and display aspects
+    std::fprintf(stderr, "[AspectGrid] CalculateAspects start (orb=%.2f)\n", orbDeg);
     CalculateAspects(positions, orbDeg);
+    std::fprintf(stderr, "[AspectGrid] CalculateAspects done\n");
     
     // Refresh the grid
-    ForceRefresh();
+    Refresh(false);
+    std::fprintf(stderr, "[AspectGrid] UpdateGrid leave\n");
 }
-
 void AspectGrid::CalculateAspects(const std::array<astrocore::PlanetPosition, 21>& positions, double orbDeg)
 {
     int planetCount = static_cast<int>(m_planets.size());
     
-    // Calculate aspects between planets
-    for (int i = 1; i < planetCount; ++i) {
+    // Calculate aspects between planets (grid indices 1..planetCount)
+    for (int i = 1; i <= planetCount; ++i) {
         for (int j = 1; j < i; ++j) {
-            // Get planet positions
-            const astrocore::PlanetPosition& pos1 = positions[i];
-            const astrocore::PlanetPosition& pos2 = positions[j];
+            // Map grid index to planet ID and position index
+            astrocore::PlanetId p1 = m_planets[i - 1];
+            astrocore::PlanetId p2 = m_planets[j - 1];
+            int idx1 = static_cast<int>(p1);
+            int idx2 = static_cast<int>(p2);
+            if (idx1 < 0 || idx1 >= static_cast<int>(positions.size()) ||
+                idx2 < 0 || idx2 >= static_cast<int>(positions.size())) {
+                continue;
+            }
+            const astrocore::PlanetPosition& pos1 = positions[idx1];
+            const astrocore::PlanetPosition& pos2 = positions[idx2];
             
             // Skip if either planet position is invalid
             if (!pos1.valid || !pos2.valid) {
@@ -175,8 +197,12 @@ void AspectGrid::DrawAspectSymbol(int row, int col, astrocore::AspectType aspect
                 break;
         }
         
-        // Add orb information
-        wxString cellValue = aspectSymbol + "\n" + wxString::Format("%.1f°", std::abs(orb));
+        // Add orb information (format value using ASCII-only format string to avoid
+        // locale/encoding conversion issues, then append degree symbol via UTF-8)
+        wxString orbText = wxString::Format("%.1f", std::abs(orb));
+        // UTF-8 for degree sign: 0xC2 0xB0
+        wxString degree = wxString::FromUTF8("\xC2\xB0");
+        wxString cellValue = aspectSymbol + "\n" + orbText + degree;
         SetCellValue(row, col, cellValue);
         SetCellAlignment(row, col, wxALIGN_CENTER, wxALIGN_CENTER);
     } catch (const std::exception& e) {
@@ -214,166 +240,4 @@ void AspectGrid::SetVisible(bool visible)
 {
     m_visible = visible;
     Show(visible);
-}
-
-void AspectGrid::ShowDemoAspects(double asc, double mc, double orbDeg, const std::array<astrocore::PlanetPosition, 21>& positions)
-{
-    if (!m_visible) {
-        return;
-    }
-    
-    // Clear existing grid cells but don't recreate the grid
-    int rows = GetNumberRows();
-    int cols = GetNumberCols();
-    
-    // Clear all cell values and colors
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            try {
-                SetCellValue(i, j, "");
-                SetCellBackgroundColour(i, j, *wxWHITE);
-            } catch (const std::exception& e) {
-                wxLogError("Error clearing cell (%d,%d): %s", i, j, e.what());
-            }
-        }
-    }
-    
-    // Re-initialize planet symbols in the first row and column
-    int planetCount = static_cast<int>(m_planets.size());
-    for (int i = 0; i < planetCount; ++i) {
-        // Skip if out of bounds
-        if (i + 1 >= rows || i + 1 >= cols) {
-            continue;
-        }
-        
-        astrocore::PlanetId planet = m_planets[i];
-        wxString planetName = GetPlanetName(planet);
-        
-        try {
-            // Set the planet symbol in the first column
-            SetCellValue(i + 1, 0, planetName);
-            SetCellAlignment(i + 1, 0, wxALIGN_CENTER, wxALIGN_CENTER);
-            SetCellBackgroundColour(i + 1, 0, wxColour(240, 240, 240));
-            
-            // Set the planet symbol in the first row
-            SetCellValue(0, i + 1, planetName);
-            SetCellAlignment(0, i + 1, wxALIGN_CENTER, wxALIGN_CENTER);
-            SetCellBackgroundColour(0, i + 1, wxColour(240, 240, 240));
-        } catch (const std::exception& e) {
-            wxLogError("Error setting planet symbol for planet %d: %s", i, e.what());
-        }
-    }
-    
-    // Create demo points at significant angles from Asc and MC
-    std::vector<double> demoLongs = {
-        asc,                                // Ascendant
-        std::fmod(asc + 60.0, 360.0),      // Asc + 60° (sextile)
-        std::fmod(asc + 120.0, 360.0),     // Asc + 120° (trine)
-        mc,                                 // Midheaven
-        std::fmod(mc + 180.0, 360.0)       // MC + 180° (opposition)
-    };
-    
-    // Labels for the demo points
-    std::vector<wxString> demoLabels = {
-        "Asc",
-        "Asc+60°",
-        "Asc+120°",
-        "MC",
-        "MC+180°"
-    };
-    
-    // Add a special row and column for demo points
-    int demoRow = planetCount + 1; // +1 for header row
-    
-    // Make sure we have enough rows and columns
-    int neededRows = demoRow + static_cast<int>(demoLongs.size());
-    int neededCols = planetCount + 1; // +1 for header column
-    
-    // Resize grid if needed
-    while (GetNumberRows() < neededRows) {
-        AppendRows(1);
-    }
-    while (GetNumberCols() < neededCols) {
-        AppendCols(1);
-    }
-    
-    // Set header for demo points
-    if (demoRow < GetNumberRows()) {
-        SetCellValue(demoRow, 0, "Demo Points");
-        SetCellBackgroundColour(demoRow, 0, wxColour(240, 240, 200));
-        SetCellAlignment(demoRow, 0, wxALIGN_CENTER, wxALIGN_CENTER);
-    }
-    
-    // Add demo point labels
-    for (size_t i = 0; i < demoLongs.size(); ++i) {
-        int row = demoRow + 1 + static_cast<int>(i);
-        // Safety check to prevent out-of-bounds access
-        if (row < GetNumberRows()) {
-            SetCellValue(row, 0, demoLabels[i]);
-            SetCellBackgroundColour(row, 0, wxColour(240, 240, 200));
-            SetCellAlignment(row, 0, wxALIGN_CENTER, wxALIGN_CENTER);
-        }
-    }
-    
-    // Calculate aspects between demo points
-    for (size_t i = 0; i < demoLongs.size(); ++i) {
-        for (size_t j = 0; j < i; ++j) {
-            // Calculate aspect
-            astrocore::AspectResult aspect = astrocore::detect_aspect(demoLongs[i], demoLongs[j], orbDeg);
-            
-            // Draw aspect symbol if an aspect is detected
-            if (aspect.type != astrocore::AspectType::None) {
-                // Create a cell for this aspect
-                int row = demoRow + 1 + static_cast<int>(i);
-                int col = 1 + static_cast<int>(j);
-                
-                // Safety check to prevent out-of-bounds access
-                if (row >= 0 && row < GetNumberRows() && col >= 0 && col < GetNumberCols()) {
-                    // Draw the aspect symbol
-                    DrawAspectSymbol(row, col, aspect.type, aspect.deltaDeg);
-                }
-            }
-        }
-    }
-    
-    // Calculate aspects between planets and demo points
-    for (size_t i = 0; i < demoLongs.size(); ++i) {
-        for (int j = 0; j < planetCount; ++j) {
-            // Skip if planet position is invalid
-            if (j >= static_cast<int>(m_planets.size())) {
-                continue;
-            }
-            
-            // Get planet ID and position
-            astrocore::PlanetId planetId = m_planets[j];
-            int planetIndex = static_cast<int>(planetId);
-            
-            // Skip if planet index is out of bounds or position is invalid
-            if (planetIndex < 0 || static_cast<size_t>(planetIndex) >= positions.size() || !positions[planetIndex].valid) {
-                continue;
-            }
-            
-            // Get planet longitude
-            double planetLong = positions[planetIndex].longitude;
-            
-            // Calculate aspect
-            astrocore::AspectResult aspect = astrocore::detect_aspect(demoLongs[i], planetLong, orbDeg);
-            
-            // Draw aspect symbol if an aspect is detected
-            if (aspect.type != astrocore::AspectType::None) {
-                // Create a cell for this aspect
-                int row = demoRow + 1 + static_cast<int>(i);
-                int col = j + 1; // +1 to account for header column
-                
-                // Safety check to prevent out-of-bounds access
-                if (row >= 0 && row < GetNumberRows() && col >= 0 && col < GetNumberCols()) {
-                    // Draw the aspect symbol
-                    DrawAspectSymbol(row, col, aspect.type, aspect.deltaDeg);
-                }
-            }
-        }
-    }
-    
-    // Refresh the grid
-    ForceRefresh();
 }

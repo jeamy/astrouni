@@ -536,3 +536,42 @@ events:
       Running the CXX compiler's linker: "/usr/bin/ld" "-v"
       GNU ld version 2.44-6.fc42
 ...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake/Modules/Internal/CheckSourceCompiles.cmake:108 (try_compile)"
+      - "/usr/share/cmake/Modules/CheckCSourceCompiles.cmake:58 (cmake_check_source_compiles)"
+      - "/usr/share/cmake/Modules/FindThreads.cmake:97 (CHECK_C_SOURCE_COMPILES)"
+      - "/usr/share/cmake/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "build/_deps/googletest-src/googletest/cmake/internal_utils.cmake:66 (find_package)"
+      - "build/_deps/googletest-src/googletest/CMakeLists.txt:83 (config_compiler_and_linker)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "/media/data/programming/v004beta/build/CMakeFiles/CMakeScratch/TryCompile-pNCdLs"
+      binary: "/media/data/programming/v004beta/build/CMakeFiles/CMakeScratch/TryCompile-pNCdLs"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: '/media/data/programming/v004beta/build/CMakeFiles/CMakeScratch/TryCompile-pNCdLs'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_e3472/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_e3472.dir/build.make CMakeFiles/cmTC_e3472.dir/build
+        gmake[1]: Verzeichnis „/media/data/programming/v004beta/build/CMakeFiles/CMakeScratch/TryCompile-pNCdLs“ wird betreten
+        Building C object CMakeFiles/cmTC_e3472.dir/src.c.o
+        /usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_e3472.dir/src.c.o -c /media/data/programming/v004beta/build/CMakeFiles/CMakeScratch/TryCompile-pNCdLs/src.c
+        Linking C executable cmTC_e3472
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e3472.dir/link.txt --verbose=1
+        /usr/bin/cc CMakeFiles/cmTC_e3472.dir/src.c.o -o cmTC_e3472
+        gmake[1]: Verzeichnis „/media/data/programming/v004beta/build/CMakeFiles/CMakeScratch/TryCompile-pNCdLs“ wird verlassen
+        
+      exitCode: 0
+...

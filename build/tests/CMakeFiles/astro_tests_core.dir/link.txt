@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/astro_tests_core.dir/link.d CMakeFiles/astro_tests_core.dir/test_core.cpp.o -o astro_tests_core  ../lib/libgtest.a ../lib/libgtest_main.a ../core/libastrocore.a ../lib/libgtest.a

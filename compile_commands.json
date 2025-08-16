@@ -1,0 +1,62 @@
+[
+{
+  "directory": "/media/data/programming/v004beta/core",
+  "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -I/media/data/programming/v004beta/core/include -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astrocore.dir/src/api.cpp.o -c /media/data/programming/v004beta/core/src/api.cpp",
+  "file": "/media/data/programming/v004beta/core/src/api.cpp",
+  "output": "core/CMakeFiles/astrocore.dir/src/api.cpp.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/core",
+  "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -I/media/data/programming/v004beta/core/include -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astrocore.dir/src/planets.cpp.o -c /media/data/programming/v004beta/core/src/planets.cpp",
+  "file": "/media/data/programming/v004beta/core/src/planets.cpp",
+  "output": "core/CMakeFiles/astrocore.dir/src/planets.cpp.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/core",
+  "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -I/media/data/programming/v004beta/core/include -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astrocore.dir/src/ephemeris.cpp.o -c /media/data/programming/v004beta/core/src/ephemeris.cpp",
+  "file": "/media/data/programming/v004beta/core/src/ephemeris.cpp",
+  "output": "core/CMakeFiles/astrocore.dir/src/ephemeris.cpp.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/apps/cli",
+  "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -I/media/data/programming/v004beta/core/include -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astrocli.dir/src/main.cpp.o -c /media/data/programming/v004beta/apps/cli/src/main.cpp",
+  "file": "/media/data/programming/v004beta/apps/cli/src/main.cpp",
+  "output": "apps/cli/CMakeFiles/astrocli.dir/src/main.cpp.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/apps/gui",
+  "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -DWXUSINGDLL -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE=\"\" -D__WXGTK__ -I/media/data/programming/v004beta/core/include -isystem /usr/lib64/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2  -pthread -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astro_gui.dir/src/main.cpp.o -c /media/data/programming/v004beta/apps/gui/src/main.cpp",
+  "file": "/media/data/programming/v004beta/apps/gui/src/main.cpp",
+  "output": "apps/gui/CMakeFiles/astro_gui.dir/src/main.cpp.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/apps/gui",
+  "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -DWXUSINGDLL -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE=\"\" -D__WXGTK__ -I/media/data/programming/v004beta/core/include -isystem /usr/lib64/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2  -pthread -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astro_gui.dir/src/ChartPanel.cpp.o -c /media/data/programming/v004beta/apps/gui/src/ChartPanel.cpp",
+  "file": "/media/data/programming/v004beta/apps/gui/src/ChartPanel.cpp",
+  "output": "apps/gui/CMakeFiles/astro_gui.dir/src/ChartPanel.cpp.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/apps/gui",
+  "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -DWXUSINGDLL -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE=\"\" -D__WXGTK__ -I/media/data/programming/v004beta/core/include -isystem /usr/lib64/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2  -pthread -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astro_gui.dir/src/Dialogs.cpp.o -c /media/data/programming/v004beta/apps/gui/src/Dialogs.cpp",
+  "file": "/media/data/programming/v004beta/apps/gui/src/Dialogs.cpp",
+  "output": "apps/gui/CMakeFiles/astro_gui.dir/src/Dialogs.cpp.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/apps/gui",
+  "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -DWXUSINGDLL -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE=\"\" -D__WXGTK__ -I/media/data/programming/v004beta/core/include -isystem /usr/lib64/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2  -pthread -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astro_gui.dir/src/GlyphRenderer.cpp.o -c /media/data/programming/v004beta/apps/gui/src/GlyphRenderer.cpp",
+  "file": "/media/data/programming/v004beta/apps/gui/src/GlyphRenderer.cpp",
+  "output": "apps/gui/CMakeFiles/astro_gui.dir/src/GlyphRenderer.cpp.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/apps/gui",
+  "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -DWXUSINGDLL -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE=\"\" -D__WXGTK__ -I/media/data/programming/v004beta/core/include -isystem /usr/lib64/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2  -pthread -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astro_gui.dir/src/AspectGrid.cpp.o -c /media/data/programming/v004beta/apps/gui/src/AspectGrid.cpp",
+  "file": "/media/data/programming/v004beta/apps/gui/src/AspectGrid.cpp",
+  "output": "apps/gui/CMakeFiles/astro_gui.dir/src/AspectGrid.cpp.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/apps/gui",
+  "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -DWXUSINGDLL -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE=\"\" -D__WXGTK__ -I/media/data/programming/v004beta/core/include -isystem /usr/lib64/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2  -pthread -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astro_gui.dir/src/AspectGridWindow.cpp.o -c /media/data/programming/v004beta/apps/gui/src/AspectGridWindow.cpp",
+  "file": "/media/data/programming/v004beta/apps/gui/src/AspectGridWindow.cpp",
+  "output": "apps/gui/CMakeFiles/astro_gui.dir/src/AspectGridWindow.cpp.o"
+}
+]

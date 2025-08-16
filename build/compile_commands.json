@@ -58,5 +58,35 @@
   "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -DWXUSINGDLL -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE=\"\" -D__WXGTK__ -I/media/data/programming/v004beta/core/include -isystem /usr/lib64/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2  -pthread -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astro_gui.dir/src/AspectGridWindow.cpp.o -c /media/data/programming/v004beta/apps/gui/src/AspectGridWindow.cpp",
   "file": "/media/data/programming/v004beta/apps/gui/src/AspectGridWindow.cpp",
   "output": "apps/gui/CMakeFiles/astro_gui.dir/src/AspectGridWindow.cpp.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/build/tests",
+  "command": "/usr/bin/c++ -DASTROCORE_PLATFORM_UNIX -I/media/data/programming/v004beta/core/include -isystem /media/data/programming/v004beta/build/_deps/googletest-src/googletest/include -isystem /media/data/programming/v004beta/build/_deps/googletest-src/googletest -std=gnu++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/astro_tests_core.dir/test_core.cpp.o -c /media/data/programming/v004beta/tests/test_core.cpp",
+  "file": "/media/data/programming/v004beta/tests/test_core.cpp",
+  "output": "tests/CMakeFiles/astro_tests_core.dir/test_core.cpp.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/build/_deps/googletest-build/googlemock",
+  "command": "/usr/bin/c++  -I/media/data/programming/v004beta/build/_deps/googletest-src/googlemock/include -I/media/data/programming/v004beta/build/_deps/googletest-src/googlemock -isystem /media/data/programming/v004beta/build/_deps/googletest-src/googletest/include -isystem /media/data/programming/v004beta/build/_deps/googletest-src/googletest -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /media/data/programming/v004beta/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "file": "/media/data/programming/v004beta/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/build/_deps/googletest-build/googlemock",
+  "command": "/usr/bin/c++  -isystem /media/data/programming/v004beta/build/_deps/googletest-src/googlemock/include -isystem /media/data/programming/v004beta/build/_deps/googletest-src/googlemock -isystem /media/data/programming/v004beta/build/_deps/googletest-src/googletest/include -isystem /media/data/programming/v004beta/build/_deps/googletest-src/googletest -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /media/data/programming/v004beta/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "file": "/media/data/programming/v004beta/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/build/_deps/googletest-build/googletest",
+  "command": "/usr/bin/c++  -I/media/data/programming/v004beta/build/_deps/googletest-src/googletest/include -I/media/data/programming/v004beta/build/_deps/googletest-src/googletest -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /media/data/programming/v004beta/build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "file": "/media/data/programming/v004beta/build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "output": "_deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o"
+},
+{
+  "directory": "/media/data/programming/v004beta/build/_deps/googletest-build/googletest",
+  "command": "/usr/bin/c++  -isystem /media/data/programming/v004beta/build/_deps/googletest-src/googletest/include -isystem /media/data/programming/v004beta/build/_deps/googletest-src/googletest -std=c++20 -Wall -Wshadow -Wundef -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wall -Wextra -Wpedantic -Wconversion -Wshadow -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /media/data/programming/v004beta/build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "file": "/media/data/programming/v004beta/build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "output": "_deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o"
 }
 ]

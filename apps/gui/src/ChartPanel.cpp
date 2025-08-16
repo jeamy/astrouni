@@ -2,6 +2,9 @@
 #include <wx/dcbuffer.h>
 #include <wx/filename.h>
 #include <wx/image.h>
+#include <wx/app.h>
+#include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #include <numbers>
 #include <vector>
@@ -14,13 +17,21 @@ wxEND_EVENT_TABLE()
 ChartPanel::ChartPanel(wxWindow* parent)
   : wxPanel(parent, wxID_ANY)
 {
+  std::fprintf(stderr, "[ChartPanel] ctor\n");
   SetBackgroundStyle(wxBG_STYLE_PAINT); // enable double-buffering with wxAutoBufferedPaintDC
   
-  // Create the aspect grid window
-  m_aspectGridWindow = new AspectGridWindow(parent, "Aspect Grid");
-  
-  // Initially hide the aspect grid window
-  m_aspectGridWindow->ShowWindow(m_showAspectGrid);
+  // Optionally skip creating the aspect grid window during tests
+  const char* no_grid = std::getenv("ASTRO_TEST_NO_GRID");
+  if (no_grid && no_grid[0] == '1') {
+    std::fprintf(stderr, "[ChartPanel] Skipping AspectGridWindow creation due to ASTRO_TEST_NO_GRID=1\n");
+    m_aspectGridWindow = nullptr;
+  } else {
+    // Create the aspect grid window
+    m_aspectGridWindow = new AspectGridWindow(parent, "Aspect Grid");
+    
+    // Initially hide the aspect grid window
+    m_aspectGridWindow->ShowWindow(m_showAspectGrid);
+  }
 }
 
 void ChartPanel::OnPaint(wxPaintEvent&) {
@@ -32,6 +43,7 @@ void ChartPanel::OnPaint(wxPaintEvent&) {
 
 void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
   using namespace astrocore;
+  std::fprintf(stderr, "[ChartPanel] DrawChart start\n");
   // Simple chart: circle, axes, equal-house cusps from computed Ascendant, label Asc/MC
   int w = size.GetWidth();
   int h = size.GetHeight();
@@ -50,9 +62,11 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
   }
   if (!gc) {
     // Fall back to basic DC if graphics context creation fails
+    std::fprintf(stderr, "[ChartPanel] No wxGraphicsContext, fallback drawing\n");
     dc.SetPen(*wxBLACK_PEN);
     dc.SetBrush(*wxTRANSPARENT_BRUSH);
     dc.DrawCircle(cx, cy, radius);
+    std::fprintf(stderr, "[ChartPanel] DrawChart end (fallback)\n");
     return;
   }
 
@@ -65,6 +79,7 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
   }
 
   // Compute from current parameters
+  std::fprintf(stderr, "[ChartPanel] computing jd/asc/mc\n");
   double jd = julian_day(m_date, m_time, m_tz);
   const double lon = m_longitudeDeg * std::numbers::pi / 180.0;
   const double lat = m_latitudeDeg  * std::numbers::pi / 180.0;
@@ -104,16 +119,20 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
   flags.calculateDistance = true;
   
   // Get planet positions
+  std::fprintf(stderr, "[ChartPanel] calculate_chart...\n");
   ChartPositions chartData = calculate_chart(jd, m_longitudeDeg, m_latitudeDeg, flags);
+  std::fprintf(stderr, "[ChartPanel] calculate_chart done\n");
   
   // Draw planets if enabled
   if (m_showPlanets) {
     // Initialize the glyph renderer if needed
     if (!GlyphRenderer::IsInitialized()) {
+      std::fprintf(stderr, "[ChartPanel] GlyphRenderer::Initialize()\n");
       GlyphRenderer::Initialize();
     }
     
     // Draw each planet
+    std::fprintf(stderr, "[ChartPanel] drawing planets...\n");
     for (int i = 0; i <= static_cast<int>(PlanetId::Pluto); ++i) {
       PlanetId planet = static_cast<PlanetId>(i);
       const PlanetPosition& pos = chartData.positions[i];
@@ -136,66 +155,35 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
     
     // Draw aspect lines between planets if enabled
     if (m_showAspectLines) {
+      std::fprintf(stderr, "[ChartPanel] drawing aspect lines (orb=%.2f)\n", m_aspectOrbDeg);
       ChartGlyphHelper::DrawAspectLines(gc, chartData.positions, wxPoint(cx, cy), radius, m_aspectOrbDeg);
     }
   }
   
-  // Update aspect grid if visible
+  // Update aspect grid if visible (schedule after paint to avoid re-entrancy)
   if (m_aspectGridWindow && m_showAspectGrid) {
-    AspectGrid* grid = m_aspectGridWindow->GetAspectGrid();
-    if (grid) {
-      // Update grid with planet positions
-      grid->UpdateGrid(chartData.positions, m_aspectOrbDeg);
-      
-      // If demo aspects are enabled, add them to the grid
-      if (m_demoAspects) {
-        // Convert to degrees for the grid
-        double ascDeg = asc * 180.0 / std::numbers::pi;
-        double mcDeg = mc * 180.0 / std::numbers::pi;
-        grid->ShowDemoAspects(ascDeg, mcDeg, m_aspectOrbDeg, chartData.positions);
-      }
-    }
-  }
-  
-  // Demo aspects: draw lines between sample ecliptic points if within orb
-  if (m_demoAspects) {
-    std::vector<double> longs = {
-      asc,
-      std::fmod(asc + 60.0 * std::numbers::pi / 180.0, 2.0 * std::numbers::pi),
-      std::fmod(asc + 120.0 * std::numbers::pi / 180.0, 2.0 * std::numbers::pi),
-      mc,
-      std::fmod(mc + M_PI, 2.0 * M_PI)
-    };
-    auto point_on_circle = [&](double ang) {
-      int x = cx + static_cast<int>(std::cos(ang) * radius);
-      int y = cy + static_cast<int>(std::sin(ang) * radius);
-      return wxPoint(x, y);
-    };
-    auto set_pen_for_aspect = [&](astrocore::AspectType t) {
-      switch (t) {
-        case astrocore::AspectType::Conjunction: dc.SetPen(wxPen(*wxBLACK, 2)); break;
-        case astrocore::AspectType::Opposition:  dc.SetPen(wxPen(*wxRED, 2)); break;
-        case astrocore::AspectType::Trine:       dc.SetPen(wxPen(*wxGREEN, 2)); break;
-        case astrocore::AspectType::Square:      dc.SetPen(wxPen(*wxBLUE, 2)); break;
-        case astrocore::AspectType::Sextile:     dc.SetPen(wxPen(*wxCYAN, 2)); break;
-        default: dc.SetPen(wxPen(*wxLIGHT_GREY, 1)); break;
-      }
-    };
-    for (size_t i = 0; i < longs.size(); ++i) {
-      for (size_t j = i + 1; j < longs.size(); ++j) {
-        double d1 = longs[i] * 180.0 / std::numbers::pi;
-        double d2 = longs[j] * 180.0 / std::numbers::pi;
-        auto r = astrocore::detect_aspect(d1, d2, m_aspectOrbDeg);
-        if (r.type != astrocore::AspectType::None) {
-          set_pen_for_aspect(r.type);
-          dc.DrawLine(point_on_circle(longs[i]), point_on_circle(longs[j]));
+    std::fprintf(stderr, "[ChartPanel] scheduling AspectGrid update\n");
+    auto positionsCopy = chartData.positions; // copy for async use
+    double orbCopy = m_aspectOrbDeg;
+    AspectGridWindow* wnd = m_aspectGridWindow;
+    if (wnd) {
+      wnd->CallAfter([wnd, positionsCopy, orbCopy]() {
+        if (!wnd) return;
+        AspectGrid* grid = wnd->GetAspectGrid();
+        if (grid && grid->IsShownOnScreen()) {
+          std::fprintf(stderr, "[ChartPanel] calling AspectGrid::UpdateGrid now\n");
+          grid->CallAfter([grid, positionsCopy, orbCopy]() {
+            if (!grid) return;
+            grid->UpdateGrid(positionsCopy, orbCopy);
+          });
         }
-      }
+      });
     }
   }
   
   // Clean up graphics context
   delete gc;
+  std::fprintf(stderr, "[ChartPanel] DrawChart end\n");
 }
 
 // Setters
@@ -210,39 +198,6 @@ void ChartPanel::SetHouseSystem(HouseSystem hs) {
 }
 void ChartPanel::SetAspectOrbDeg(double orbDeg) {
   m_aspectOrbDeg = orbDeg; Refresh();
-}
-void ChartPanel::SetDemoAspects(bool enabled) {
-  m_demoAspects = enabled;
-  Refresh();
-  
-  // If aspect grid is visible, update it with the new demo aspects setting
-  if (m_aspectGridWindow && m_showAspectGrid) {
-    AspectGrid* grid = m_aspectGridWindow->GetAspectGrid();
-    if (grid) {
-      // Force a recalculation of the chart data to update the grid
-      double jd = astrocore::julian_day(m_date, m_time, m_tz);
-      astrocore::ChartPositions chartData;
-      chartData.jd = jd;
-      
-      // Calculate Asc/MC
-      double longitudeRad = m_longitudeDeg * M_PI / 180.0;
-      double latitudeRad = m_latitudeDeg * M_PI / 180.0;
-      double ascRad, mcRad;
-      astrocore::asc_mc_longitudes(jd, longitudeRad, latitudeRad, ascRad, mcRad);
-      
-      // Convert to degrees for the grid
-      double asc = ascRad * 180.0 / M_PI;
-      double mc = mcRad * 180.0 / M_PI;
-      
-      // Update the grid with current positions
-      grid->UpdateGrid(chartData.positions, m_aspectOrbDeg);
-      
-      // If demo aspects are enabled, add them to the grid
-      if (enabled) {
-        grid->ShowDemoAspects(asc, mc, m_aspectOrbDeg, chartData.positions);
-      }
-    }
-  }
 }
 
 void ChartPanel::SetShowAxes(bool enabled) {
@@ -264,6 +219,7 @@ void ChartPanel::SetShowAspectLines(bool enabled) {
 
 void ChartPanel::SetShowAspectGrid(bool enabled) {
   m_showAspectGrid = enabled;
+  std::fprintf(stderr, "[ChartPanel] SetShowAspectGrid(%d)\n", enabled ? 1 : 0);
   if (m_aspectGridWindow) {
     m_aspectGridWindow->ShowWindow(enabled);
   }
@@ -278,7 +234,6 @@ void ChartPanel::ResetDefaults() {
   m_latitudeDeg = 52.52;
   m_houseSystem = HouseSystem::Equal;
   m_aspectOrbDeg = 3.0;
-  m_demoAspects = false;
   m_showAxes = true;
   m_showLabels = true;
   m_showPlanets = true;

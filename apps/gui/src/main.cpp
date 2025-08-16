@@ -34,8 +34,6 @@ public:
     chartMenu->AppendSubMenu(houseMenu, "House System");
     wxLogMessage("Appending Chart/Separator 1");
     chartMenu->AppendSeparator();
-    wxLogMessage("Appending Chart/Demo Aspects");
-    chartMenu->AppendCheckItem(ID_DEMO_ASPECTS, "Demo Aspects\tCtrl+D");
     wxLogMessage("Appending Chart/Aspect Orb");
     chartMenu->Append(ID_ASPECT_ORB, "Set Aspect Orb...\tCtrl+Shift+O");
     wxLogMessage("Appending Chart/Separator 2");
@@ -92,7 +90,6 @@ public:
     // Chart bindings
     Bind(wxEVT_MENU, &AstroFrame::OnHouseEqual, this, ID_HOUSE_EQUAL);
     Bind(wxEVT_MENU, &AstroFrame::OnHousePlacidus, this, ID_HOUSE_PLACIDUS);
-    Bind(wxEVT_MENU, &AstroFrame::OnToggleAspects, this, ID_DEMO_ASPECTS);
     Bind(wxEVT_MENU, &AstroFrame::OnSetAspectOrb, this, ID_ASPECT_ORB);
     Bind(wxEVT_MENU, &AstroFrame::OnSetDateTime, this, ID_SET_DATETIME);
     Bind(wxEVT_MENU, &AstroFrame::OnSetLocation, this, ID_SET_LOCATION);
@@ -120,7 +117,7 @@ public:
       viewMenu->Check(ID_VIEW_PLANETS, planets);
       viewMenu->Check(ID_VIEW_ASPECT_LINES, aspectLines);
       viewMenu->Check(ID_VIEW_ASPECT_GRID, aspectGrid);
-      chartMenu->Check(ID_DEMO_ASPECTS, m_panel->GetDemoAspects());
+      // no demo aspects checkbox anymore
     }
     // Default house system selection reflects ChartPanel default (Equal)
     houseMenu->Check(ID_HOUSE_EQUAL, true);
@@ -131,7 +128,6 @@ private:
     ID_EXIT_APP,
     ID_HOUSE_EQUAL,
     ID_HOUSE_PLACIDUS,
-    ID_DEMO_ASPECTS,
     ID_ASPECT_ORB,
     ID_SET_DATETIME,
     ID_SET_LOCATION,
@@ -166,12 +162,7 @@ private:
     m_panel->SetHouseSystem(ChartPanel::HouseSystem::Placidus);
     SetStatusText("House system: Placidus");
   }
-  void OnToggleAspects(wxCommandEvent&) {
-    if (!m_panel) return;
-    bool checked = GetMenuBar()->IsChecked(ID_DEMO_ASPECTS);
-    m_panel->SetDemoAspects(checked);
-    SetStatusText(checked ? "Demo aspects: ON" : "Demo aspects: OFF");
-  }
+  // Removed: Demo aspects toggle handler
   void OnToggleAxes(wxCommandEvent&) {
     if (!m_panel) return;
     bool checked = GetMenuBar()->IsChecked(ID_VIEW_AXES);
@@ -193,7 +184,9 @@ private:
         double v = std::stod(dlg.GetValue().ToStdString());
         if (v >= 0 && v <= 30) {
           m_panel->SetAspectOrbDeg(v);
-          SetStatusText(wxString::Format("Aspect orb: %.2f°", v));
+          wxString val = wxString::Format("%.2f", v);
+          wxString degree = wxString::FromUTF8("\xC2\xB0");
+          SetStatusText(wxString("Aspect orb: ") + val + degree);
         }
       } catch (...) {}
     }
@@ -239,7 +232,6 @@ private:
       mb->Check(ID_VIEW_PLANETS, true);
       mb->Check(ID_VIEW_ASPECT_LINES, true);
       mb->Check(ID_VIEW_ASPECT_GRID, false);
-      mb->Check(ID_DEMO_ASPECTS, false);
       mb->Check(ID_HOUSE_EQUAL, true);
     }
     SetStatusText("Defaults restored");

@@ -31,14 +31,14 @@ The following components have been implemented:
 #### 1.1 Time and Calendar Functions
 - [x] Julian Day calculation from local civil time
 - [x] Timezone handling
-- [ ] Sidereal time calculation
-- [ ] Delta-T calculation for historical dates
+- [x] Sidereal time calculation
+- [x] Delta-T calculation for historical dates
 
 #### 1.2 Coordinate Systems
 - [x] Ecliptic to equatorial conversion
 - [x] Coordinate transformations
-- [ ] Horizontal coordinate system (altitude/azimuth)
-- [ ] Galactic coordinates
+- [x] Horizontal coordinate system (altitude/azimuth)
+- [x] Galactic coordinates
 
 #### 1.3 House Systems
 - [x] Equal house system
@@ -50,65 +50,103 @@ The following components have been implemented:
   - [ ] Porphyry
   - [ ] Whole Sign
 
-#### 1.4 Planet Calculations
-- [ ] Sun position calculation
-- [ ] Moon position calculation
-- [ ] Mercury position calculation
-- [ ] Venus position calculation
-- [ ] Mars position calculation
-- [ ] Jupiter position calculation
-- [ ] Saturn position calculation
-- [ ] Uranus position calculation
-- [ ] Neptune position calculation
-- [ ] Pluto position calculation
-- [ ] Chiron and asteroid calculations
-- [ ] Node calculations
+#### 1.4 Planetary Calculations
+- [x] Basic planetary positions (longitude/latitude)
+- [x] Planetary speeds and retrogrades
+- [ ] Planetary stations (exact retrograde/direct points)
+- [ ] Lunar phases and eclipse calculations
+- [ ] Planetary nodes and apogee/perigee
 
 #### 1.5 Aspect Calculations
-- [x] Basic aspect detection (conjunction, opposition, trine, square, sextile)
-- [ ] Extended aspects (quincunx, semi-square, etc.)
-- [ ] Aspect pattern detection (grand trine, T-square, etc.)
-- [ ] Aspect strength/applying/separating logic
+- [x] Basic aspect detection (conjunction, opposition, trine, etc.)
+- [x] Aspect orb handling
+- [ ] Aspect pattern detection (T-square, Grand Trine, etc.)
+- [ ] Applying/separating aspect classification
+- [ ] Parallels and contra-parallels
 
 ### 2. GUI Implementation
 
 #### 2.1 Chart Display
-- [x] Basic wheel drawing with house cusps
-- [x] Ascendant and Midheaven display
-- [ ] Planet glyphs rendering
-- [ ] Zodiac sign glyphs
-- [ ] House numbering
-- [ ] Aspect grid display
-- [ ] Aspect lines with appropriate styling
-- [ ] Chart title and information display
+- [x] Basic wheel rendering
+- [x] Planet glyphs and positioning
+- [x] House cusps and divisions
+- [x] Aspect lines
+- [ ] Customizable chart styles and colors
+- [ ] Multiple chart types (natal, transit, synastry)
 
-#### 2.2 User Interface
-- [x] Main menu structure
-- [x] Date/time input dialog
-- [x] Location input dialog
-- [ ] Chart type selection (natal, transit, synastry, etc.)
-- [ ] Chart style customization
-- [ ] Color scheme selection
+#### 2.2 Data Input and Management
+- [x] Date/time input with timezone
+- [x] Location input (longitude/latitude)
+- [ ] Atlas integration for city lookup
+- [ ] Chart data persistence (save/load)
+- [ ] Chart comparison tools
+
+#### 2.3 Analysis Tools
+- [x] Aspect grid display
+- [ ] Planet and house position tables
+- [ ] Aspect listing with interpretations
+- [ ] Transit forecasting
+- [ ] Progressions and directions
+
+### 3. Command Line Interface
+
+#### 3.1 Basic Functionality
+- [x] Chart calculation from command line
+- [ ] Text-based chart output
+- [ ] Batch processing of charts
+- [ ] Ephemeris generation
+
+#### 3.2 Advanced Features
+- [ ] Scriptable chart analysis
+- [ ] Data export (CSV, JSON)
+- [ ] Integration with other tools
+
+### 4. Documentation and Testing
+
+#### 4.1 Developer Documentation
+- [ ] API documentation
+- [ ] Algorithm explanations
+- [ ] Code examples
+
+#### 4.2 User Documentation
+- [ ] User manual
+- [ ] Tutorial guides
+- [ ] Reference materials
+
+#### 4.3 Testing
+- [ ] Unit tests for core calculations
+- [ ] Integration tests
+- [ ] Accuracy validation against standard ephemerides
+- [ ] Performance benchmarking
+
+### 5. Future Enhancements
+
+#### 5.1 Advanced Techniques
+- [ ] Harmonic charts
+- [ ] Arabic parts
+- [ ] Fixed stars
+- [ ] Asteroids and minor bodies
+
+#### 5.2 Predictive Tools
+- [ ] Solar returns
+- [ ] Lunar returns
+- [ ] Solar arcs
+- [ ] Primary directions
+
+#### 5.3 Additional Bodies
+- [ ] Pluto position calculation
+- [ ] Chiron and asteroid calculations
+- [ ] Node calculations
+- [ ] Lilith and hypothetical points
+- [ ] Transneptunian objects
+
+#### 5.4 User Interface Enhancements
+- [ ] Advanced chart styling options
+- [ ] Multi-chart workspace
+- [ ] Customizable report generation
+- [ ] Mobile device support
 - [ ] Font selection
 - [ ] Glyph style selection
-
-#### 2.3 Chart Types
-- [ ] Natal chart
-- [ ] Transit chart
-- [ ] Synastry chart
-- [ ] Composite chart
-- [ ] Solar return
-- [ ] Lunar return
-- [ ] Progressed chart
-
-#### 2.4 Data Management
-- [ ] Chart data saving/loading
-- [ ] Location database
-- [ ] Timezone database
-- [ ] User preferences persistence
-- [ ] Recent files list
-
-### 3. File Handling
 
 #### 3.1 Native Format
 - [ ] Define native chart file format

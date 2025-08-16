@@ -7,7 +7,7 @@
 int main(int argc, char** argv) {
   using namespace astrocore;
   auto v = version();
-  std::cout << "astrocore version " << v.major << '.' << v.minor << '.' << v.patch << "\n";
+  std::cout << "cma  version " << v.major << '.' << v.minor << '.' << v.patch << "\n";
 
   auto deg2rad = [](double d){ return d * M_PI / 180.0; };
   auto rad2deg = [](double r){ return r * 180.0 / M_PI; };

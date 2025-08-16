@@ -2,6 +2,7 @@
 
 #include <wx/wx.h>
 #include <wx/grid.h>
+#include <vector>
 #include "astrocore/planets.hpp"
 #include "GlyphRenderer.hpp"
 
@@ -12,9 +13,6 @@ public:
 
     // Update the grid with new planet positions
     void UpdateGrid(const std::array<astrocore::PlanetPosition, 21>& positions, double orbDeg);
-    
-    // Show demo aspects in the grid
-    void ShowDemoAspects(double asc, double mc, double orbDeg, const std::array<astrocore::PlanetPosition, 21>& positions);
 
     // Set the visibility of the grid
     void SetVisible(bool visible);

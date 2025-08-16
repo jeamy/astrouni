@@ -45,11 +45,11 @@ struct CalcFlags {
 
 // Result structure for planet calculations
 struct PlanetPosition {
-    double longitude;    // Ecliptic longitude in degrees (0-360)
-    double latitude;     // Ecliptic latitude in degrees
-    double distance;     // Distance in AU
-    double speed;        // Speed in degrees/day (negative = retrograde)
-    bool valid;          // True if calculation succeeded
+    double longitude = 0.0;    // Ecliptic longitude in degrees (0-360)
+    double latitude = 0.0;     // Ecliptic latitude in degrees
+    double distance = 0.0;     // Distance in AU
+    double speed = 0.0;        // Speed in degrees/day (negative = retrograde)
+    bool valid = false;        // True if calculation succeeded
 };
 
 // Full chart calculation result
