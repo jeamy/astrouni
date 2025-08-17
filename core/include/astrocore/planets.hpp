@@ -4,6 +4,7 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace astrocore {
 
@@ -85,5 +86,45 @@ bool initialize_ephemeris(const std::string& ephemerisPath);
 bool is_ephemeris_available();
 double get_ephemeris_start_jd();
 double get_ephemeris_end_jd();
+
+// Lunar phases
+enum class LunarPhase { NewMoon, FirstQuarter, FullMoon, LastQuarter };
+
+struct PhaseEvent {
+  double jd {0.0};
+  LunarPhase phase {LunarPhase::NewMoon};
+  bool valid {false};
+};
+
+// Find the next occurrence of the requested lunar phase at or after startJd.
+// Returns std::nullopt if ephemeris is unavailable or search fails/brackets not found.
+std::optional<PhaseEvent> find_next_lunar_phase(double startJd, LunarPhase phase);
+
+// Planetary stations (retrograde/direct turning points)
+struct StationEvent {
+  double jd {0.0};
+  bool retrogradeStart {false}; // true: turning from prograde to retrograde; false: retrograde -> direct
+  bool valid {false};
+};
+
+// Find the station nearest to approxJd for the given planet. Uses speed zero-crossing.
+// Returns std::nullopt if ephemeris is unavailable or search fails.
+std::optional<StationEvent> find_nearest_station(PlanetId planet, double approxJd);
+
+// Eclipse calculations (simple geometry around syzygies)
+enum class EclipseKind { Solar, Lunar };
+
+struct EclipseEvent {
+    double jd {0.0};
+    EclipseKind kind {EclipseKind::Solar};
+    bool central {false};   // Rough classification: central/umbral when true
+    bool valid {false};
+};
+
+// Find next solar eclipse at or after startJd (searches New Moons)
+std::optional<EclipseEvent> find_next_solar_eclipse(double startJd);
+
+// Find next lunar eclipse at or after startJd (searches Full Moons)
+std::optional<EclipseEvent> find_next_lunar_eclipse(double startJd);
 
 } // namespace astrocore

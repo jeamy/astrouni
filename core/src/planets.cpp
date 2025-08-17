@@ -1,8 +1,11 @@
 #include "astrocore/planets.hpp"
+#include "astrocore/ephemeris.hpp"
 #include <cmath>
 #include <algorithm>
 #include <unordered_map>
 #include <fstream>
+#include <optional>
+#include <limits>
 
 namespace astrocore {
 
@@ -43,6 +46,25 @@ static const std::unordered_map<PlanetId, std::string> s_planetNames = {
     {PlanetId::Midheaven, "Midheaven"}
 };
 
+// Forward declaration for helper used below
+static double normalize_degrees(double angle);
+
+// Mean lunar elements (approximate, Meeus-like). Returned in degrees [0,360).
+static double mean_lunar_node_longitude_deg(double jd) {
+    // Mean longitude of the ascending node of the Moon
+    const double T = (jd - J2000) / 36525.0; // Julian centuries
+    double L = 125.04452 - 1934.136261 * T + 0.0020708 * T * T + (T * T * T) / 450000.0;
+    return normalize_degrees(L);
+}
+
+static double mean_lunar_apogee_longitude_deg(double jd) {
+    // Mean longitude of the lunar apogee ("Black Moon Lilith" ~ mean apogee)
+    const double T = (jd - J2000) / 36525.0; // Julian centuries
+    double L = 83.3532465 + 4069.0137287 * T - 0.0103200 * T * T - (T * T * T) / 800000.0;
+    return normalize_degrees(L);
+}
+
+
 // Planet glyphs (Unicode code points)
 static const std::unordered_map<PlanetId, char16_t> s_planetGlyphs = {
     {PlanetId::Sun, u'\u2609'},
@@ -73,6 +95,14 @@ static double normalize_degrees(double angle) {
     angle = std::fmod(angle, 360.0);
     if (angle < 0.0) angle += 360.0;
     return angle;
+}
+
+static double angular_diff_deg(double to, double from) {
+    // Smallest signed difference to-from in degrees in (-180,180]
+    double d = std::fmod(to - from, 360.0);
+    if (d <= -180.0) d += 360.0;
+    else if (d > 180.0) d -= 360.0;
+    return d;
 }
 
 // Helper function to calculate delta-T (difference between TT and UT)
@@ -147,27 +177,72 @@ static void equal_house_cusps(double ascRad, double* cuspsRad) {
 PlanetPosition calculate_planet_position(PlanetId planet, double jd, const CalcFlags& flags) {
     PlanetPosition result;
     result.valid = false;
-    
-    // Convert JD to Astrodienst relative JD
-    double jd_ad = jd - JUL_OFFSET;
-    
-    // Apply delta-T if using ephemeris time
-    if (flags.ephemerisTime) {
-        jd_ad += delta_t(jd) / 86400.0;
+
+    // Apply delta-T if using ephemeris time (seconds -> days)
+    double jd_eff = jd + (flags.ephemerisTime ? (delta_t(jd) / 86400.0) : 0.0);
+
+    // Handle derived points independent of ephemeris (mean formulas)
+    auto compute_derived = [&](PlanetId p, double when) -> PlanetPosition {
+        PlanetPosition r; r.latitude = 0.0; r.distance = 0.0; r.valid = true;
+        auto lon_fn = [&](double x)->double{
+            if (p == PlanetId::NorthNode) return mean_lunar_node_longitude_deg(x);
+            if (p == PlanetId::SouthNode) return normalize_degrees(mean_lunar_node_longitude_deg(x) + 180.0);
+            // Lilith as mean lunar apogee
+            return mean_lunar_apogee_longitude_deg(x);
+        };
+        r.longitude = lon_fn(when);
+        if (flags.calculateSpeed) {
+            const double dt = 0.5; // days
+            double l1 = lon_fn(when - dt);
+            double l2 = lon_fn(when + dt);
+            r.speed = angular_diff_deg(l2, l1) / (2.0 * dt);
+        }
+        return r;
+    };
+
+    // Derived points: North/South Node and Lilith (mean apogee)
+    if (planet == PlanetId::NorthNode || planet == PlanetId::SouthNode || planet == PlanetId::Lilith) {
+        // Apply delta-T if requested
+        double jd_eff_nodes = jd + (flags.ephemerisTime ? (delta_t(jd) / 86400.0) : 0.0);
+        return compute_derived(planet, jd_eff_nodes);
     }
-    
-    // TODO: Implement actual planet calculation based on legacy code
-    // This is a placeholder that returns fixed values for testing
-    
+
+    // Ephemeris-backed computation
+    if (EphemerisManager::isInitialized()) {
+        auto tup = EphemerisManager::getPlanetPosition(static_cast<int>(planet), jd_eff);
+        if (tup) {
+            auto [lon, lat, dist] = *tup;
+            result.longitude = normalize_degrees(lon);
+            result.latitude = lat;
+            result.distance = dist;
+
+            if (flags.calculateSpeed) {
+                const double dt = 0.5; // days
+                auto left  = EphemerisManager::getPlanetPosition(static_cast<int>(planet), jd_eff - dt);
+                auto right = EphemerisManager::getPlanetPosition(static_cast<int>(planet), jd_eff + dt);
+                if (left && right) {
+                    double lonL = normalize_degrees(std::get<0>(*left));
+                    double lonR = normalize_degrees(std::get<0>(*right));
+                    result.speed = angular_diff_deg(lonR, lonL) / (2.0 * dt);
+                } else {
+                    result.speed = 0.0;
+                }
+            }
+
+            result.valid = true;
+            return result;
+        }
+    }
+
+    // Fallback placeholders if ephemeris not available
     switch (planet) {
         case PlanetId::Sun:
             result.longitude = 0.0;  // Aries 0°
             result.latitude = 0.0;
             result.distance = 1.0;
-            result.speed = 1.0;
+            result.speed = 0.9856;   // ~deg/day
             result.valid = true;
             break;
-            
         case PlanetId::Moon:
             result.longitude = 90.0;  // Cancer 0°
             result.latitude = 5.0;
@@ -175,16 +250,14 @@ PlanetPosition calculate_planet_position(PlanetId planet, double jd, const CalcF
             result.speed = 13.2;
             result.valid = true;
             break;
-            
-        // Add other planets with placeholder values
         default:
             result.longitude = 0.0;
             result.latitude = 0.0;
             result.distance = 0.0;
             result.speed = 0.0;
             result.valid = false;
+            break;
     }
-    
     return result;
 }
 
@@ -268,26 +341,197 @@ char16_t get_planet_glyph(PlanetId planet) {
 // Ephemeris file handling
 bool initialize_ephemeris(const std::string& ephemerisPath) {
     s_ephemerisPath = ephemerisPath;
-    
-    // TODO: Implement actual ephemeris file loading and validation
-    // For now, just set some default values
-    s_ephemerisStartJD = 2305447.5;  // 1600 CE
-    s_ephemerisEndJD = 2524627.5;    // 2200 CE
-    s_ephemerisInitialized = true;
-    
-    return true;
-}
-
-bool is_ephemeris_available() {
+    s_ephemerisInitialized = EphemerisManager::initialize(ephemerisPath);
+    if (s_ephemerisInitialized) {
+        s_ephemerisStartJD = EphemerisManager::getStartJD();
+        s_ephemerisEndJD = EphemerisManager::getEndJD();
+    } else {
+        s_ephemerisStartJD = 0.0;
+        s_ephemerisEndJD = 0.0;
+    }
     return s_ephemerisInitialized;
 }
 
+bool is_ephemeris_available() {
+    return EphemerisManager::isInitialized();
+}
+
 double get_ephemeris_start_jd() {
-    return s_ephemerisStartJD;
+    return EphemerisManager::isInitialized() ? EphemerisManager::getStartJD() : 0.0;
 }
 
 double get_ephemeris_end_jd() {
-    return s_ephemerisEndJD;
+    return EphemerisManager::isInitialized() ? EphemerisManager::getEndJD() : 0.0;
+}
+
+// ---- Lunar phases ----
+static double moon_sun_phase_func(double jd) {
+    auto m = calculate_planet_position(PlanetId::Moon, jd, {});
+    auto s = calculate_planet_position(PlanetId::Sun, jd, {});
+    if (!m.valid || !s.valid) return std::numeric_limits<double>::quiet_NaN();
+    // Signed difference to target will be applied by caller
+    return normalize_degrees(m.longitude - s.longitude);
+}
+
+std::optional<PhaseEvent> find_next_lunar_phase(double startJd, LunarPhase phase) {
+    if (!EphemerisManager::isInitialized()) return std::nullopt;
+
+    double target = 0.0;
+    switch (phase) {
+        case LunarPhase::NewMoon: target = 0.0; break;
+        case LunarPhase::FirstQuarter: target = 90.0; break;
+        case LunarPhase::FullMoon: target = 180.0; break;
+        case LunarPhase::LastQuarter: target = 270.0; break;
+    }
+
+    auto f = [&](double jd){
+        double elong = moon_sun_phase_func(jd);
+        if (!std::isfinite(elong)) return std::numeric_limits<double>::quiet_NaN();
+        // bring elongation relative to target into (-180,180]
+        return angular_diff_deg(elong, target);
+    };
+
+    // Bracket search forward from startJd
+    const double step = 1.0; // days
+    const double bracketGuardDeg = 120.0; // ignore sign changes far from target (wrap-around at ±180°)
+    double a = startJd;
+    double fa = f(a);
+    if (!std::isfinite(fa)) return std::nullopt;
+    for (int i = 1; i <= 60; ++i) {
+        double b = startJd + i * step;
+        double fb = f(b);
+        if (!std::isfinite(fb)) return std::nullopt;
+        if ((fa <= 0.0 && fb >= 0.0) || (fa >= 0.0 && fb <= 0.0)) {
+            // Guard against false brackets caused by jumping across the ±180° discontinuity.
+            // In that case |f| is near 180° at both ends; reject and continue scanning.
+            if (std::max(std::fabs(fa), std::fabs(fb)) > bracketGuardDeg) {
+                a = b; fa = fb; // step forward
+                continue;
+            }
+            // Bisection refine
+            for (int it = 0; it < 40; ++it) {
+                double c = 0.5 * (a + b);
+                double fc = f(c);
+                if (!std::isfinite(fc)) return std::nullopt;
+                if ((fa <= 0.0 && fc >= 0.0) || (fa >= 0.0 && fc <= 0.0)) {
+                    b = c; fb = fc;
+                } else {
+                    a = c; fa = fc;
+                }
+                if (std::fabs(fc) < 1e-6 || std::fabs(b - a) < 1e-6) {
+                    PhaseEvent ev; ev.jd = c; ev.phase = phase; ev.valid = true; return ev;
+                }
+            }
+            PhaseEvent ev; ev.jd = 0.5 * (a + b); ev.phase = phase; ev.valid = true; return ev;
+        }
+        a = b; fa = fb;
+    }
+    return std::nullopt;
+}
+
+// ---- Planetary stations ----
+static double planet_speed_deg_per_day(PlanetId p, double jd) {
+    const double dt = 0.5; // days
+    auto left = calculate_planet_position(p, jd - dt, {});
+    auto right = calculate_planet_position(p, jd + dt, {});
+    if (!left.valid || !right.valid) return std::numeric_limits<double>::quiet_NaN();
+    double d = angular_diff_deg(right.longitude, left.longitude);
+    return d / (2.0 * dt);
+}
+
+std::optional<StationEvent> find_nearest_station(PlanetId planet, double approxJd) {
+    if (!EphemerisManager::isInitialized()) return std::nullopt;
+
+    // Bracket a sign change in speed around approxJd
+    double a = approxJd, b = approxJd;
+    double fa = planet_speed_deg_per_day(planet, a);
+    if (!std::isfinite(fa)) return std::nullopt;
+    double fb = fa;
+
+    double step = 1.0; // start with 1 day
+    for (int iter = 0; iter < 30; ++iter) {
+        a = approxJd - step; fa = planet_speed_deg_per_day(planet, a);
+        b = approxJd + step; fb = planet_speed_deg_per_day(planet, b);
+        if (!std::isfinite(fa) || !std::isfinite(fb)) return std::nullopt;
+        if ((fa <= 0.0 && fb >= 0.0) || (fa >= 0.0 && fb <= 0.0)) break;
+        step *= 1.7;
+    }
+
+    // If no sign change found, give up
+    if (!((fa <= 0.0 && fb >= 0.0) || (fa >= 0.0 && fb <= 0.0))) return std::nullopt;
+
+    // Bisection on speed to find zero-crossing
+    auto classify_turn = [&](double c) -> bool {
+        // Determine if turning prograde->retrograde (true) or retrograde->direct (false)
+        // by sampling speeds just before and after c.
+        const double h = 1e-3; // days
+        double sl = planet_speed_deg_per_day(planet, c - h);
+        double sr = planet_speed_deg_per_day(planet, c + h);
+        if (std::isfinite(sl) && std::isfinite(sr)) {
+            return (sl > 0.0 && sr < 0.0);
+        }
+        // Fallback to bracket orientation if sampling failed
+        return (fa > 0.0 && fb < 0.0);
+    };
+    for (int it = 0; it < 50; ++it) {
+        double c = 0.5 * (a + b);
+        double fc = planet_speed_deg_per_day(planet, c);
+        if (!std::isfinite(fc)) return std::nullopt;
+        if ((fa <= 0.0 && fc >= 0.0) || (fa >= 0.0 && fc <= 0.0)) { b = c; fb = fc; }
+        else { a = c; fa = fc; }
+        if (std::fabs(fc) < 1e-4 || std::fabs(b - a) < 1e-5) {
+            StationEvent ev; ev.jd = c; ev.retrogradeStart = classify_turn(c); ev.valid = true; return ev;
+        }
+    }
+    {
+        double c = 0.5 * (a + b);
+        StationEvent ev; ev.jd = c; ev.retrogradeStart = classify_turn(c); ev.valid = true; return ev;
+    }
+}
+
+// ---- Eclipses (heuristic detection around syzygies) ----
+std::optional<EclipseEvent> find_next_solar_eclipse(double startJd) {
+    if (!EphemerisManager::isInitialized()) return std::nullopt;
+
+    const double latAny = 1.5;     // deg: rough threshold for any (partial) solar eclipse
+    const double latCentral = 0.3; // deg: rough threshold for central/umbral
+
+    double jd = startJd;
+    for (int k = 0; k < 40; ++k) { // search up to ~3 years worth of lunations
+        auto ph = find_next_lunar_phase(jd, LunarPhase::NewMoon);
+        if (!ph.has_value()) return std::nullopt;
+        double t = ph->jd;
+        auto m = calculate_planet_position(PlanetId::Moon, t, {});
+        if (!m.valid) return std::nullopt;
+        double abslat = std::fabs(m.latitude);
+        if (abslat <= latAny) {
+            EclipseEvent ev; ev.jd = t; ev.kind = EclipseKind::Solar; ev.central = (abslat <= latCentral); ev.valid = true; return ev;
+        }
+        jd = t + 1.0; // step past this lunation and continue
+    }
+    return std::nullopt;
+}
+
+std::optional<EclipseEvent> find_next_lunar_eclipse(double startJd) {
+    if (!EphemerisManager::isInitialized()) return std::nullopt;
+
+    const double latAny = 1.0;     // deg: lunar eclipse more tolerant
+    const double latCentral = 0.3; // deg: rough umbral threshold
+
+    double jd = startJd;
+    for (int k = 0; k < 40; ++k) {
+        auto ph = find_next_lunar_phase(jd, LunarPhase::FullMoon);
+        if (!ph.has_value()) return std::nullopt;
+        double t = ph->jd;
+        auto m = calculate_planet_position(PlanetId::Moon, t, {});
+        if (!m.valid) return std::nullopt;
+        double abslat = std::fabs(m.latitude);
+        if (abslat <= latAny) {
+            EclipseEvent ev; ev.jd = t; ev.kind = EclipseKind::Lunar; ev.central = (abslat <= latCentral); ev.valid = true; return ev;
+        }
+        jd = t + 1.0;
+    }
+    return std::nullopt;
 }
 
 } // namespace astrocore

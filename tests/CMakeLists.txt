@@ -15,6 +15,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(astro_tests_core
   test_core.cpp
   test_houses.cpp
+  test_planets.cpp
 )
 
 target_link_libraries(astro_tests_core PRIVATE

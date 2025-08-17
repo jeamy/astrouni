@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <optional>
+#include <tuple>
 #include <cstdint>
 
 namespace astrocore {

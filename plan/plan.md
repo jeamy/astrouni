@@ -65,14 +65,20 @@ Implementation plan for house systems:
 - __[Testing]__ Add unit tests covering multiple latitudes (0°, 45°, 60°, 66.5°, 70°), both hemispheres, and random dates. Include regression fixtures derived from the legacy implementation for each system.
 - __[GUI integration]__ Extend the existing house system selector to list all supported systems and refresh the chart upon change. If computation invalid, display a non-fatal notice and keep previous valid cusps highlighted.
 - __[CLI integration]__ Add a `--house-system` option accepting all enum values; print cusps as a table for verification.
-- __[Documentation]__ Document formulas, references, and limitations per system in Developer Docs, with links to tests.
+ - __[Documentation]__ Document formulas, references, and limitations per system in Developer Docs, with links to tests.
 
 #### 1.4 Planetary Calculations
 - [x] Basic planetary positions (longitude/latitude)
 - [x] Planetary speeds and retrogrades
-- [ ] Planetary stations (exact retrograde/direct points)
-- [ ] Lunar phases and eclipse calculations
+- [x] Planetary stations (exact retrograde/direct points)
+- [x] Lunar phases
+- [ ] Eclipse calculations
 - [ ] Planetary nodes and apogee/perigee
+ 
+ Notes (DE):
+ - Implementieren: Knoten und Apogäum/Perigäum (Lilith).
+ - Implementieren: Sonnen-/Mondfinsternisse (Detektion um Syzygien + einfache Geometrie).
+ - Eklipsen sowie Knoten/Apogäum/Perigäum stehen noch aus. Ephemeriden werden aus astroeph.dat gelesen.
 
 #### 1.5 Aspect Calculations
 - [x] Basic aspect detection (conjunction, opposition, trine, etc.)
