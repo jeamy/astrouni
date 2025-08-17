@@ -74,18 +74,18 @@ void GlyphRenderer::InitializeGlyphMaps() {
     s_planetGlyphs[astrocore::PlanetId::Midheaven] = "M";
     
     // Sign glyphs
-    s_signGlyphs[0] = "A"; // Aries
-    s_signGlyphs[1] = "B"; // Taurus
-    s_signGlyphs[2] = "C"; // Gemini
-    s_signGlyphs[3] = "D"; // Cancer
-    s_signGlyphs[4] = "E"; // Leo
-    s_signGlyphs[5] = "F"; // Virgo
-    s_signGlyphs[6] = "G"; // Libra
-    s_signGlyphs[7] = "H"; // Scorpio
-    s_signGlyphs[8] = "I"; // Sagittarius
-    s_signGlyphs[9] = "J"; // Capricorn
-    s_signGlyphs[10] = "K"; // Aquarius
-    s_signGlyphs[11] = "L"; // Pisces
+    s_signGlyphs[0] = wxString::FromUTF8("♈"); // Aries   ♈
+    s_signGlyphs[1] = wxString::FromUTF8("♉"); // Taurus  ♉
+    s_signGlyphs[2] = wxString::FromUTF8("♊"); // Gemini  ♊
+    s_signGlyphs[3] = wxString::FromUTF8("♋"); // Cancer  ♋
+    s_signGlyphs[4] = wxString::FromUTF8("♌"); // Leo     ♌
+    s_signGlyphs[5] = wxString::FromUTF8("♍"); // Virgo   ♍
+    s_signGlyphs[6] = wxString::FromUTF8("♎"); // Libra   ♎
+    s_signGlyphs[7] = wxString::FromUTF8("♏"); // Scorpio ♏
+    s_signGlyphs[8] = wxString::FromUTF8("♐"); // Sagittarius ♐
+    s_signGlyphs[9] = wxString::FromUTF8("♑"); // Capricorn   ♑
+    s_signGlyphs[10] = wxString::FromUTF8("♒"); // Aquarius   ♒
+    s_signGlyphs[11] = wxString::FromUTF8("♓"); // Pisces     ♓
     
     // Aspect glyphs
     s_aspectGlyphs[astrocore::AspectType::Conjunction] = "Q";
@@ -142,16 +142,17 @@ void GlyphRenderer::DrawPlanetGlyph(wxGraphicsContext* gc, astrocore::PlanetId p
     
     // Set up font and color
     wxFont font = s_planetFont;
-    font.SetPointSize(size);
+    font.SetPointSize(static_cast<int>(std::round(size)));
     gc->SetFont(font, color);
     
     // Get the glyph
     wxString glyph = s_planetGlyphs[planet];
     
     // Draw the glyph
-    double textWidth, textHeight;
-    gc->GetTextExtent(glyph, &textWidth, &textHeight);
-    gc->DrawText(glyph, position.x - textWidth/2, position.y - textHeight/2);
+    double textWidth, textHeight, descent, externalLeading;
+    gc->GetTextExtent(glyph, &textWidth, &textHeight, &descent, &externalLeading);
+    // y is baseline; adjust so the visual box is centered
+    gc->DrawText(glyph, position.x - textWidth/2.0, position.y + textHeight/2.0 - descent);
 }
 
 void GlyphRenderer::DrawSignGlyph(wxGraphicsContext* gc, int signIndex, 
@@ -163,16 +164,16 @@ void GlyphRenderer::DrawSignGlyph(wxGraphicsContext* gc, int signIndex,
     
     // Set up font and color
     wxFont font = s_signFont;
-    font.SetPointSize(size);
+    font.SetPointSize(static_cast<int>(std::round(size)));
     gc->SetFont(font, color);
     
     // Get the glyph
     wxString glyph = s_signGlyphs[signIndex % 12];
     
     // Draw the glyph
-    double textWidth, textHeight;
-    gc->GetTextExtent(glyph, &textWidth, &textHeight);
-    gc->DrawText(glyph, position.x - textWidth/2, position.y - textHeight/2);
+    double textWidth, textHeight, descent, externalLeading;
+    gc->GetTextExtent(glyph, &textWidth, &textHeight, &descent, &externalLeading);
+    gc->DrawText(glyph, position.x - textWidth/2.0, position.y + textHeight/2.0 - descent);
 }
 
 void GlyphRenderer::DrawAspectGlyph(wxGraphicsContext* gc, astrocore::AspectType aspect, 
@@ -184,16 +185,16 @@ void GlyphRenderer::DrawAspectGlyph(wxGraphicsContext* gc, astrocore::AspectType
     
     // Set up font and color
     wxFont font = s_planetFont;
-    font.SetPointSize(size);
+    font.SetPointSize(static_cast<int>(std::round(size)));
     gc->SetFont(font, color);
     
     // Get the glyph
     wxString glyph = s_aspectGlyphs[aspect];
     
     // Draw the glyph
-    double textWidth, textHeight;
-    gc->GetTextExtent(glyph, &textWidth, &textHeight);
-    gc->DrawText(glyph, position.x - textWidth/2, position.y - textHeight/2);
+    double textWidth, textHeight, descent, externalLeading;
+    gc->GetTextExtent(glyph, &textWidth, &textHeight, &descent, &externalLeading);
+    gc->DrawText(glyph, position.x - textWidth/2.0, position.y + textHeight/2.0 - descent);
 }
 
 wxColour GlyphRenderer::GetPlanetColor(astrocore::PlanetId planet) {
@@ -271,41 +272,62 @@ void ChartGlyphHelper::DrawPlanetOnWheel(wxGraphicsContext* gc, astrocore::Plane
 
 void ChartGlyphHelper::DrawSignOnWheel(wxGraphicsContext* gc, int signIndex,
                                       const wxPoint& center, double radius,
-                                      bool showLabel, double glyphSize) {
+                                      bool showLabel, double glyphSize,
+                                      double labelRadiusOffset) {
     // Calculate position on wheel (center of sign)
     double signLongitude = signIndex * 30.0 + 15.0;
     double angle = (90.0 - signLongitude) * M_PI / 180.0;
-    double x = center.x + (radius + 20) * cos(angle);
-    double y = center.y - (radius + 20) * sin(angle);
+    // Place glyph centered in the zodiac ring band (inner r+12, outer r+52 → mid r+32)
+    double x = center.x + (radius + 32) * cos(angle);
+    double y = center.y - (radius + 32) * sin(angle);
     
     // Draw the sign glyph
     wxColour color = GlyphRenderer::GetSignColor(signIndex);
     GlyphRenderer::DrawSignGlyph(gc, signIndex, wxPoint(x, y), glyphSize, color);
     
-    // Draw label if requested
+    // Draw label if requested (tangential alignment)
     if (showLabel) {
-        // Sign names
+        // Sign names (German)
         static const wxString signNames[] = {
-            "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-            "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+            wxString::FromUTF8("Widder"), wxString::FromUTF8("Stier"), wxString::FromUTF8("Zwillinge"),
+            wxString::FromUTF8("Krebs"), wxString::FromUTF8("Löwe"), wxString::FromUTF8("Jungfrau"),
+            wxString::FromUTF8("Waage"), wxString::FromUTF8("Skorpion"), wxString::FromUTF8("Schütze"),
+            wxString::FromUTF8("Steinbock"), wxString::FromUTF8("Wassermann"), wxString::FromUTF8("Fische")
         };
-        
+
         wxString label = signNames[signIndex % 12];
-        
-        // Set up text properties
-        wxFont font(8, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
+
+        // Scale label font slightly relative to glyph size
+        int labelPt = std::max(7, (int)std::round(glyphSize * 0.7));
+        wxFont font(labelPt, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
         gc->SetFont(font, color);
-        
-        // Calculate label position (outside the glyph)
+
+        // Label position (outside the glyph)
         double labelAngle = angle;
-        double labelRadius = radius + 35;
+        // Place label at configurable radius offset from base radius
+        double labelRadius = radius + labelRadiusOffset;
         double labelX = center.x + labelRadius * cos(labelAngle);
         double labelY = center.y - labelRadius * sin(labelAngle);
-        
-        // Draw the label
-        double textWidth, textHeight;
-        gc->GetTextExtent(label, &textWidth, &textHeight);
-        gc->DrawText(label, labelX - textWidth/2, labelY - textHeight/2);
+
+        // Tangent orientation computed in screen space (y down)
+        double dx = labelX - center.x;
+        double dy = labelY - center.y;
+        double tx = -dy;
+        double ty = dx;
+        double t = atan2(ty, tx);
+        // Keep text upright (avoid upside-down)
+        if (t > M_PI / 2.0) t -= M_PI;
+        if (t < -M_PI / 2.0) t += M_PI;
+
+        double tw, th, descent, externalLeading;
+        gc->GetTextExtent(label, &tw, &th, &descent, &externalLeading);
+
+        gc->PushState();
+        gc->Translate(labelX, labelY);
+        gc->Rotate(t);
+        // y is baseline; draw so that the label's visual box is centered at (0,0)
+        gc->DrawText(label, -tw / 2.0, th / 2.0 - descent);
+        gc->PopState();
     }
 }
 

@@ -17,48 +17,70 @@ public:
     // Basic menu
     auto* fileMenu = new wxMenu();
     wxLogMessage("Appending File/Export");
-    fileMenu->Append(ID_EXPORT_PNG, "Export PNG...\tCtrl+E");
+    fileMenu->Append(ID_EXPORT_PNG, "PNG exportieren...\tCtrl+E");
+    wxLogMessage("OK File/Export id=%d", ID_EXPORT_PNG);
     wxLogMessage("Appending File/Separator");
     fileMenu->AppendSeparator();
+    wxLogMessage("OK File/Separator");
     wxLogMessage("Appending File/Exit");
-    fileMenu->Append(ID_EXIT_APP, "E&xit\tCtrl+Q");
+    fileMenu->Append(ID_EXIT_APP, "Beenden\tCtrl+Q");
+    wxLogMessage("OK File/Exit id=%d", ID_EXIT_APP);
 
     // Chart menu
     auto* chartMenu = new wxMenu();
     auto* houseMenu = new wxMenu();
     wxLogMessage("Appending House/Equal");
-    houseMenu->AppendRadioItem(ID_HOUSE_EQUAL, "Equal");
+    houseMenu->AppendRadioItem(ID_HOUSE_EQUAL, "Gleich");
+    wxLogMessage("OK House/Equal id=%d", ID_HOUSE_EQUAL);
     wxLogMessage("Appending House/Placidus");
     houseMenu->AppendRadioItem(ID_HOUSE_PLACIDUS, "Placidus");
+    wxLogMessage("OK House/Placidus id=%d", ID_HOUSE_PLACIDUS);
     wxLogMessage("Appending Chart/SubMenu House System");
-    chartMenu->AppendSubMenu(houseMenu, "House System");
+    chartMenu->AppendSubMenu(houseMenu, "Haus-System");
+    wxLogMessage("OK Chart/SubMenu House System");
     wxLogMessage("Appending Chart/Separator 1");
     chartMenu->AppendSeparator();
+    wxLogMessage("OK Chart/Separator 1");
     wxLogMessage("Appending Chart/Aspect Orb");
-    chartMenu->Append(ID_ASPECT_ORB, "Set Aspect Orb...\tCtrl+Shift+O");
+    chartMenu->Append(ID_ASPECT_ORB, "Aspekt-Orb festlegen...\tCtrl+Shift+O");
+    wxLogMessage("OK Chart/Aspect Orb id=%d", ID_ASPECT_ORB);
     wxLogMessage("Appending Chart/Separator 2");
     chartMenu->AppendSeparator();
     wxLogMessage("Appending Chart/Set DateTime");
-    chartMenu->Append(ID_SET_DATETIME, "Set Date/Time/Zone...\tCtrl+T");
+    chartMenu->Append(ID_SET_DATETIME, "Datum/Uhrzeit/Zone festlegen...\tCtrl+T");
+    wxLogMessage("OK Chart/Set DateTime id=%d", ID_SET_DATETIME);
     wxLogMessage("Appending Chart/Set Location");
-    chartMenu->Append(ID_SET_LOCATION, "Set Location...\tCtrl+L");
+    chartMenu->Append(ID_SET_LOCATION, "Ort festlegen...\tCtrl+L");
+    wxLogMessage("OK Chart/Set Location id=%d", ID_SET_LOCATION);
     wxLogMessage("Appending Chart/Separator 3");
     chartMenu->AppendSeparator();
     wxLogMessage("Appending Chart/Reset Defaults");
-    chartMenu->Append(ID_RESET_DEFAULTS, "Reset Defaults\tCtrl+R");
+    chartMenu->Append(ID_RESET_DEFAULTS, wxString::FromUTF8("Standardwerte zurücksetzen\tCtrl+R"));
+    wxLogMessage("OK Chart/Reset Defaults id=%d", ID_RESET_DEFAULTS);
 
     // View menu
     auto* viewMenu = new wxMenu();
-    viewMenu->AppendCheckItem(ID_VIEW_AXES, "Show &Axes\tCtrl+A");
-    viewMenu->AppendCheckItem(ID_VIEW_LABELS, "Show &Labels\tCtrl+L");
-    viewMenu->AppendCheckItem(ID_VIEW_PLANETS, "Show &Planets\tCtrl+P");
-    viewMenu->AppendCheckItem(ID_VIEW_ASPECT_LINES, "Show Aspect &Lines\tCtrl+Shift+A");
-    viewMenu->AppendCheckItem(ID_VIEW_ASPECT_GRID, "Show Aspect &Grid\tCtrl+G");
-    viewMenu->AppendSeparator();
+    wxLogMessage("Appending View/Axes");
+    viewMenu->AppendCheckItem(ID_VIEW_AXES, "&Achsen anzeigen\tCtrl+A");
+    wxLogMessage("OK View/Axes id=%d", ID_VIEW_AXES);
+    wxLogMessage("Appending View/Labels");
+    viewMenu->AppendCheckItem(ID_VIEW_LABELS, "&Beschriftungen anzeigen\tCtrl+L");
+    wxLogMessage("OK View/Labels id=%d", ID_VIEW_LABELS);
+    wxLogMessage("Appending View/Planets");
+    viewMenu->AppendCheckItem(ID_VIEW_PLANETS, "&Planeten anzeigen\tCtrl+P");
+    wxLogMessage("OK View/Planets id=%d", ID_VIEW_PLANETS);
+    wxLogMessage("Appending View/Aspect Lines");
+    viewMenu->AppendCheckItem(ID_VIEW_ASPECT_LINES, "Aspekt&linien anzeigen\tCtrl+Shift+A");
+    wxLogMessage("OK View/Aspect Lines id=%d", ID_VIEW_ASPECT_LINES);
+    wxLogMessage("Appending View/Aspect Grid");
+    viewMenu->AppendCheckItem(ID_VIEW_ASPECT_GRID, "Aspekt&gitter anzeigen\tCtrl+G");
+    wxLogMessage("OK View/Aspect Grid id=%d", ID_VIEW_ASPECT_GRID);
 
     // Help menu
     auto* helpMenu = new wxMenu();
-    helpMenu->Append(ID_HELP_ABOUT, "About...\tF1");
+    wxLogMessage("Appending Help/About");
+    helpMenu->Append(ID_HELP_ABOUT, wxString::FromUTF8("Über...\tF1"));
+    wxLogMessage("OK Help/About id=%d", ID_HELP_ABOUT);
 
     // Diagnostics: list menu items and labels
     auto dumpMenu = [](const char* name, wxMenu* m){
@@ -68,21 +90,21 @@ public:
         wxLogMessage("  id=%d, kind=%d, empty=%s, label='%s'", item->GetId(), (int)item->GetKind(), lbl.empty()?"yes":"no", lbl);
       }
     };
-    dumpMenu("File", fileMenu);
-    dumpMenu("Chart", chartMenu);
-    dumpMenu("House", houseMenu);
-    dumpMenu("View", viewMenu);
-    dumpMenu("Help", helpMenu);
+    dumpMenu("Datei", fileMenu);
+    dumpMenu("Horoskop", chartMenu);
+    dumpMenu("Haus", houseMenu);
+    dumpMenu("Ansicht", viewMenu);
+    dumpMenu("Hilfe", helpMenu);
 
     auto* menuBar = new wxMenuBar();
-    menuBar->Append(fileMenu, "File");
-    menuBar->Append(chartMenu, "Chart");
-    menuBar->Append(viewMenu, "View");
-    menuBar->Append(helpMenu, "Help");
+    menuBar->Append(fileMenu, "Datei");
+    menuBar->Append(chartMenu, "Horoskop");
+    menuBar->Append(viewMenu, "Ansicht");
+    menuBar->Append(helpMenu, "Hilfe");
     SetMenuBar(menuBar);
 
     CreateStatusBar();
-    SetStatusText("Ready");
+    SetStatusText("Bereit");
 
     Bind(wxEVT_MENU, &AstroFrame::OnExportPNG, this, ID_EXPORT_PNG);
     Bind(wxEVT_MENU, [this](wxCommandEvent&){ Close(true); }, ID_EXIT_APP);
@@ -124,7 +146,7 @@ public:
   }
 private:
   enum {
-    ID_EXPORT_PNG = wxID_HIGHEST + 1,
+    ID_EXPORT_PNG = wxID_HIGHEST + 1000,
     ID_EXIT_APP,
     ID_HOUSE_EQUAL,
     ID_HOUSE_PLACIDUS,
@@ -142,43 +164,43 @@ private:
 
   void OnExportPNG(wxCommandEvent&)
   {
-    wxFileDialog dlg(this, "Export PNG", "", "chart.png",
-                     "PNG files (*.png)|*.png", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+    wxFileDialog dlg(this, "PNG exportieren", "", "chart.png",
+                     "PNG-Dateien (*.png)|*.png", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
     if (dlg.ShowModal() == wxID_CANCEL) return;
     if (m_panel && m_panel->ExportPNG(dlg.GetPath())) {
-      SetStatusText("Exported: " + dlg.GetPath());
+      SetStatusText("Exportiert: " + dlg.GetPath());
     } else {
-      wxMessageBox("Export failed", "Error", wxOK | wxICON_ERROR, this);
+      wxMessageBox("Export fehlgeschlagen", "Fehler", wxOK | wxICON_ERROR, this);
     }
   }
 
   void OnHouseEqual(wxCommandEvent&) {
     if (!m_panel) return;
     m_panel->SetHouseSystem(ChartPanel::HouseSystem::Equal);
-    SetStatusText("House system: Equal");
+    SetStatusText("Haussystem: Gleich");
   }
   void OnHousePlacidus(wxCommandEvent&) {
     if (!m_panel) return;
     m_panel->SetHouseSystem(ChartPanel::HouseSystem::Placidus);
-    SetStatusText("House system: Placidus");
+    SetStatusText("Haussystem: Placidus");
   }
   // Removed: Demo aspects toggle handler
   void OnToggleAxes(wxCommandEvent&) {
     if (!m_panel) return;
     bool checked = GetMenuBar()->IsChecked(ID_VIEW_AXES);
     m_panel->SetShowAxes(checked);
-    SetStatusText(checked ? "Axes: ON" : "Axes: OFF");
+    SetStatusText(checked ? "Achsen: AN" : "Achsen: AUS");
   }
   void OnToggleLabels(wxCommandEvent&) {
     if (!m_panel) return;
     bool checked = GetMenuBar()->IsChecked(ID_VIEW_LABELS);
     m_panel->SetShowLabels(checked);
-    SetStatusText(checked ? "Labels: ON" : "Labels: OFF");
+    SetStatusText(checked ? "Beschriftungen: AN" : "Beschriftungen: AUS");
   }
   void OnSetAspectOrb(wxCommandEvent&) {
     if (!m_panel) return;
     double orb = m_panel->GetAspectOrbDeg();
-    wxTextEntryDialog dlg(this, "Aspect orb (degrees):", "Aspect Orb", wxString::Format("%.2f", orb));
+    wxTextEntryDialog dlg(this, "Aspekt-Orb (Grad):", "Aspekt-Orb", wxString::Format("%.2f", orb));
     if (dlg.ShowModal() == wxID_OK) {
       try {
         double v = std::stod(dlg.GetValue().ToStdString());
@@ -186,7 +208,7 @@ private:
           m_panel->SetAspectOrbDeg(v);
           wxString val = wxString::Format("%.2f", v);
           wxString degree = wxString::FromUTF8("\xC2\xB0");
-          SetStatusText(wxString("Aspect orb: ") + val + degree);
+          SetStatusText(wxString("Aspekt-Orb: ") + val + degree);
         }
       } catch (...) {}
     }
@@ -201,9 +223,9 @@ private:
       astrocore::Date nd; astrocore::Time nt; astrocore::TimeZone ntz;
       if (dlg.GetResult(nd, nt, ntz)) {
         m_panel->SetDateTime(nd, nt, ntz);
-        SetStatusText("Date/Time/Zone updated");
+        SetStatusText("Datum/Uhrzeit/Zone aktualisiert");
       } else {
-        wxMessageBox("Invalid date/time/zone values.", "Input Error", wxOK | wxICON_ERROR, this);
+        wxMessageBox("Ungültige Werte für Datum/Uhrzeit/Zeitzone.", "Eingabefehler", wxOK | wxICON_ERROR, this);
       }
     }
   }
@@ -216,9 +238,9 @@ private:
       double nlon, nlat;
       if (dlg.GetResult(nlon, nlat)) {
         m_panel->SetLocation(nlon, nlat);
-        SetStatusText(wxString::Format("Location: lon %.3f, lat %.3f", nlon, nlat));
+        SetStatusText(wxString::Format("Ort: Länge %.3f, Breite %.3f", nlon, nlat));
       } else {
-        wxMessageBox("Invalid location. Longitude must be -180..180, Latitude -90..90.", "Input Error", wxOK | wxICON_ERROR, this);
+        wxMessageBox("Ungültiger Ort. Länge muss -180..180, Breite -90..90 sein.", "Eingabefehler", wxOK | wxICON_ERROR, this);
       }
     }
   }
@@ -234,35 +256,37 @@ private:
       mb->Check(ID_VIEW_ASPECT_GRID, false);
       mb->Check(ID_HOUSE_EQUAL, true);
     }
-    SetStatusText("Defaults restored");
+    SetStatusText("Standardwerte zurückgesetzt");
   }
   void OnTogglePlanets(wxCommandEvent&) {
     if (!m_panel) return;
     bool checked = GetMenuBar()->IsChecked(ID_VIEW_PLANETS);
     m_panel->SetShowPlanets(checked);
-    SetStatusText(checked ? "Planets: ON" : "Planets: OFF");
+    SetStatusText(checked ? "Planeten: AN" : "Planeten: AUS");
   }
 
   void OnToggleAspectLines(wxCommandEvent&) {
     if (!m_panel) return;
     bool checked = GetMenuBar()->IsChecked(ID_VIEW_ASPECT_LINES);
     m_panel->SetShowAspectLines(checked);
-    SetStatusText(checked ? "Aspect Lines: ON" : "Aspect Lines: OFF");
+    SetStatusText(checked ? "Aspektlinien: AN" : "Aspektlinien: AUS");
   }
 
   void OnToggleAspectGrid(wxCommandEvent&) {
     if (!m_panel) return;
     bool checked = GetMenuBar()->IsChecked(ID_VIEW_ASPECT_GRID);
     m_panel->SetShowAspectGrid(checked);
-    SetStatusText(checked ? "Aspect Grid: ON" : "Aspect Grid: OFF");
+    SetStatusText(checked ? "Aspektgitter: AN" : "Aspektgitter: AUS");
   }
+
+  
 
   void OnAbout(wxCommandEvent&) {
     wxString msg;
-    msg << "Astrology GUI\n";
-    msg << "Core: astrocore library\n";
-    msg << "Features: Asc/MC, Equal/Placidus houses, planets, aspects\n";
-    wxMessageBox(msg, "About", wxOK | wxICON_INFORMATION, this);
+    msg << "Astrologie GUI\n";
+    msg << "Kern: astrocore-Bibliothek\n";
+    msg << "Funktionen: AC/MC, Häuser (Equal/Placidus), Planeten, Aspekte\n";
+    wxMessageBox(msg, "Info", wxOK | wxICON_INFORMATION, this);
   }
   ChartPanel* m_panel {nullptr};
 };

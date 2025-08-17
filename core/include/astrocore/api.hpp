@@ -2,6 +2,7 @@
 
 #include <string>
 #include <cstdint>
+#include <vector>
 
 namespace astrocore {
 
@@ -84,11 +85,37 @@ struct AspectResult {
   AspectType type;
   double exactAngleDeg;   // 0, 60, 90, 120, 180
   double deltaDeg;        // signed difference from exact, in degrees (-orb..+orb)
+  bool applying;          // true if approaching exact (based on provided speeds)
+  double orbDeg;          // absolute orb = |deltaDeg|
 };
 
 // Given two ecliptic longitudes (degrees, wrapped 0..360) and an orb in degrees,
 // detect if they form a major aspect. Returns AspectResult with type None if not.
 AspectResult detect_aspect(double lon1Deg, double lon2Deg, double orbDeg);
+
+// Variant with instantaneous speeds (deg/day) to classify applying/separating.
+// If no aspect within orb, returns type None.
+AspectResult detect_aspect_with_speeds(double lon1Deg, double speed1DegPerDay,
+                                       double lon2Deg, double speed2DegPerDay,
+                                       double orbDeg);
+
+// Declination-based parallels and contra-parallels
+// A Parallel occurs when declinations are near-equal with the same sign (both north or both south).
+// A ContraParallel occurs when declination magnitudes are near-equal with opposite signs.
+enum class DeclAspectType { None, Parallel, ContraParallel };
+
+struct DeclAspectResult {
+  DeclAspectType type;
+  // For Parallel: deltaDeg = dec2 - dec1 (signed same-hemisphere difference)
+  // For ContraParallel: deltaDeg = |dec2| - |dec1| (signed magnitude difference)
+  // In both cases, orbDeg = |deltaDeg| and exact occurs at deltaDeg == 0.
+  double deltaDeg;
+  double orbDeg;
+};
+
+// Detect declination parallels/contra-parallels given declinations in degrees and an orb in degrees.
+// Returns type None when neither condition holds within orb.
+DeclAspectResult detect_declination_aspect(double dec1Deg, double dec2Deg, double orbDeg);
 
 // Ascendant and Midheaven longitudes (radians, wrapped 0..2pi) for given JD and observer location
 // longitudeRad: east positive, latitudeRad: geodetic latitude
@@ -101,5 +128,20 @@ void equal_house_cusps(double ascRad, double cuspsRad[12]);
 // Placidus house cusps (radians). Placeholder implementation currently falls back to Equal.
 // Inputs: jd (TT/UTC JD acceptable for our use), longitudeRad (east+), latitudeRad (geodetic)
 void placidus_house_cusps(double jd, double longitudeRad, double latitudeRad, double cuspsRad[12]);
+
+// --- Aspect pattern detection (synthetic; operates on given longitudes) ---
+enum class AspectPatternType { None, TSquare, GrandTrine };
+
+struct AspectPattern {
+  AspectPatternType type;
+  // Indices of involved points in the input longitude vector, sorted ascending.
+  std::vector<int> indices;
+};
+
+// Detect higher-order aspect patterns among a set of ecliptic longitudes (degrees, 0..360).
+// Uses major aspects with the provided orb for pairwise checks.
+// Returns unique patterns with sorted indices (no duplicate permutations).
+std::vector<AspectPattern> detect_aspect_patterns(const std::vector<double>& longitudesDeg,
+                                                    double orbDeg);
 
 } // namespace astrocore

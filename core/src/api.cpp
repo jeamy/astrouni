@@ -1,11 +1,81 @@
 #include "astrocore/api.hpp"
 #include <cmath>
 #include <algorithm>
+#include <vector>
+#include <set>
+#include <tuple>
 
 namespace astrocore {
 
 Version version() {
   return Version{0, 1, 0};
+}
+
+// Pattern detection among provided ecliptic longitudes
+std::vector<AspectPattern> detect_aspect_patterns(const std::vector<double>& longitudesDeg,
+                                                  double orbDeg) {
+  const int n = static_cast<int>(longitudesDeg.size());
+  std::vector<AspectPattern> out;
+  if (n < 3) return out;
+
+  // Precompute pairwise aspect types for faster lookup
+  auto aspect_between = [&](int i, int j) -> AspectType {
+    auto r = detect_aspect(longitudesDeg[i], longitudesDeg[j], orbDeg);
+    return r.type;
+  };
+
+  // Deduplicate patterns using a set of tuples (type, i, j, k)
+  std::set<std::tuple<int,int,int,int>> seen;
+
+  // Enumerate all triples i<j<k
+  for (int i = 0; i < n; ++i) {
+    for (int j = i + 1; j < n; ++j) {
+      AspectType a_ij = aspect_between(i, j);
+      for (int k = j + 1; k < n; ++k) {
+        AspectType a_ik = aspect_between(i, k);
+        AspectType a_jk = aspect_between(j, k);
+
+        // Grand Trine: all three pairs are Trine
+        if (a_ij == AspectType::Trine && a_ik == AspectType::Trine && a_jk == AspectType::Trine) {
+          auto key = std::make_tuple(static_cast<int>(AspectPatternType::GrandTrine), i, j, k);
+          if (seen.insert(key).second) {
+            out.push_back(AspectPattern{AspectPatternType::GrandTrine, {i, j, k}});
+          }
+        }
+
+        // T-Square: exactly one Opposition and two Squares among the three pairs (order-agnostic)
+        int oppCount = (a_ij == AspectType::Opposition) + (a_ik == AspectType::Opposition) + (a_jk == AspectType::Opposition);
+        int sqCount  = (a_ij == AspectType::Square)     + (a_ik == AspectType::Square)     + (a_jk == AspectType::Square);
+        if (oppCount == 1 && sqCount == 2) {
+          auto key = std::make_tuple(static_cast<int>(AspectPatternType::TSquare), i, j, k);
+          if (seen.insert(key).second) {
+            out.push_back(AspectPattern{AspectPatternType::TSquare, {i, j, k}});
+          }
+        }
+      }
+    }
+  }
+
+  return out;
+}
+
+DeclAspectResult detect_declination_aspect(double dec1Deg, double dec2Deg, double orbDeg) {
+  // Same hemisphere (including equator treated as both non-negative and non-positive)
+  bool sameHemisphere = (dec1Deg >= 0.0 && dec2Deg >= 0.0) || (dec1Deg <= 0.0 && dec2Deg <= 0.0);
+  if (sameHemisphere) {
+    double delta = dec2Deg - dec1Deg; // signed difference within same sign
+    if (std::fabs(delta) <= orbDeg) {
+      return DeclAspectResult{DeclAspectType::Parallel, delta, std::fabs(delta)};
+    }
+  }
+  // Opposite hemispheres strictly (zero is neutral)
+  if (dec1Deg * dec2Deg < 0.0) {
+    double delta = std::fabs(dec2Deg) - std::fabs(dec1Deg); // signed magnitude difference
+    if (std::fabs(delta) <= orbDeg) {
+      return DeclAspectResult{DeclAspectType::ContraParallel, delta, std::fabs(delta)};
+    }
+  }
+  return DeclAspectResult{DeclAspectType::None, 0.0, 0.0};
 }
 
 int64_t demo_compute(int64_t x) {
@@ -147,10 +217,47 @@ AspectResult detect_aspect(double lon1Deg, double lon2Deg, double orbDeg) {
   for (auto& tgt : targets) {
     double delta = d - tgt.ang;
     if (std::fabs(delta) <= orbDeg) {
-      return AspectResult{tgt.t, tgt.ang, delta};
+      return AspectResult{tgt.t, tgt.ang, delta, /*applying=*/false, std::fabs(delta)};
     }
   }
-  return AspectResult{AspectType::None, 0.0, 0.0};
+  return AspectResult{AspectType::None, 0.0, 0.0, /*applying=*/false, 0.0};
+}
+
+AspectResult detect_aspect_with_speeds(double lon1Deg, double speed1DegPerDay,
+                                       double lon2Deg, double speed2DegPerDay,
+                                       double orbDeg) {
+  auto wrap360 = [](double a){ a = std::fmod(a, 360.0); if (a < 0) a += 360.0; return a; };
+  auto wrap180 = [](double a){ a = std::remainder(a, 360.0); return a; }; // (-180,180]
+
+  double a1 = wrap360(lon1Deg);
+  double a2 = wrap360(lon2Deg);
+
+  // Wrapped signed separation Δw in (-180,180]
+  double deltaWrap = wrap180(a2 - a1);
+  double d = std::fabs(deltaWrap); // minimal separation 0..180
+
+  // Relative rate of change of minimal separation d = |Δw|
+  double relRate = (deltaWrap == 0.0) ? 0.0 : std::copysign(1.0, deltaWrap) * (speed2DegPerDay - speed1DegPerDay);
+
+  struct Target { AspectType t; double ang; } targets[] = {
+    {AspectType::Conjunction, 0.0},
+    {AspectType::Sextile, 60.0},
+    {AspectType::Square, 90.0},
+    {AspectType::Trine, 120.0},
+    {AspectType::Opposition, 180.0},
+  };
+  for (auto& tgt : targets) {
+    double delta = d - tgt.ang;           // signed deviation from exact
+    if (std::fabs(delta) <= orbDeg) {
+      bool applying = false;
+      if (std::fabs(delta) > 0.0) {
+        // Approaching if deviation magnitude is decreasing: delta > 0 with relRate < 0; delta < 0 with relRate > 0
+        if ((delta > 0 && relRate < 0) || (delta < 0 && relRate > 0)) applying = true;
+      }
+      return AspectResult{tgt.t, tgt.ang, delta, applying, std::fabs(delta)};
+    }
+  }
+  return AspectResult{AspectType::None, 0.0, 0.0, /*applying=*/false, 0.0};
 }
 
 void asc_mc_longitudes(double jd, double longitudeRad, double latitudeRad,

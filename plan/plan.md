@@ -72,28 +72,56 @@ Implementation plan for house systems:
 - [x] Planetary speeds and retrogrades
 - [x] Planetary stations (exact retrograde/direct points)
 - [x] Lunar phases
-- [ ] Eclipse calculations
-- [ ] Planetary nodes and apogee/perigee
+- [x] Eclipse calculations
+- [x] Planetary nodes and apogee/perigee
  
  Notes (DE):
- - Implementieren: Knoten und Apogäum/Perigäum (Lilith).
- - Implementieren: Sonnen-/Mondfinsternisse (Detektion um Syzygien + einfache Geometrie).
- - Eklipsen sowie Knoten/Apogäum/Perigäum stehen noch aus. Ephemeriden werden aus astroeph.dat gelesen.
+- Implementiert: Knoten (mittlerer Mondknoten) und Apogäum (Lilith/mean apogee).
+- Implementiert: Sonnen-/Mondfinsternisse (Heuristik um Syzygien; Klassifikation via ekliptische Mondbreite).
+- Hinweis: Heuristische Implementierung; Verfeinerungen (Wirkungsbereich, Kontaktzeiten) möglich. Ephemeriden werden aus astroeph.dat gelesen.
 
 #### 1.5 Aspect Calculations
 - [x] Basic aspect detection (conjunction, opposition, trine, etc.)
 - [x] Aspect orb handling
-- [ ] Aspect pattern detection (T-square, Grand Trine, etc.)
-- [ ] Applying/separating aspect classification
-- [ ] Parallels and contra-parallels
+- [x] Aspect pattern detection (T-square, Grand Trine) (core + tests + CLI)
+- [x] Applying/separating aspect classification (core + tests + CLI output)
+- [x] Parallels and contra-parallels (core + CLI + tests)
+
+Implementation plan for aspect calculations:
+
+- __[API/Data model]__ Extend aspect result structure to include:
+  - `applying`/`separating` flag, `exact_jd` (optional), `orb_deg`, involved bodies.
+  - Distinct `AspectType` including parallels/contra-parallels.
+- __[Applying/Separating]__ Implemented in `detect_aspect_with_speeds()` (core). Tests added in `tests/test_core.cpp` (ApplyingSeparatingClassification). CLI now surfaces applying/separating via `aspect` command optional speeds. GUI styling to follow.
+- __[Parallels/Contra-parallels]__ Implemented as `detect_declination_aspect()` (core) with CLI command `declaspect`. Tests added in `tests/test_core.cpp` (Parallels/ContraParallels + Zero/Boundary cases). Next: integrate configurable `orbDecl` into CLI flags and GUI toggles/visuals.
+- __[Pattern detection]__ Build higher-order patterns from detected aspects:
+  - Implemented: T-square (two squares + an opposition), Grand Trine (three trines).
+  - Use tolerance consistent with per-aspect orbs; avoid duplicate pattern reporting.
+  - CLI `patterns` command lists detected patterns and indices.
+- __[Configuration]__ Centralize orbs per aspect type and declination orb in config accessible from CLI/GUI.
+ - __[Testing]__
+  - (Done) Unit tests for applying/separating using synthetic ephemeris-like scenarios.
+  - (Done) Tests for parallels/contra-parallels including zero/edge-orb cases.
+  - (Done) Pattern detection tests on synthetic configurations (Grand Trine, T-square).
+ - __[Integration]__
+  - CLI: `aspect` prints applying/separating when speeds supplied; `declaspect` available; `patterns` lists detected patterns.
+  - GUI: style applying vs separating (line style), toggle parallels; highlight patterns (TODO).
 
 ### 2. GUI Implementation
 
 #### 2.1 Chart Display
 - [x] Basic wheel rendering
 - [x] Planet glyphs and positioning
-- [x] House cusps and divisions
-- [x] Aspect lines
+- [x] House cusps and divisions (Equal, Placidus)
+- [x] Aspect lines (configurable orb)
+- [x] Visibility toggles: axes, labels, planets, aspect lines
+- [x] Asc/MC labels
+- [ ] Applying vs separating aspect styling (line style/color)
+- [ ] Parallels/contra-parallels: overlay rendering and View toggle
+- [ ] Highlight aspect patterns (T-square, Grand Trine)
+- [ ] GUI support for additional house systems (Koch, Campanus, Regiomontanus, Porphyry, PorphyryNeo, Whole, Topocentric, Meridian, Morinus, EqualMid, Alcabitius)
+- [ ] Planet set options: include Nodes and Chiron
+- [x] Zodiac sign ring and glyphs
 - [ ] Customizable chart styles and colors
 - [ ] Multiple chart types (natal, transit, synastry)
 

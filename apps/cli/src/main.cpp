@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <vector>
 #include <cmath>
 #include "astrocore/api.hpp"
 
@@ -62,13 +63,21 @@ int main(int argc, char** argv) {
       return 0;
     } else if (cmd == "aspect") {
       if (argc < 5) {
-        std::cerr << "Usage: " << argv[0] << " aspect lon1_deg lon2_deg orb_deg\n";
+        std::cerr << "Usage: " << argv[0]
+                  << " aspect lon1_deg lon2_deg orb_deg [speed1_deg_per_day speed2_deg_per_day]\n";
         return 1;
       }
       double lon1 = std::stod(argv[2]);
       double lon2 = std::stod(argv[3]);
       double orb = std::stod(argv[4]);
-      AspectResult r = detect_aspect(lon1, lon2, orb);
+      AspectResult r;
+      if (argc >= 7) {
+        double s1 = std::stod(argv[5]);
+        double s2 = std::stod(argv[6]);
+        r = detect_aspect_with_speeds(lon1, s1, lon2, s2, orb);
+      } else {
+        r = detect_aspect(lon1, lon2, orb);
+      }
       std::string name = "None";
       switch (r.type) {
         case AspectType::Conjunction: name = "Conjunction"; break;
@@ -81,7 +90,59 @@ int main(int argc, char** argv) {
       std::cout << std::fixed << std::setprecision(3)
                 << "aspect= " << name
                 << ", exact= " << r.exactAngleDeg
-                << ", delta= " << r.deltaDeg << "\n";
+                << ", delta= " << r.deltaDeg
+                << ", applying= " << (r.applying ? "true" : "false")
+                << "\n";
+      return 0;
+    } else if (cmd == "declaspect") {
+      if (argc < 5) {
+        std::cerr << "Usage: " << argv[0] << " declaspect dec1_deg dec2_deg orb_deg\n";
+        return 1;
+      }
+      double dec1 = std::stod(argv[2]);
+      double dec2 = std::stod(argv[3]);
+      double orb = std::stod(argv[4]);
+      auto r = detect_declination_aspect(dec1, dec2, orb);
+      std::string name = "None";
+      switch (r.type) {
+        case DeclAspectType::Parallel: name = "Parallel"; break;
+        case DeclAspectType::ContraParallel: name = "ContraParallel"; break;
+        default: break;
+      }
+      std::cout << std::fixed << std::setprecision(3)
+                << "declination_aspect= " << name
+                << ", delta= " << r.deltaDeg
+                << ", orb= " << r.orbDeg << "\n";
+      return 0;
+    } else if (cmd == "patterns") {
+      // Usage: patterns orb_deg lon1_deg lon2_deg lon3_deg [lon4 ...]
+      if (argc < 6) {
+        std::cerr << "Usage: " << argv[0] << " patterns orb_deg lon1_deg lon2_deg lon3_deg [lon4 ...]\n";
+        return 1;
+      }
+      double orb = std::stod(argv[2]);
+      std::vector<double> longs;
+      for (int i = 3; i < argc; ++i) longs.push_back(std::stod(argv[i]));
+      auto pats = detect_aspect_patterns(longs, orb);
+      auto patName = [](AspectPatternType t){
+        switch (t) {
+          case AspectPatternType::TSquare: return "TSquare";
+          case AspectPatternType::GrandTrine: return "GrandTrine";
+          default: return "None";
+        }
+      };
+      if (pats.empty()) {
+        std::cout << "patterns= none\n";
+      } else {
+        for (const auto& p : pats) {
+          std::cout << "pattern= " << patName(p.type) << ", indices= ";
+          for (size_t i = 0; i < p.indices.size(); ++i) {
+            if (i) std::cout << ",";
+            std::cout << p.indices[i];
+          }
+          std::cout << "\n";
+        }
+      }
       return 0;
     } else if (cmd == "ascmc") {
       if (argc < 13) {
@@ -121,7 +182,7 @@ int main(int argc, char** argv) {
         std::cout << "demo_compute(" << x << ") = " << demo_compute(x) << "\n";
         return 0;
       } catch (...) {
-        std::cerr << "Unknown command. Use: jd | xform | <number>\n";
+        std::cerr << "Unknown command. Use: jd | xform | gmst | lst | aspect | declaspect | ascmc | houses | patterns | <number>\n";
         return 1;
       }
     }

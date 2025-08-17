@@ -19,6 +19,7 @@ add_executable(astro_gui
   src/GlyphRenderer.cpp
   src/AspectGrid.cpp
   src/AspectGridWindow.cpp
+  src/LegacyPortRenderer.cpp
 )
 
 # Include directories provided by wxWidgets

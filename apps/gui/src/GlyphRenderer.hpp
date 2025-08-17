@@ -73,7 +73,8 @@ public:
     // Draw a zodiac sign on the chart wheel
     static void DrawSignOnWheel(wxGraphicsContext* gc, int signIndex,
                                const wxPoint& center, double radius,
-                               bool showLabel = true, double glyphSize = 16.0);
+                               bool showLabel = true, double glyphSize = 16.0,
+                               double labelRadiusOffset = 44.0);
 
     // Draw aspect lines between planets
     static void DrawAspectLines(wxGraphicsContext* gc, 

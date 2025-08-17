@@ -29,6 +29,7 @@ public:
   void SetShowPlanets(bool enabled);
   void SetShowAspectLines(bool enabled);
   void SetShowAspectGrid(bool enabled);
+  void SetSignLabelRadiusOffset(double offset);
   void ResetDefaults();
 
   // Get parameters
@@ -44,6 +45,7 @@ public:
   bool GetShowPlanets() const { return m_showPlanets; }
   bool GetShowAspectLines() const { return m_showAspectLines; }
   bool GetShowAspectGrid() const { return m_showAspectGrid; }
+  double GetSignLabelRadiusOffset() const { return m_signLabelRadiusOffset; }
 
 private:
   void OnPaint(wxPaintEvent&);
@@ -62,6 +64,7 @@ private:
   bool m_showPlanets{true};
   bool m_showAspectLines{true};
   bool m_showAspectGrid{false};
+  double m_signLabelRadiusOffset{44.0};
   
   // UI components
   AspectGridWindow* m_aspectGridWindow{nullptr};

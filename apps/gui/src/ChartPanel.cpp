@@ -8,7 +8,9 @@
 #include <cmath>
 #include <numbers>
 #include <vector>
+#include <algorithm>
 #include "astrocore/api.hpp"
+#include "LegacyPortRenderer.hpp"
 
 wxBEGIN_EVENT_TABLE(ChartPanel, wxPanel)
   EVT_PAINT(ChartPanel::OnPaint)
@@ -49,7 +51,9 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
   int h = size.GetHeight();
   int cx = w / 2;
   int cy = h / 2;
-  int radius = std::min(w, h) * 3 / 8;
+  int minwh = std::min(w, h);
+  int margin = std::clamp(minwh / 10, 48, 96); // dynamic frame margin
+  int radius = std::max(50, minwh / 2 - margin);
   
   // Create graphics context for advanced drawing
   wxGraphicsContext* gc = nullptr;
@@ -76,6 +80,23 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
   if (m_showAxes) {
     dc.DrawLine(cx - radius, cy, cx + radius, cy); // horizontal axis
     dc.DrawLine(cx, cy - radius, cx, cy + radius); // vertical axis
+  }
+
+  // Zodiac sign ring (always visible)
+  if (!GlyphRenderer::IsInitialized()) {
+    std::fprintf(stderr, "[ChartPanel] GlyphRenderer::Initialize() for sign ring\n");
+    GlyphRenderer::Initialize();
+  }
+  // Use legacy-inspired renderer via adapter for ring band and ticks
+  LegacyPort::DrawSignRing(gc, wxPoint(cx, cy), radius);
+
+  // Dynamic glyph sizes
+  double glyphSizeSign = std::clamp(radius * 0.06, 14.0, 26.0);
+  double glyphSizePlanet = std::clamp(radius * 0.055, 12.0, 24.0);
+
+  // Draw the 12 sign glyphs around the wheel
+  for (int sign = 0; sign < 12; ++sign) {
+    ChartGlyphHelper::DrawSignOnWheel(gc, sign, wxPoint(cx, cy), radius, m_showLabels, glyphSizeSign, m_signLabelRadiusOffset);
   }
 
   // Compute from current parameters
@@ -143,13 +164,13 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
         double angleRad = angleDeg * std::numbers::pi / 180.0;
         
         // Calculate position on chart
-        double planetRadius = radius * 0.8; // Place planets inside the house cusps
+        double planetRadius = radius * 0.86; // Place planets inside the house cusps with more space
         int x = cx + static_cast<int>(std::cos(angleRad) * planetRadius);
         int y = cy + static_cast<int>(std::sin(angleRad) * planetRadius);
         
         // Draw the planet glyph
         ChartGlyphHelper::DrawPlanetOnWheel(gc, planet, pos.longitude, pos.latitude,
-                                          wxPoint(cx, cy), radius * 0.8, m_showLabels);
+                                          wxPoint(cx, cy), radius * 0.86, m_showLabels, glyphSizePlanet);
       }
     }
     
@@ -226,6 +247,13 @@ void ChartPanel::SetShowAspectGrid(bool enabled) {
   Refresh();
 }
 
+void ChartPanel::SetSignLabelRadiusOffset(double offset) {
+  m_signLabelRadiusOffset = offset;
+  Refresh();
+}
+
+// Sign ring is always visible; setter removed
+
 void ChartPanel::ResetDefaults() {
   m_date = {2000,1,1};
   m_time = {12,0,0.0};
@@ -239,6 +267,7 @@ void ChartPanel::ResetDefaults() {
   m_showPlanets = true;
   m_showAspectLines = true;
   m_showAspectGrid = false;
+  m_signLabelRadiusOffset = 44.0;
   
   if (m_aspectGridWindow) {
     m_aspectGridWindow->ShowWindow(m_showAspectGrid);
