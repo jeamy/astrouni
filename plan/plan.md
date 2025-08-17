@@ -53,7 +53,7 @@ The following components have been implemented:
   - [x] Meridian / Axial (`legacy/astro.h: vMeridian`)
   - [x] Morinus (`legacy/astro.h: vMorinus`)
   - [x] Equal (MC) / Equal Mid (`legacy/astro.h: vEqualMid`)
-  - [ ] Alcabitius (`legacy/astro.h: vAlcabitius`)
+  - [x] Alcabitius (`legacy/astro.h: vAlcabitius`)
 
 Implementation plan for house systems:
 

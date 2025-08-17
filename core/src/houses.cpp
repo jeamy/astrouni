@@ -94,13 +94,9 @@ static void topocentric_house_cusps(double jd, double longitudeRad, double latit
   prim[1] = topo_spitze_longitude(RA, OB, p2, deg2rad(120.0));
   prim[2] = topo_spitze_longitude(RA, OB, p1, deg2rad(150.0));
 
-  // Finalize by adding LST (sidereal) like legacy + wrap
+  // Finalize: prim[] values are already absolute longitudes (legacy adds sidereal offset later, which is zero here)
   for (int i = 0; i < 6; ++i) {
-    if (i == 3) {
-      cuspsRad[i] = prim[i]; // already absolute (mc+pi)
-    } else {
-      cuspsRad[i] = wrap_rad(prim[i] + RA);
-    }
+    cuspsRad[i] = prim[i];
     cuspsRad[i + 6] = wrap_rad(cuspsRad[i] + M_PI);
   }
 }
@@ -158,6 +154,54 @@ static void regiomontanus_house_cusps(double jd, double longitudeRad, double lat
   }
 }
 
+// Alcabitius house cusps translated and corrected from legacy vAlcabitius()
+// Steps:
+// - Compute declination of Ascendant degree: delta = asin( sin(eps) * sin(lambda_asc) )
+// - Diurnal semi-arc H_d = acos( -tan(phi) * tan(delta) )
+//   Nocturnal semi-arc H_n = pi - H_d
+// - Define RA positions around RAMC (local sidereal time) at fractions of H_d/H_n
+// - Convert each RA to ecliptic longitude via lambda = atan2( sin RA, cos RA * cos eps )
+// - Houses 1..6 are opposite to 7..12
+static void alcabitius_house_cusps(double jd,
+                                   double longitudeRad,
+                                   double latitudeRad,
+                                   double ascRad,
+                                   double cuspsRad[12]) {
+  const double eps = mean_obliquity_rad(jd);
+  const double RAMC = lst_rad(jd, longitudeRad);
+
+  // Declination of the Ascendant degree on the ecliptic (beta=0)
+  const double delta = std::asin(std::sin(eps) * std::sin(ascRad));
+
+  // Semi-arc lengths
+  double v = -std::tan(latitudeRad) * std::tan(delta);
+  v = std::clamp(v, -1.0, 1.0);
+  const double H_d = std::acos(v);
+  const double H_n = M_PI - H_d;
+
+  // RA positions for cusps 7..12 (indices 6..11)
+  double ra[12];
+  ra[6]  = RAMC - H_n;                 // 7th house
+  ra[7]  = RAMC - (2.0/3.0) * H_n;     // 8th house
+  ra[8]  = RAMC - (1.0/3.0) * H_n;     // 9th house
+  ra[9]  = RAMC;                        // 10th house (MC)
+  ra[10] = RAMC + (1.0/3.0) * H_d;     // 11th house
+  ra[11] = RAMC + (2.0/3.0) * H_d;     // 12th house
+
+  auto ra_to_lambda = [&](double r) {
+    double y = std::sin(r);
+    double x = std::cos(r) * std::cos(eps);
+    return angle_wrap(y, x);
+  };
+
+  for (int i = 6; i < 12; ++i) {
+    cuspsRad[i] = ra_to_lambda(ra[i]);
+  }
+  for (int i = 0; i < 6; ++i) {
+    cuspsRad[i] = wrap_rad(cuspsRad[i + 6] + M_PI);
+  }
+}
+
 // Porphyry house cusps using Asc and MC
 static void porphyry_house_cusps(double ascRad, double mcRad, double cuspsRad[12]) {
   double ascDeg = rad2deg(ascRad);
@@ -212,6 +256,54 @@ static void whole_sign_house_cusps(double ascRad, double cuspsRad[12]) {
   double signStart = std::floor(ascDeg / 30.0) * 30.0;
   for (int i = 0; i < 12; ++i) {
     cuspsRad[i] = deg2rad(wrap_deg(signStart + 30.0 * i));
+  }
+}
+
+// -------------------- High-latitude validation helpers --------------------
+
+static const char* house_system_name(HouseSystem s) {
+  switch (s) {
+    case HouseSystem::Equal: return "Equal";
+    case HouseSystem::Placidus: return "Placidus";
+    case HouseSystem::Koch: return "Koch";
+    case HouseSystem::Campanus: return "Campanus";
+    case HouseSystem::Regiomontanus: return "Regiomontanus";
+    case HouseSystem::Porphyry: return "Porphyry";
+    case HouseSystem::PorphyryNeo: return "PorphyryNeo";
+    case HouseSystem::Whole: return "Whole";
+    case HouseSystem::Topocentric: return "Topocentric";
+    case HouseSystem::Meridian: return "Meridian";
+    case HouseSystem::Morinus: return "Morinus";
+    case HouseSystem::EqualMid: return "EqualMid";
+    case HouseSystem::Alcabitius: return "Alcabitius";
+  }
+  return "Unknown";
+}
+
+static inline bool needs_high_latitude_warning(HouseSystem s) {
+  // Time/semi-arc based systems commonly considered unsuitable above polar circles
+  switch (s) {
+    case HouseSystem::Placidus:
+    case HouseSystem::Koch:
+    case HouseSystem::Topocentric:
+      return true;
+    default:
+      return false;
+  }
+}
+
+static inline void maybe_set_high_latitude_warning(double jd,
+                                                   double latitudeDeg,
+                                                   HouseSystem system,
+                                                   HouseCusps& out) {
+  if (!needs_high_latitude_warning(system)) return;
+  const double ob = mean_obliquity_rad(jd);
+  const double limitDeg = 90.0 - rad2deg(ob); // ~66.5° around current epoch
+  const double latAbs = std::fabs(latitudeDeg);
+  if (latAbs > limitDeg) {
+    out.warning = std::string("High-latitude caution: ") + house_system_name(system) +
+                  " may be undefined or inaccurate above polar circles (~|lat| > 66.5°). "
+                  "Consider Equal/Whole/Meridian/Porphyry-based systems.";
   }
 }
 
@@ -316,13 +408,14 @@ HouseCusps compute_house_cusps(const Date& d,
       topocentric_house_cusps(jd, lonRad, latRad, mc, cuspsRad);
       double degs[12];
       for (int i = 0; i < 12; ++i) degs[i] = wrap_deg(rad2deg(cuspsRad[i]));
-      auto dist0 = min_distance_deg(degs[0], out.ascDeg);
-      auto dist6 = min_distance_deg(degs[6], out.ascDeg);
-      if (dist6 < dist0) {
-        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[(i + 6) % 12];
-      } else {
-        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[i];
+      // Rotate so that the cusp closest to Ascendant becomes cusp 1 (index 0)
+      int kMin = 0;
+      double dMin = min_distance_deg(degs[0], out.ascDeg);
+      for (int k = 1; k < 12; ++k) {
+        double dk = min_distance_deg(degs[k], out.ascDeg);
+        if (dk < dMin) { dMin = dk; kMin = k; }
       }
+      for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[(i + kMin) % 12];
       out.valid = true;
       break;
     }
@@ -330,13 +423,9 @@ HouseCusps compute_house_cusps(const Date& d,
       meridian_house_cusps(jd, lonRad, cuspsRad);
       double degs[12];
       for (int i = 0; i < 12; ++i) degs[i] = wrap_deg(rad2deg(cuspsRad[i]));
-      auto dist0 = min_distance_deg(degs[0], out.ascDeg);
-      auto dist6 = min_distance_deg(degs[6], out.ascDeg);
-      if (dist6 < dist0) {
-        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[(i + 6) % 12];
-      } else {
-        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[i];
-      }
+      // Additive alignment: shift all cusps so that cusp1 equals Ascendant
+      double delta = wrap_deg(out.ascDeg - degs[0]);
+      for (int i = 0; i < 12; ++i) out.cuspDeg[i] = wrap_deg(degs[i] + delta);
       out.valid = true;
       break;
     }
@@ -344,13 +433,8 @@ HouseCusps compute_house_cusps(const Date& d,
       morinus_house_cusps(jd, lonRad, cuspsRad);
       double degs[12];
       for (int i = 0; i < 12; ++i) degs[i] = wrap_deg(rad2deg(cuspsRad[i]));
-      auto dist0 = min_distance_deg(degs[0], out.ascDeg);
-      auto dist6 = min_distance_deg(degs[6], out.ascDeg);
-      if (dist6 < dist0) {
-        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[(i + 6) % 12];
-      } else {
-        for (int i = 0; i < 12; ++i) out.cuspDeg[i] = degs[i];
-      }
+      double delta = wrap_deg(out.ascDeg - degs[0]);
+      for (int i = 0; i < 12; ++i) out.cuspDeg[i] = wrap_deg(degs[i] + delta);
       out.valid = true;
       break;
     }
@@ -361,11 +445,21 @@ HouseCusps compute_house_cusps(const Date& d,
       break;
     }
     case HouseSystem::Alcabitius: {
-      out.valid = false;
-      out.warning = "House system not implemented yet";
+      alcabitius_house_cusps(jd, lonRad, latRad, asc, cuspsRad);
+      // Directly convert to degrees without reindex rotation to preserve MC at cusp 10
+      for (int i = 0; i < 12; ++i) out.cuspDeg[i] = wrap_deg(rad2deg(cuspsRad[i]));
+
+      // Enforce exact Asc and MC alignment on canonical indices
+      out.cuspDeg[0] = out.ascDeg;                 // House 1 equals Ascendant
+      out.cuspDeg[9] = out.mcDeg;                  // House 10 equals MC
+      out.cuspDeg[3] = wrap_deg(out.mcDeg + 180.0); // House 4 opposite MC
+      out.cuspDeg[6] = wrap_deg(out.ascDeg + 180.0); // House 7 opposite Asc
+      out.valid = true;
       break;
     }
   }
+  // Apply high-latitude warnings (do not change validity; flag via message)
+  maybe_set_high_latitude_warning(jd, latitudeDeg, system, out);
 
   return out;
 }

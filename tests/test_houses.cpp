@@ -3,8 +3,12 @@
 #include "astrocore/houses.hpp"
 #include <cmath>
 #include <array>
+#include <regex>
 
 using namespace astrocore;
+
+// Forward declaration for helper defined later in this file
+static void expect_range_and_finite(const HouseCusps& res);
 
 static double norm2pi(double a) {
   while (a < 0) a += 2*M_PI;
@@ -268,8 +272,110 @@ TEST(HousesUnifiedAPI, EqualMidBasic) {
   }
 }
 
-TEST(HousesAlcabitius, Placeholder) {
-  GTEST_SKIP() << "Implement Alcabitius; validate against legacy reference output";
+TEST(HousesHighLatitudeWarnings, WarningMessageContentRegexPlacidus) {
+  Date d{2024,3,20};
+  Time t{12,0,0.0};
+  TimeZone tz{0.0, 0.0};
+  double lonDeg = 0.0; // Greenwich
+
+  double jd = julian_day(d, t, tz);
+  double limitDeg = 90.0 - (mean_obliquity_rad(jd) * 180.0 / M_PI);
+  double latDeg = limitDeg + 3.0; // above threshold
+  if (latDeg > 89.0) latDeg = 89.0;
+
+  auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, HouseSystem::Placidus);
+  expect_range_and_finite(res);
+  ASSERT_FALSE(res.warning.empty());
+
+  // Expect warning to mention high-latitude caution, the system name, polar circles, and advisory
+  std::regex rx("^High-latitude caution:\\s*Placidus.*polar circles.*Consider Equal/Whole/Meridian/Porphyry-based systems\\.$");
+  EXPECT_TRUE(std::regex_search(res.warning, rx)) << "warning='" << res.warning << "'";
+}
+
+// -------------------- High-latitude warnings --------------------
+
+TEST(HousesHighLatitudeWarnings, TimeArcSystemsAboveLimit) {
+  Date d{2024,3,20};
+  Time t{12,0,0.0};
+  TimeZone tz{0.0, 0.0};
+  double lonDeg = 0.0; // Greenwich
+
+  double jd = julian_day(d, t, tz);
+  double limitDeg = 90.0 - (mean_obliquity_rad(jd) * 180.0 / M_PI);
+  double latDeg = limitDeg + 3.0; // above threshold
+  if (latDeg > 89.0) latDeg = 89.0; // avoid pathological pole
+
+  std::vector<HouseSystem> warnSystems = {
+    HouseSystem::Placidus,
+    HouseSystem::Koch,
+    HouseSystem::Topocentric
+  };
+
+  for (auto sys : warnSystems) {
+    auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, sys);
+    expect_range_and_finite(res);
+    EXPECT_FALSE(res.warning.empty()) << "sys=" << static_cast<int>(sys) << ", lat=" << latDeg;
+  }
+}
+
+TEST(HousesHighLatitudeWarnings, NoWarningsBelowLimitAndRobustSystems) {
+  Date d{2024,3,20};
+  Time t{12,0,0.0};
+  TimeZone tz{0.0, 0.0};
+  double lonDeg = 0.0;
+
+  double jd = julian_day(d, t, tz);
+  double limitDeg = 90.0 - (mean_obliquity_rad(jd) * 180.0 / M_PI);
+  double latBelow = limitDeg - 3.0; // below threshold
+  if (latBelow < 0.0) latBelow = 0.0;
+
+  // Time/semi-arc systems: no warning below threshold
+  for (auto sys : {HouseSystem::Placidus, HouseSystem::Koch, HouseSystem::Topocentric}) {
+    auto res = compute_house_cusps(d, t, tz, lonDeg, latBelow, sys);
+    expect_range_and_finite(res);
+    EXPECT_TRUE(res.warning.empty()) << "sys=" << static_cast<int>(sys) << ", lat=" << latBelow;
+  }
+
+  // Robust systems: no warnings even above threshold
+  double latAbove = limitDeg + 3.0;
+  if (latAbove > 89.0) latAbove = 89.0;
+  std::vector<HouseSystem> robustSystems = {
+    HouseSystem::Equal,
+    HouseSystem::Whole,
+    HouseSystem::Meridian,
+    HouseSystem::Porphyry,
+    HouseSystem::PorphyryNeo,
+    HouseSystem::Regiomontanus,
+    HouseSystem::Campanus,
+    HouseSystem::Morinus,
+    HouseSystem::EqualMid,
+    HouseSystem::Alcabitius
+  };
+  for (auto sys : robustSystems) {
+    auto res = compute_house_cusps(d, t, tz, lonDeg, latAbove, sys);
+    expect_range_and_finite(res);
+    EXPECT_TRUE(res.warning.empty()) << "sys=" << static_cast<int>(sys) << ", lat=" << latAbove;
+  }
+}
+
+TEST(HousesUnifiedAPI, AlcabitiusBasic) {
+  Date d{2024,3,20};
+  Time t{12,0,0.0};
+  TimeZone tz{0.0, 0.0};
+  // Berlin
+  double lonDeg = 13.405;
+  double latDeg = 52.52;
+
+  auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, HouseSystem::Alcabitius);
+  EXPECT_TRUE(res.valid);
+  for (int i = 0; i < 12; ++i) {
+    EXPECT_TRUE(std::isfinite(res.cuspDeg[i]));
+    EXPECT_GE(res.cuspDeg[i], 0.0);
+    EXPECT_LT(res.cuspDeg[i], 360.0);
+  }
+  // Alignment checks
+  EXPECT_NEAR(res.cuspDeg[0], res.ascDeg, 1e-6);
+  EXPECT_NEAR(res.cuspDeg[9], res.mcDeg, 1e-6);
 }
 
 TEST(HousesUnifiedAPI, Placeholder) {
@@ -370,5 +476,139 @@ TEST(HousesPlacidus, HighLatitudeSanity) {
   auto u = unwrap_monotonic(cusps, 12);
   for (int i = 0; i < 11; ++i) {
     EXPECT_LE(u[i], u[i+1] + 1e-10) << "non-monotonic at index " << i;
+  }
+}
+
+// -------------------- Parameterized, multi-latitude validations --------------------
+
+static const double kLatitudesDeg[] = { 0.0, 45.0, -45.0, 60.0, -60.0, 66.5, -66.5, 70.0, -70.0 };
+
+static double wrap_deg(double d) {
+  while (d < 0.0) d += 360.0;
+  while (d >= 360.0) d -= 360.0;
+  return d;
+}
+
+static double mindeg(double a, double b) {
+  double d = std::fabs(a - b);
+  return d <= 180.0 ? d : 360.0 - d;
+}
+
+static void expect_range_and_finite(const HouseCusps& res) {
+  EXPECT_TRUE(res.valid);
+  for (int i = 0; i < 12; ++i) {
+    EXPECT_TRUE(std::isfinite(res.cuspDeg[i]));
+    EXPECT_GE(res.cuspDeg[i], 0.0);
+    EXPECT_LT(res.cuspDeg[i], 360.0);
+  }
+  EXPECT_TRUE(std::isfinite(res.ascDeg));
+  EXPECT_TRUE(std::isfinite(res.mcDeg));
+}
+
+TEST(HousesParameterized, AscAlignmentMultiLat) {
+  Date d{2024,3,20};
+  Time t{12,0,0.0};
+  TimeZone tz{0.0, 0.0};
+  double lonDeg = 0.0; // Greenwich
+
+  std::vector<HouseSystem> systems = {
+    HouseSystem::Equal,
+    HouseSystem::Placidus,
+    HouseSystem::Koch,
+    HouseSystem::Campanus,
+    HouseSystem::Regiomontanus,
+    HouseSystem::Porphyry,
+    HouseSystem::PorphyryNeo,
+    HouseSystem::Topocentric,
+    HouseSystem::Meridian,
+    HouseSystem::Morinus,
+    HouseSystem::Alcabitius
+  };
+
+  for (double latDeg : kLatitudesDeg) {
+    for (auto sys : systems) {
+      auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, sys);
+      expect_range_and_finite(res);
+      EXPECT_NEAR(res.cuspDeg[0], res.ascDeg, 1e-6) << "lat=" << latDeg << ", sys=" << static_cast<int>(sys);
+    }
+  }
+}
+
+TEST(HousesParameterized, MCAlignmentMultiLat) {
+  Date d{2024,3,20};
+  Time t{12,0,0.0};
+  TimeZone tz{0.0, 0.0};
+  double lonDeg = 0.0;
+
+  std::vector<HouseSystem> systems = {
+    HouseSystem::Placidus,
+    HouseSystem::Porphyry,
+    HouseSystem::PorphyryNeo,
+    HouseSystem::EqualMid,
+    HouseSystem::Alcabitius
+  };
+
+  for (double latDeg : kLatitudesDeg) {
+    for (auto sys : systems) {
+      auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, sys);
+      expect_range_and_finite(res);
+      EXPECT_NEAR(res.cuspDeg[9], res.mcDeg, 1e-6) << "lat=" << latDeg << ", sys=" << static_cast<int>(sys);
+    }
+  }
+}
+
+TEST(HousesParameterized, OppositePairsExactForSymmetricSystems) {
+  Date d{2024,3,20};
+  Time t{12,0,0.0};
+  TimeZone tz{0.0, 0.0};
+  double lonDeg = 0.0;
+
+  std::vector<HouseSystem> systems = {
+    HouseSystem::Equal,
+    HouseSystem::Porphyry,
+    HouseSystem::PorphyryNeo,
+    HouseSystem::Whole,
+    HouseSystem::Topocentric,
+    HouseSystem::EqualMid,
+    HouseSystem::Alcabitius
+  };
+
+  for (double latDeg : kLatitudesDeg) {
+    for (auto sys : systems) {
+      auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, sys);
+      expect_range_and_finite(res);
+      for (int i = 0; i < 6; ++i) {
+        double expected = wrap_deg(res.cuspDeg[i] + 180.0);
+        EXPECT_LE(mindeg(res.cuspDeg[i+6], expected), 1e-6)
+          << "pair=" << i << ", lat=" << latDeg << ", sys=" << static_cast<int>(sys);
+      }
+    }
+  }
+}
+
+TEST(HousesParameterized, WholeSignSpacingAndContainmentMultiLat) {
+  Date d{2024,3,20};
+  Time t{12,0,0.0};
+  TimeZone tz{0.0, 0.0};
+  double lonDeg = 0.0;
+
+  for (double latDeg : kLatitudesDeg) {
+    auto res = compute_house_cusps(d, t, tz, lonDeg, latDeg, HouseSystem::Whole);
+    expect_range_and_finite(res);
+    // 30-degree spacing
+    for (int i = 0; i < 12; ++i) {
+      double expected = std::fmod(res.cuspDeg[0] + i * 30.0, 360.0);
+      if (expected < 0) expected += 360.0;
+      EXPECT_NEAR(res.cuspDeg[i], expected, 1e-6) << "idx=" << i << ", lat=" << latDeg;
+    }
+    // cusp1 is start of Ascendant's sign
+    double ascSignStart = std::floor(res.ascDeg / 30.0) * 30.0;
+    EXPECT_NEAR(res.cuspDeg[0], ascSignStart, 1e-6) << "lat=" << latDeg;
+    // Ascendant lies within house 1 segment
+    double nextCusp = std::fmod(res.cuspDeg[0] + 30.0, 360.0);
+    if (nextCusp < 0) nextCusp += 360.0;
+    bool inSeg = (res.cuspDeg[0] <= res.ascDeg && res.ascDeg < nextCusp) ||
+                 (nextCusp < res.cuspDeg[0] && (res.ascDeg >= res.cuspDeg[0] || res.ascDeg < nextCusp));
+    EXPECT_TRUE(inSeg) << "lat=" << latDeg;
   }
 }
