@@ -1,37 +1,43 @@
 #!/bin/bash
-# Swiss Ephemeris Ephemeriden-Dateien herunterladen
+# Swiss Ephemeris Ephemeriden Download Script
+# Lädt die benötigten Ephemeriden-Files von GitHub herunter
 
 set -e
 
 EPHE_DIR="./ephe"
-BASE_URL="https://www.astro.com/ftp/swisseph/ephe"
+# GitHub Raw URL (funktioniert zuverlässig)
+BASE_URL="https://raw.githubusercontent.com/aloistr/swisseph/master/ephe"
 
 echo "=== Swiss Ephemeris Ephemeriden Download ==="
+echo "Quelle: GitHub (aloistr/swisseph)"
 echo "Zielverzeichnis: $EPHE_DIR"
 echo ""
 
+# Erstelle Verzeichnis falls nicht vorhanden
 mkdir -p "$EPHE_DIR"
-cd "$EPHE_DIR"
 
-# Kompakt-Dateien (18 Jahrhunderte: 1800-3000 AD)
+# Kompakt-Ephemeriden (1800-3000 AD, ~2 MB total)
 echo "Lade Kompakt-Ephemeriden (1800-3000 AD)..."
 
-files=(
-    "seas_18.se1"   # Hauptplaneten (Sonne, Merkur, Venus, Mars)
-    "semo_18.se1"   # Mond
-    "sepl_18.se1"   # Äußere Planeten (Jupiter, Saturn, Uranus, Neptun, Pluto)
+FILES=(
+    "seas_18.se1"  # Planeten (~218 KB)
+    "semo_18.se1"  # Mond (~1.3 MB)
+    "sepl_18.se1"  # Äußere Planeten (~473 KB)
 )
 
-for file in "${files[@]}"; do
-    if [ -f "$file" ]; then
-        echo "  ✓ $file bereits vorhanden"
+for file in "${FILES[@]}"; do
+    if [ -f "$EPHE_DIR/$file" ]; then
+        # Prüfe ob Datei gültig ist (nicht HTML)
+        if file "$EPHE_DIR/$file" | grep -q "data"; then
+            echo "  ✓ $file bereits vorhanden und gültig"
+        else
+            echo "  ⚠ $file ist korrupt, lade neu..."
+            rm -f "$EPHE_DIR/$file"
+            curl -L -o "$EPHE_DIR/$file" "$BASE_URL/$file"
+        fi
     else
         echo "  → Lade $file..."
-        curl -# -L -o "$file" "$BASE_URL/$file" || {
-            echo "  ✗ Fehler beim Download von $file"
-            exit 1
-        }
-        echo "  ✓ $file heruntergeladen"
+        curl -L -o "$EPHE_DIR/$file" "$BASE_URL/$file"
     fi
 done
 
@@ -39,13 +45,13 @@ echo ""
 echo "=== Optional: Erweiterte Ephemeriden ==="
 echo "Für größeren Zeitraum (600 BC - 5400 AD):"
 echo ""
-echo "  curl -L -o seplm54.se1 $BASE_URL/seplm54.se1  # ~50 MB"
-echo "  curl -L -o seasm54.se1 $BASE_URL/seasm54.se1  # ~30 MB"
-echo "  curl -L -o semom54.se1 $BASE_URL/semom54.se1  # ~20 MB"
+echo "  cd $EPHE_DIR"
+echo "  curl -L -O $BASE_URL/seplm54.se1  # ~50 MB"
+echo "  curl -L -O $BASE_URL/seasm54.se1  # ~30 MB"
+echo "  curl -L -O $BASE_URL/semom54.se1  # ~20 MB"
 echo ""
-
 echo "=== Fixsterne (optional) ==="
-echo "  curl -L -o sefstars.txt $BASE_URL/sefstars.txt"
+echo "  curl -L -O $BASE_URL/sefstars.txt"
 echo ""
 
 echo "=== Download abgeschlossen ==="

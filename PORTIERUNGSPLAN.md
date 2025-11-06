@@ -24,28 +24,61 @@ Migration der deutschen Astrologie-Software AstroUnivers v0.04Beta (16-bit Windo
 
 ## Architektur-Design
 
-### Moderne C++ Struktur
+### Moderne C++ Struktur (Implementiert)
 
 ```
-astro_universe/
-├── core/                    # Platform-unabhängige Berechnungen
-│   ├── astro/
-│   │   ├── ephemeris.h/cpp  # Ephemeriden-Algorithmus
-│   │   ├── houses.h/cpp     # Häusersysteme
-│   │   ├── aspects.h/cpp    # Aspekt-Berechnung
-│   │   └── planets.h/cpp    # Planeten-Positionen
-│   ├── data/
-│   │   ├── radix.h          # RADIXFIX → C++ class
-│   │   └── location.h       # ORTE → C++ class
-│   └── localization/
-│       └── german.h         # Deutsche Texte
-├── gui/                     # wxWidgets Oberfläche
-│   ├── main_frame.h/cpp
-│   ├── chart_panel.h/cpp    # Radix-Darstellung
-│   └── dialogs/
-├── cli/                     # Kommandozeile
-├── tests/                   # Unit Tests
-└── data/                    # .dat Files
+astrouni/
+├── CMakeLists.txt           # ✅ Haupt-Build-Konfiguration
+├── build.sh / build.bat     # ✅ Build-Scripts (Linux/macOS/Windows)
+├── test.sh / test.bat       # ✅ Test-Scripts
+├── clean.sh / clean.bat     # ✅ Clean-Scripts
+│
+├── core/                    # ✅ Platform-unabhängige Berechnungen
+│   ├── CMakeLists.txt       # ✅ Core Build-Config
+│   ├── include/astro/
+│   │   ├── data_types.h     # ✅ Datenstrukturen (RADIXFIX, ORTE → C++)
+│   │   ├── swiss_ephemeris.h # ✅ Swiss Ephemeris Wrapper
+│   │   ├── math_utils.h     # ✅ Mathematik (Julianisches Datum, Winkel)
+│   │   └── calculations.h   # ✅ Berechnungs-Engine (Charts, Aspekte)
+│   └── src/
+│       ├── data_types.cpp   # ✅ Implementierung
+│       ├── swiss_ephemeris.cpp # ✅ Implementierung
+│       ├── math_utils.cpp   # ✅ Implementierung
+│       └── calculations.cpp # ✅ Implementierung
+│
+├── tests/                   # ✅ Unit Tests (Google Test)
+│   ├── CMakeLists.txt       # ✅ Test Build-Config
+│   ├── test_math_utils.cpp  # ✅ Mathematik Tests
+│   ├── test_swiss_ephemeris.cpp # ✅ Swiss Ephemeris Tests
+│   └── test_calculations.cpp # ✅ Berechnungs Tests
+│
+├── swisseph/               # ✅ Swiss Ephemeris
+│   ├── README.md           # ✅ Swiss Ephemeris Dokumentation
+│   ├── download_ephe.sh    # ✅ Ephemeriden-Download Script (GitHub)
+│   └── ephe/               # ✅ Ephemeriden-Files
+│       ├── seas_18.se1     # ✅ Planeten (218 KB)
+│       ├── semo_18.se1     # ✅ Mond (1.3 MB)
+│       └── sepl_18.se1     # ✅ Äußere Planeten (473 KB)
+│
+├── legacy/                 # ✅ Original Legacy Code (Referenz)
+│   └── [41 Dateien]        # ✅ Für Vergleich und Analyse
+│
+├── example_chart.cpp       # ✅ Beispielprogramm
+│
+├── gui/                    # 📋 Geplant (Phase 3)
+│   ├── main_frame.h/cpp    # 📋 wxWidgets Hauptfenster
+│   ├── chart_panel.h/cpp   # 📋 Radix-Darstellung
+│   └── dialogs/            # 📋 Dialoge
+│
+└── docs/                   # ✅ Dokumentation
+    ├── README.md           # ✅ Projekt-Übersicht
+    ├── QUICKSTART.md       # ✅ Quick Start Guide
+    ├── BUILD.md            # ✅ Build-Anleitung
+    ├── INSTALLATION.md     # ✅ Setup-Guide
+    ├── PORTIERUNGSPLAN.md  # ✅ Dieser Plan
+    ├── STATUS.md           # ✅ Projekt-Status
+    ├── SWISS_EPHEMERIS_INTEGRATION.md # ✅ Swiss Ephemeris Details
+    └── DATEI_ANALYSE.md    # ✅ Legacy Code Analyse
 ```
 
 ### Design Prinzipien
@@ -64,7 +97,7 @@ astro_universe/
 - [x] Moderne Architektur entwerfen
 - [x] Technologiestack festlegen (C++20, wxWidgets, CMake)
 
-### Phase 2: Core Library Portierung (Woche 3-5)
+### Phase 2: Core Library Portierung (Woche 3-5) 🚀 IN ARBEIT
 
 #### 2.1 Datenstrukturen modernisieren
 
@@ -88,7 +121,7 @@ public:
 };
 ```
 
-#### 2.2 Ephemeriden-Engine (Swiss Ephemeris)
+#### 2.2 Ephemeriden-Engine (Swiss Ephemeris) ✅ ENTSCHIEDEN
 
 **Wichtig**: Statt proprietärer Astrodienst-Daten verwenden wir **Swiss Ephemeris** (GPL/LGPL).
 
@@ -364,15 +397,76 @@ TEST(HouseSystemTest, PlacidusConsistency) {
 | 11-12 | Tests | Alle Tests grün, Regression validiert |
 | 13    | Release | Paketierung und Dokumentation abgeschlossen |
 
-## Nächste Schritte
+## Aktuelle Implementierung (November 2025)
 
-1. **Repository Setup**: Git Repo mit CMake Struktur anlegen
-2. **Core Module Start**: Mit Ephemeriden-Engine beginnen
-3. **Continuous Integration**: GitHub Actions für Linux/Windows/macOS
-4. **Team Onboarding**: wxWidgets Tutorials und Best Practices
+### ✅ Phase 2 Abgeschlossen (6. November 2025)
+
+**Core Library:**
+- [x] CMake Projekt-Struktur erstellt
+- [x] Swiss Ephemeris C++ Wrapper implementiert
+- [x] Core Datenstrukturen portiert (RADIXFIX, ORTE → C++20)
+- [x] Mathematik-Module portiert (aucalc.c → math_utils.cpp)
+- [x] Berechnungs-Engine portiert (auwurzel.c → calculations.cpp)
+
+**Build & Test:**
+- [x] Build-Scripts für Linux/macOS/Windows (build.sh, build.bat)
+- [x] Test-Scripts für alle Plattformen (test.sh, test.bat)
+- [x] Clean-Scripts (clean.sh, clean.bat)
+- [x] Unit Tests implementiert (19 Tests, alle bestanden)
+- [x] Beispielprogramm funktioniert
+
+**Dokumentation:**
+- [x] README.md mit Quick Start
+- [x] QUICKSTART.md (3-Schritte-Anleitung)
+- [x] BUILD.md (Detaillierte Build-Anleitung)
+- [x] INSTALLATION.md (Setup mit Troubleshooting)
+- [x] STATUS.md (Projekt-Status)
+- [x] Projekt-Struktur aktualisiert
+
+### 🚀 Phase 3: GUI (Geplant)
+- [ ] wxWidgets Integration
+- [ ] Hauptfenster implementieren
+- [ ] Chart-Panel (Radix-Darstellung)
+- [ ] Dialoge und Menüs
+- [ ] Export-Funktionen (PNG, SVG, PDF)
+
+### 📋 Nächste Schritte (Priorität)
+
+1. **Projekt-Struktur anlegen**
+   ```
+   astro_universe/
+   ├── CMakeLists.txt
+   ├── core/
+   │   ├── include/
+   │   └── src/
+   ├── tests/
+   └── data/ephe/
+   ```
+
+2. **Swiss Ephemeris Wrapper** (swiss_ephemeris.h/cpp)
+   - Initialisierung mit Ephemeriden-Pfad
+   - Planeten-Berechnungen
+   - Häusersysteme
+   - Delta T
+
+3. **Core Datenstrukturen** (data_types.h)
+   - RadixData (RADIXFIX)
+   - GeoLocation (ORTE)
+   - PlanetPosition
+   - HouseCusp
+
+4. **Mathematik-Basis** (math_utils.h/cpp)
+   - Julianisches Datum
+   - Winkel-Berechnungen
+   - Koordinaten-Konvertierung
+
+5. **Unit Tests** (Google Test)
+   - Swiss Ephemeris Integration testen
+   - Mathematik-Funktionen validieren
+   - Gegen Legacy-Ausgaben vergleichen
 
 ---
 
-*Stand: November 2025*  
-*Version: 1.0*  
-*Autor: Development Team*
+*Stand: 6. November 2025, 20:07 UTC+1*  
+*Version: 1.1*  
+*Status: Phase 2 - Core Library Portierung gestartet*
