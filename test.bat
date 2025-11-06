@@ -1,6 +1,6 @@
 @echo off
 REM Test Script für Windows
-REM AstroUniverse - Modern Astrology Software
+REM AstroUniverse - Astrology Software
 
 setlocal enabledelayedexpansion
 

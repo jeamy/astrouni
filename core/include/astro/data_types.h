@@ -1,7 +1,11 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+// Copyright (C) 2025 AstroUniverse Project
+
 #pragma once
 
 #include <string>
-#include <chrono>
+#include <vector>
+#include <cmath>
 #include <cstdint>
 
 namespace astro {

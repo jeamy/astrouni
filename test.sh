@@ -1,6 +1,6 @@
 #!/bin/bash
 # Test Script für Linux/macOS
-# AstroUniverse - Modern Astrology Software
+# AstroUniverse - Astrology Software
 
 set -e
 

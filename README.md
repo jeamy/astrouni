@@ -1,4 +1,4 @@
-# AstroUniverse - Modern Astrology Software
+# AstroUniverse - Astrology Software
 
 Moderne C++20 Portierung der deutschen Astrologie-Software **AstroUnivers v0.04Beta**.
 
@@ -201,9 +201,20 @@ Oder direkt:
 
 ## Lizenz
 
-### Code
-- **AstroUniverse**: GPL v3 (siehe LICENSE)
-- **Legacy Code**: Original Copyright (nur für Analyse)
+**GNU General Public License v2.0**
+
+AstroUniverse ist freie Software unter der GPL v2 Lizenz.
+
+- **Lizenz:** [LICENSE](LICENSE) (GPL v2)
+- **Copyright:** [COPYRIGHT](COPYRIGHT)
+- **SPDX:** `GPL-2.0-or-later`
+
+### Drittanbieter-Komponenten
+
+- **Swiss Ephemeris** - GPL v2 / LGPL (Astrodienst AG)
+- **Google Test** - BSD-3-Clause (Google Inc.)
+
+Siehe [COPYRIGHT](COPYRIGHT) für Details.
 
 ### Swiss Ephemeris
 - **GPL v2** oder **LGPL** für Open Source
