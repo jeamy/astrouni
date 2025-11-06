@@ -30,7 +30,10 @@ AstroCalculator::AstroCalculator(std::shared_ptr<SwissEphemeris> ephemeris)
 }
 
 AstroCalculator::ChartData AstroCalculator::calculate_chart(const RadixData& radix, 
-                                                            HouseSystem house_system) {
+                                                            HouseSystem house_system,
+                                                            const std::vector<Planet>& planets,
+                                                            const std::vector<AspectType>& aspect_types,
+                                                            double orb) const {
     if (!radix.is_valid()) {
         throw std::invalid_argument("Invalid radix data");
     }
@@ -39,32 +42,24 @@ AstroCalculator::ChartData AstroCalculator::calculate_chart(const RadixData& rad
     chart.radix = radix;
     
     // Planeten berechnen
-    chart.planets = calculate_all_planets(radix.julian_date);
+    chart.planets = calculate_all_planets(radix.julian_date, planets);
     
     // Häuser berechnen
-    chart.houses = calculate_houses(house_system, radix.julian_date, radix.birth_location);
+    chart.houses = calculate_houses(radix.julian_date, radix.birth_location, house_system);
     
     // Aspekte berechnen
-    chart.aspects = calculate_aspects(chart.planets);
+    chart.aspects = calculate_aspects(chart.planets, aspect_types, orb);
     
-    // Ascendant und Midheaven (aus Häusern)
-    if (!chart.houses.empty()) {
-        chart.ascendant = chart.houses[0].longitude;  // 1. Haus = Ascendant
-        
-        // Midheaven ist normalerweise 10. Haus
-        if (chart.houses.size() >= 10) {
-            chart.midheaven = chart.houses[9].longitude;
-        }
-    }
     
     return chart;
 }
 
-std::vector<PlanetPosition> AstroCalculator::calculate_all_planets(const JulianDate& jd) {
+std::vector<PlanetPosition> AstroCalculator::calculate_all_planets(const JulianDate& jd,
+                                                                   const std::vector<Planet>& planets) const {
     std::vector<PlanetPosition> positions;
-    positions.reserve(DEFAULT_PLANETS.size());
+    positions.reserve(planets.size());
     
-    for (Planet planet : DEFAULT_PLANETS) {
+    for (Planet planet : planets) {
         try {
             PlanetPosition pos = ephemeris_->calculate_planet(planet, jd);
             positions.push_back(pos);
@@ -77,15 +72,16 @@ std::vector<PlanetPosition> AstroCalculator::calculate_all_planets(const JulianD
     return positions;
 }
 
-std::vector<HouseCusp> AstroCalculator::calculate_houses(HouseSystem system,
-                                                        const JulianDate& jd,
-                                                        const GeoLocation& location) {
+std::vector<HouseCusp> AstroCalculator::calculate_houses(const JulianDate& jd,
+                                                        const GeoLocation& location,
+                                                        HouseSystem system) const {
     return ephemeris_->calculate_houses(system, jd, location);
 }
 
 std::vector<Aspect> AstroCalculator::calculate_aspects(
     const std::vector<PlanetPosition>& planets,
-    double max_orb) {
+    const std::vector<AspectType>& aspect_types,
+    double max_orb) const {
     
     std::vector<Aspect> aspects;
     
@@ -95,7 +91,7 @@ std::vector<Aspect> AstroCalculator::calculate_aspects(
             double angle = calculate_angle(planets[i], planets[j]);
             
             // Prüfe alle Aspekt-Typen
-            for (AspectType type : DEFAULT_ASPECTS) {
+            for (AspectType type : aspect_types) {
                 double orb;
                 if (is_aspect(angle, type, max_orb, orb)) {
                     Aspect aspect;
@@ -124,11 +120,11 @@ std::vector<Aspect> AstroCalculator::calculate_aspects(
 }
 
 double AstroCalculator::calculate_angle(const PlanetPosition& planet1,
-                                       const PlanetPosition& planet2) {
+                                       const PlanetPosition& planet2) const {
     return math::angle_difference(planet1.longitude, planet2.longitude);
 }
 
-bool AstroCalculator::is_aspect(double angle, AspectType type, double max_orb, double& orb) {
+bool AstroCalculator::is_aspect(double angle, AspectType type, double max_orb, double& orb) const {
     double aspect_angle = static_cast<double>(type);
     
     // Berechne Differenz zum exakten Aspekt

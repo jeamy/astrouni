@@ -87,11 +87,13 @@ echo ===============================================
 echo.
 echo Ausfuehrbare Dateien:
 echo   - %BUILD_TYPE%\example_chart.exe     (Beispielprogramm)
+echo   - gui\%BUILD_TYPE%\astro_gui.exe     (wxWidgets GUI)
 echo   - tests\%BUILD_TYPE%\astro_tests.exe (Unit Tests)
 echo.
 echo Naechste Schritte:
-echo   test.bat                (Tests ausfuehren)
+echo   test.bat                        (Tests ausfuehren)
 echo   %BUILD_TYPE%\example_chart.exe  (Demo starten)
+echo   gui\%BUILD_TYPE%\astro_gui.exe  (GUI starten)
 echo.
 
 endlocal

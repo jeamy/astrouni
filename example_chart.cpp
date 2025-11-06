@@ -125,11 +125,14 @@ int main(int argc, char* argv[]) {
         print_house_cusps(chart.houses);
         
         // Ascendant und Midheaven
-        std::cout << "\nWichtige Punkte:\n";
+        std::cout << "Wichtige Punkte:\n";
         std::cout << "─────────────────────────────\n";
-        std::cout << "Ascendant (AC): " << std::fixed << std::setprecision(2)
-                  << chart.ascendant << "°\n";
-        std::cout << "Midheaven (MC): " << chart.midheaven << "°\n";
+        if (!chart.houses.empty()) {
+            std::cout << "Ascendant (AC): " << std::fixed << std::setprecision(2) << chart.houses[0].longitude << "°\n";
+            if (chart.houses.size() >= 10) {
+                std::cout << "Midheaven (MC): " << std::fixed << std::setprecision(2) << chart.houses[9].longitude << "°\n";
+            }
+        }
         
         // Aspekte ausgeben (nur die ersten 10)
         if (!chart.aspects.empty()) {

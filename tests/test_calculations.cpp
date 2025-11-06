@@ -50,7 +50,7 @@ TEST_F(CalculationsTest, CalculateAspects) {
     JulianDate jd(dt);
     
     auto planets = calculator->calculate_all_planets(jd);
-    auto aspects = calculator->calculate_aspects(planets, 8.0);
+    auto aspects = calculator->calculate_aspects(planets, astro::AstroCalculator::DEFAULT_ASPECTS, 8.0);
     
     // Es sollten einige Aspekte gefunden werden
     EXPECT_GT(aspects.size(), 0);

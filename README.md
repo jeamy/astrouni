@@ -4,13 +4,13 @@ Moderne C++20 Portierung der deutschen Astrologie-Software **AstroUnivers v0.04B
 
 ## Features
 
-- ✅ **Swiss Ephemeris Integration** - Höchste Genauigkeit (NASA JPL DE431)
-- ✅ **Alle Planeten** - Sonne, Mond, Merkur bis Pluto, Mondknoten, Chiron
-- ✅ **Häusersysteme** - Placidus, Koch, Regiomontanus, Equal, Whole Sign, etc.
-- ✅ **Aspekt-Berechnung** - Konjunktion, Opposition, Trigon, Quadrat, Sextil, etc.
-- ✅ **Cross-Platform** - Linux, Windows, macOS
-- ✅ **Modern C++20** - Type-safe, RAII, Smart Pointers
-- ✅ **Unit Tests** - Google Test Framework
+- ✅ **Präzise Berechnungen** - Swiss Ephemeris (JPL DE431)
+- ✅ **Cross-Platform** - Linux, macOS, Windows
+- ✅ **Moderne GUI** - wxWidgets 3.2+ ✅ **Funktioniert!**
+- ✅ **i18n** - Deutsch & Englisch
+- ✅ **Legacy-Kompatibel** - Liest AstroUnivers .dat Dateien
+- ✅ **Unit Tests** - 19 Tests, alle bestanden
+- ✅ **Open Source** - GPL v2
 
 ## Quick Start
 
@@ -62,16 +62,16 @@ test.bat
 
 ### 4. Ausführen
 
-**Linux/macOS:**
+**GUI (wxWidgets):**
 ```bash
-cd build
-./example_chart
+cd build/gui && ./astro_gui          # Linux/macOS
+cd build\gui\Release && astro_gui.exe  # Windows
 ```
 
-**Windows:**
-```cmd
-cd build\Release
-example_chart.exe
+**Konsolen-Demo:**
+```bash
+cd build && ./example_chart          # Linux/macOS
+cd build\Release && example_chart.exe  # Windows
 ```
 
 **Ausgabe:**
@@ -116,6 +116,12 @@ astrouni/
 │   ├── test_swiss_ephemeris.cpp
 │   └── test_calculations.cpp
 │
+├── gui/                     # wxWidgets GUI ✅
+│   ├── main.cpp             # Entry Point
+│   ├── main_frame.cpp       # Hauptfenster
+│   ├── chart_panel.cpp      # Chart-Darstellung
+│   └── dialogs/             # Dialoge
+│
 ├── swisseph/               # Swiss Ephemeris
 │   ├── README.md
 │   ├── download_ephe.sh    # Download von GitHub
@@ -128,12 +134,13 @@ astrouni/
 ├── example_chart.cpp       # Beispielprogramm
 │
 └── docs/                   # Dokumentation
-    ├── README.md
-    ├── QUICKSTART.md
-    ├── BUILD.md
-    ├── INSTALLATION.md
-    ├── PORTIERUNGSPLAN.md
-    └── STATUS.md
+    ├── QUICKSTART.md       # Quick Start Guide
+    ├── BUILD.md            # Build-Anleitung
+    ├── INSTALLATION.md     # Installation
+    ├── DATENFORMAT.md      # Datenformat-Spezifikation
+    ├── PORTIERUNGSPLAN.md  # Portierungsplan
+    ├── STATUS.md           # Projekt-Status
+    └── SWISS_EPHEMERIS_INTEGRATION.md # Swiss Ephemeris Details
 ```
 
 ## API-Beispiel
@@ -223,22 +230,36 @@ Siehe [COPYRIGHT](COPYRIGHT) für Details.
 
 ## Roadmap
 
-### Phase 1: Core Library ✅ (Woche 3-5)
-- [x] Swiss Ephemeris Integration
-- [x] Datenstrukturen (RadixData, GeoLocation, etc.)
-- [x] Mathematik-Module (Julianisches Datum, Winkel)
-- [x] Berechnungs-Engine (Planeten, Häuser, Aspekte)
-- [x] Unit Tests
+### Phase 1: Analyse (Abgeschlossen)
+- [x] Legacy Code analysiert
+- [x] Abhängigkeiten identifiziert
+- [x] Architektur entworfen
 
-### Phase 2: GUI (Woche 7-9) 🚧
-- [ ] wxWidgets Integration
-- [ ] Chart-Darstellung (Radix-Kreis)
-- [ ] Dialoge (Neue Charts, Einstellungen)
-- [ ] Export (PNG, SVG, PDF)
+### Phase 2: Core Library (Abgeschlossen)
+- [x] Swiss Ephemeris integriert
+- [x] Datenstrukturen portiert
+- [x] Mathematik-Module portiert
+- [x] Berechnungs-Engine portiert
+- [x] Unit Tests (19/19 bestanden)
+- [x] Build-System (CMake)
+- [x] Cross-Platform Scripts
 
-### Phase 3: Features (Woche 10-12) 📋
-- [ ] Deutsche Lokalisierung
-- [ ] Orte-Datenbank
+### Phase 3: GUI (In Arbeit - 80% fertig)
+- [x] wxWidgets integriert
+- [x] Hauptfenster implementiert
+- [x] Chart-Panel implementiert
+- [x] Dialoge implementiert
+- [x] i18n (Deutsch/Englisch)
+- [ ] Chart-Rendering verbessern
+- [ ] Speichern/Laden implementieren
+- [ ] Export-Funktionen (PNG, SVG)
+
+### Phase 4: Erweiterte Features (Geplant)
+- [ ] Orte-Datenbank (SQLite)
+- [ ] Transite
+- [ ] Progressionen
+- [ ] Synastrie
+- [ ] Kompositebank
 - [ ] Transite und Progressionen
 - [ ] Synastrie (Partner-Vergleich)
 

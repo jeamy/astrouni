@@ -1,9 +1,10 @@
 # Core Library
 add_library(astro_core STATIC
-    src/swiss_ephemeris.cpp
     src/data_types.cpp
+    src/swiss_ephemeris.cpp
     src/math_utils.cpp
     src/calculations.cpp
+    src/i18n.cpp
 )
 
 target_include_directories(astro_core

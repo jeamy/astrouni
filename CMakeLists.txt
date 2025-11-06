@@ -37,6 +37,12 @@ if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
+# GUI (optional)
+option(BUILD_GUI "Build wxWidgets GUI" ON)
+if(BUILD_GUI)
+    add_subdirectory(gui)
+endif()
+
 # Installation
 install(TARGETS example_chart DESTINATION bin)
 install(DIRECTORY swisseph/ephe/ DESTINATION share/astro_universe/ephe)
