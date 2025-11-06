@@ -50,6 +50,8 @@ public:
 private:
   void OnPaint(wxPaintEvent&);
   void DrawChart(wxDC& dc, const wxSize& size);
+  void DrawAspectLegend(wxDC& dc, const wxPoint& position);
+  void DrawHouseNumbers(wxDC& dc, const wxPoint& center, int radius, const double cusps[12]);
 
   // parameters
   astrocore::Date m_date{2000,1,1};

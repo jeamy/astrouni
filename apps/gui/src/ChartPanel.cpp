@@ -73,6 +73,7 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
     std::fprintf(stderr, "[ChartPanel] DrawChart end (fallback)\n");
     return;
   }
+  std::fprintf(stderr, "[ChartPanel] Graphics context created successfully\n");
 
   dc.SetPen(*wxBLACK_PEN);
   dc.SetBrush(*wxTRANSPARENT_BRUSH);
@@ -94,9 +95,10 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
   double glyphSizeSign = std::clamp(radius * 0.06, 14.0, 26.0);
   double glyphSizePlanet = std::clamp(radius * 0.055, 12.0, 24.0);
 
-  // Draw the 12 sign glyphs around the wheel
-  for (int sign = 0; sign < 12; ++sign) {
-    ChartGlyphHelper::DrawSignOnWheel(gc, sign, wxPoint(cx, cy), radius, m_showLabels, glyphSizeSign, m_signLabelRadiusOffset);
+  // Draw zodiac sign ring (symbols only, no labels)
+  std::fprintf(stderr, "[ChartPanel] drawing zodiac sign ring...\n");
+  for (int i = 0; i < 12; ++i) {
+    ChartGlyphHelper::DrawSignOnWheel(gc, i, wxPoint(cx, cy), radius, false, glyphSizeSign, 65);
   }
 
   // Compute from current parameters
@@ -120,6 +122,11 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
     int x2 = cx + static_cast<int>(std::cos(a) * radius);
     int y2 = cy + static_cast<int>(std::sin(a) * radius);
     dc.DrawLine(cx, cy, x2, y2);
+  }
+  
+  // Draw house numbers
+  if (m_showLabels) {
+    DrawHouseNumbers(dc, wxPoint(cx, cy), radius, cusps);
   }
 
   // Label Asc and MC
@@ -152,32 +159,45 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
       GlyphRenderer::Initialize();
     }
     
-    // Draw each planet
+    // Collect valid planets and sort by longitude for better spacing
     std::fprintf(stderr, "[ChartPanel] drawing planets...\n");
+    std::vector<std::pair<PlanetId, PlanetPosition>> validPlanets;
     for (int i = 0; i <= static_cast<int>(PlanetId::Pluto); ++i) {
       PlanetId planet = static_cast<PlanetId>(i);
       const PlanetPosition& pos = chartData.positions[i];
-      
       if (pos.valid) {
-        // Convert ecliptic longitude to chart angle (0° at right, moving counterclockwise)
-        double angleDeg = 90.0 - pos.longitude;
-        double angleRad = angleDeg * std::numbers::pi / 180.0;
-        
-        // Calculate position on chart
-        double planetRadius = radius * 0.86; // Place planets inside the house cusps with more space
-        int x = cx + static_cast<int>(std::cos(angleRad) * planetRadius);
-        int y = cy + static_cast<int>(std::sin(angleRad) * planetRadius);
-        
-        // Draw the planet glyph
-        ChartGlyphHelper::DrawPlanetOnWheel(gc, planet, pos.longitude, pos.latitude,
-                                          wxPoint(cx, cy), radius * 0.86, m_showLabels, glyphSizePlanet);
+        validPlanets.push_back({planet, pos});
       }
+    }
+    
+    // Draw planets with collision avoidance
+    std::vector<double> usedPositions;
+    for (const auto& [planet, pos] : validPlanets) {
+      double adjustedLongitude = pos.longitude;
+      
+      // Simple collision avoidance - check if too close to existing planets
+      for (double usedPos : usedPositions) {
+        double diff = std::abs(adjustedLongitude - usedPos);
+        if (diff > 180.0) diff = 360.0 - diff; // Handle wrap-around
+        if (diff < 8.0) { // Minimum 8 degrees separation
+          adjustedLongitude += (diff < 4.0) ? 8.0 : -8.0;
+          if (adjustedLongitude < 0) adjustedLongitude += 360.0;
+          if (adjustedLongitude >= 360.0) adjustedLongitude -= 360.0;
+        }
+      }
+      
+      usedPositions.push_back(adjustedLongitude);
+      ChartGlyphHelper::DrawPlanetOnWheel(gc, planet, adjustedLongitude, pos.latitude,
+                                        wxPoint(cx, cy), radius * 0.86, m_showLabels, glyphSizePlanet);
     }
     
     // Draw aspect lines between planets if enabled
     if (m_showAspectLines) {
       std::fprintf(stderr, "[ChartPanel] drawing aspect lines (orb=%.2f)\n", m_aspectOrbDeg);
       ChartGlyphHelper::DrawAspectLines(gc, chartData.positions, wxPoint(cx, cy), radius, m_aspectOrbDeg);
+      
+      // Draw aspect legend
+      DrawAspectLegend(dc, wxPoint(10, 10));
     }
   }
   
@@ -205,6 +225,76 @@ void ChartPanel::DrawChart(wxDC& dc, const wxSize& size) {
   // Clean up graphics context
   delete gc;
   std::fprintf(stderr, "[ChartPanel] DrawChart end\n");
+}
+
+void ChartPanel::DrawAspectLegend(wxDC& dc, const wxPoint& position) {
+  // Draw legend box
+  dc.SetPen(*wxBLACK_PEN);
+  dc.SetBrush(*wxWHITE_BRUSH);
+  dc.DrawRectangle(position.x, position.y, 220, 120);
+  
+  // Legend title
+  wxFont titleFont(10, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
+  dc.SetFont(titleFont);
+  dc.DrawText("Aspekte:", position.x + 5, position.y + 5);
+  
+  // Legend entries
+  wxFont entryFont(8, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
+  dc.SetFont(entryFont);
+  
+  struct LegendEntry {
+    wxString name;
+    wxPenStyle style;
+    int width;
+  };
+  
+  LegendEntry entries[] = {
+    {"Konjunktion (0°) - Vereinigung", wxPENSTYLE_SOLID, 2},
+    {"Opposition (180°) - Spannung", wxPENSTYLE_LONG_DASH, 1},
+    {"Trigon (120°) - Harmonie", wxPENSTYLE_SOLID, 1},
+    {"Quadrat (90°) - Herausforderung", wxPENSTYLE_DOT, 1},
+    {"Sextil (60°) - Gelegenheit", wxPENSTYLE_DOT_DASH, 1}
+  };
+  
+  int y = position.y + 25;
+  for (const auto& entry : entries) {
+    // Draw line sample
+    wxPen pen(*wxBLACK, entry.width, entry.style);
+    dc.SetPen(pen);
+    dc.DrawLine(position.x + 5, y + 4, position.x + 25, y + 4);
+    
+    // Draw text
+    dc.SetPen(*wxBLACK_PEN);
+    dc.DrawText(entry.name, position.x + 30, y);
+    y += 15;
+  }
+}
+
+void ChartPanel::DrawHouseNumbers(wxDC& dc, const wxPoint& center, int radius, const double cusps[12]) {
+  wxFont houseFont(9, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
+  dc.SetFont(houseFont);
+  dc.SetTextForeground(*wxBLUE);
+  
+  for (int i = 0; i < 12; ++i) {
+    // Calculate middle of house
+    double startAngle = cusps[i];
+    double endAngle = cusps[(i + 1) % 12];
+    
+    // Handle wrap-around
+    if (endAngle < startAngle) endAngle += 2.0 * std::numbers::pi;
+    double midAngle = (startAngle + endAngle) / 2.0;
+    
+    // Position house number
+    double houseRadius = radius * 0.9;
+    int x = center.x + static_cast<int>(std::cos(midAngle) * houseRadius);
+    int y = center.y + static_cast<int>(std::sin(midAngle) * houseRadius);
+    
+    wxString houseNum = wxString::Format("%d", i + 1);
+    wxSize textSize = dc.GetTextExtent(houseNum);
+    dc.DrawText(houseNum, x - textSize.x/2, y - textSize.y/2);
+  }
+  
+  dc.SetTextForeground(*wxBLACK);
 }
 
 // Setters

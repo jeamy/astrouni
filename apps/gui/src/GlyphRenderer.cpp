@@ -285,50 +285,8 @@ void ChartGlyphHelper::DrawSignOnWheel(wxGraphicsContext* gc, int signIndex,
     wxColour color = GlyphRenderer::GetSignColor(signIndex);
     GlyphRenderer::DrawSignGlyph(gc, signIndex, wxPoint(x, y), glyphSize, color);
     
-    // Draw label if requested (tangential alignment)
-    if (showLabel) {
-        // Sign names (German)
-        static const wxString signNames[] = {
-            wxString::FromUTF8("Widder"), wxString::FromUTF8("Stier"), wxString::FromUTF8("Zwillinge"),
-            wxString::FromUTF8("Krebs"), wxString::FromUTF8("Löwe"), wxString::FromUTF8("Jungfrau"),
-            wxString::FromUTF8("Waage"), wxString::FromUTF8("Skorpion"), wxString::FromUTF8("Schütze"),
-            wxString::FromUTF8("Steinbock"), wxString::FromUTF8("Wassermann"), wxString::FromUTF8("Fische")
-        };
-
-        wxString label = signNames[signIndex % 12];
-
-        // Scale label font slightly relative to glyph size
-        int labelPt = std::max(7, (int)std::round(glyphSize * 0.7));
-        wxFont font(labelPt, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
-        gc->SetFont(font, color);
-
-        // Label position (outside the glyph)
-        double labelAngle = angle;
-        // Place label at configurable radius offset from base radius
-        double labelRadius = radius + labelRadiusOffset;
-        double labelX = center.x + labelRadius * cos(labelAngle);
-        double labelY = center.y - labelRadius * sin(labelAngle);
-
-        // Tangent orientation computed in screen space (y down)
-        double dx = labelX - center.x;
-        double dy = labelY - center.y;
-        double tx = -dy;
-        double ty = dx;
-        double t = atan2(ty, tx);
-        // Keep text upright (avoid upside-down)
-        if (t > M_PI / 2.0) t -= M_PI;
-        if (t < -M_PI / 2.0) t += M_PI;
-
-        double tw, th, descent, externalLeading;
-        gc->GetTextExtent(label, &tw, &th, &descent, &externalLeading);
-
-        gc->PushState();
-        gc->Translate(labelX, labelY);
-        gc->Rotate(t);
-        // y is baseline; draw so that the label's visual box is centered at (0,0)
-        gc->DrawText(label, -tw / 2.0, th / 2.0 - descent);
-        gc->PopState();
-    }
+    // Skip drawing labels to avoid clutter
+    (void)showLabel; // Suppress unused parameter warning
 }
 
 void ChartGlyphHelper::DrawAspectLines(wxGraphicsContext* gc, 
@@ -355,14 +313,25 @@ void ChartGlyphHelper::DrawAspectLines(wxGraphicsContext* gc,
             
             // If there's an aspect, draw the line
             if (aspectResult.type != astrocore::AspectType::None) {
-                // Calculate positions on the wheel
+                // Calculate positions on the wheel - connect to planet positions
                 double a1 = (90.0 - angle1) * M_PI / 180.0;
                 double a2 = (90.0 - angle2) * M_PI / 180.0;
                 
-                double x1 = center.x + radius * 0.8 * cos(a1);
-                double y1 = center.y - radius * 0.8 * sin(a1);
-                double x2 = center.x + radius * 0.8 * cos(a2);
-                double y2 = center.y - radius * 0.8 * sin(a2);
+                // Connect aspect lines at planet ring, not through center
+                double planetRadius = radius * 0.86;
+                double x1 = center.x + planetRadius * cos(a1);
+                double y1 = center.y - planetRadius * sin(a1);
+                double x2 = center.x + planetRadius * cos(a2);
+                double y2 = center.y - planetRadius * sin(a2);
+                
+                // For opposition aspects, draw shorter lines to avoid center clutter
+                if (aspectResult.type == astrocore::AspectType::Opposition) {
+                    double shortenFactor = 0.7; // Don't draw all the way across
+                    double dx = x2 - x1;
+                    double dy = y2 - y1;
+                    x2 = x1 + dx * shortenFactor;
+                    y2 = y1 + dy * shortenFactor;
+                }
                 
                 // Set line properties based on aspect
                 wxColour color = GlyphRenderer::GetAspectColor(aspectResult.type);

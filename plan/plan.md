@@ -15,14 +15,20 @@ The application follows a layered architecture:
 ## Current Status
 
 The following components have been implemented:
-- Basic chart drawing with house cusps (Equal, Placidus, Koch, Porphyry, PorphyryNeo, Whole Sign, Campanus)
-- GUI menus (File, Chart, View, Help) with handlers
-- Date/time/timezone input dialog
-- Location input dialog
-- Aspect detection and visualization
-- Chart parameter controls (house system, aspect orb)
-- View toggles (axes, labels)
-- PNG export
+- ✅ Core library (astrocore) with comprehensive astronomical calculations
+- ✅ All major house systems (Equal, Placidus, Koch, Campanus, Regiomontanus, Porphyry, PorphyryNeo, Whole Sign, Topocentric, Meridian, Morinus, EqualMid, Alcabitius)
+- ✅ GUI with wxWidgets: chart wheel, planet positions, aspect lines/grid
+- ✅ German localization throughout the interface
+- ✅ Complete menu system (File, Chart, View, Help) with handlers
+- ✅ Date/time/timezone and location input dialogs
+- ✅ Aspect detection with applying/separating classification
+- ✅ Declination parallels and contra-parallels (core + CLI)
+- ✅ Aspect pattern detection (Grand Trine, T-Square)
+- ✅ Zodiac sign ring with Unicode symbols (♈..♓)
+- ✅ Chart parameter controls and view toggles
+- ✅ PNG export functionality
+- ✅ CLI interface with comprehensive commands
+- ✅ Extensive unit test coverage
 
 ## Feature Implementation Plan
 
@@ -121,21 +127,29 @@ Implementation plan for aspect calculations:
 - [ ] Highlight aspect patterns (T-square, Grand Trine)
 - [ ] GUI support for additional house systems (Koch, Campanus, Regiomontanus, Porphyry, PorphyryNeo, Whole, Topocentric, Meridian, Morinus, EqualMid, Alcabitius)
 - [ ] Planet set options: include Nodes and Chiron
-- [x] Zodiac sign ring and glyphs
+- [x] Zodiac sign ring and glyphs (always visible, Unicode symbols)
 - [ ] Customizable chart styles and colors
 - [ ] Multiple chart types (natal, transit, synastry)
+- [ ] Professional astrological font integration
+- [ ] Enhanced planet glyph rendering (currently ASCII placeholders)
 
 #### 2.2 Data Input and Management
-- [x] Date/time input with timezone
-- [x] Location input (longitude/latitude)
+- [x] Date/time input with timezone (German localized dialogs)
+- [x] Location input (longitude/latitude) with validation
 - [ ] Atlas integration for city lookup
 - [ ] Chart data persistence (save/load)
 - [ ] Chart comparison tools
+- [ ] Legacy data file parsing (astronam.dat, astroger.dat, astroini.dat)
 
 #### 2.3 Analysis Tools
-- [x] Aspect grid display
+- [x] Aspect grid display (separate window)
+- [x] Aspect pattern detection and CLI output
+- [x] Applying/separating aspect classification (core + CLI)
+- [x] Declination parallels/contra-parallels (core + CLI)
 - [ ] Planet and house position tables
 - [ ] Aspect listing with interpretations
+- [ ] Visual highlighting of aspect patterns in GUI
+- [ ] Parallels/contra-parallels GUI display and toggle
 - [ ] Transit forecasting
 - [ ] Progressions and directions
 
@@ -143,6 +157,9 @@ Implementation plan for aspect calculations:
 
 #### 3.1 Basic Functionality
 - [x] Chart calculation from command line
+- [x] Aspect detection with speeds (`aspect` command)
+- [x] Declination aspects (`declaspect` command)
+- [x] Pattern detection (`patterns` command)
 - [ ] Text-based chart output
 - [ ] Batch processing of charts
 - [ ] Ephemeris generation
@@ -165,10 +182,14 @@ Implementation plan for aspect calculations:
 - [ ] Reference materials
 
 #### 4.3 Testing
-- [ ] Unit tests for core calculations
+- [x] Unit tests for core calculations (comprehensive coverage)
+- [x] Aspect detection and pattern recognition tests
+- [x] House system validation across multiple latitudes
+- [x] Applying/separating and declination aspect tests
 - [ ] Integration tests
 - [ ] Accuracy validation against standard ephemerides
 - [ ] Performance benchmarking
+- [ ] GUI automated testing
 
 ### 5. Future Enhancements
 
@@ -241,29 +262,44 @@ Implementation plan for aspect calculations:
 
 ### 5. Performance and Optimization
 
+**High Priority:**
+- [ ] Optimize chart drawing for smooth rendering (current bottleneck)
+- [ ] Cache frequently used calculations (ephemeris lookups)
+- [ ] Optimize aspect line rendering performance
+- [ ] Memory usage optimization for large datasets
+
+**Medium Priority:**
 - [ ] Optimize planet calculations for speed
-- [ ] Cache frequently used calculations
-- [ ] Optimize chart drawing for smooth rendering
-- [ ] Memory usage optimization
+- [ ] Implement lazy loading for GUI components
+- [ ] Background calculation threading
+- [ ] Chart export optimization
 
 ### 6. Testing and Validation
 
-- [ ] Unit tests for core calculations
-- [ ] Validation against published ephemerides
-- [ ] GUI testing
-- [ ] Cross-platform testing
+- [x] Unit tests for core calculations (comprehensive)
+- [x] House system accuracy tests
+- [x] Aspect detection validation
+- [ ] Validation against published ephemerides (Swiss Ephemeris comparison)
+- [ ] GUI automated testing framework
+- [ ] Cross-platform testing (Linux/Windows/macOS)
+- [ ] Performance regression testing
+- [ ] User acceptance testing
 
 ## Module-by-Module Implementation Sequence
 
-1. **Core Astronomy Module**
-   - Complete planet position calculations
-   - Implement all house systems
-   - Complete aspect calculations
+1. **Core Astronomy Module** ✅ **COMPLETED**
+   - ✅ Complete planet position calculations
+   - ✅ Implement all house systems (12 systems implemented)
+   - ✅ Complete aspect calculations with applying/separating
+   - ✅ Declination aspects and pattern detection
 
-2. **Chart Drawing Module**
-   - Implement planet glyph rendering
-   - Add zodiac sign glyphs
-   - Implement aspect grid
+2. **Chart Drawing Module** 🔄 **IN PROGRESS**
+   - ✅ Basic chart wheel rendering
+   - ✅ Add zodiac sign glyphs (Unicode symbols)
+   - ✅ Implement aspect grid (separate window)
+   - 🔄 Enhance planet glyph rendering (professional fonts needed)
+   - 🔄 Visual styling for applying/separating aspects
+   - 🔄 Pattern highlighting in GUI
 
 3. **File I/O Module**
    - Implement .dat file parsing
