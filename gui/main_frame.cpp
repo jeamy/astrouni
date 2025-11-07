@@ -182,35 +182,25 @@ void MainFrame::OnOrtDialog(wxCommandEvent& event) {
 
 // Horoskop-Menü Implementierung
 void MainFrame::OnHoroTyp(wxCommandEvent& event) {
-    // HoroTyp-Dialog öffnen (1:1 Legacy DlgHoroAuswahl)
-    wxArrayString choices;
-    choices.Add(wxString::FromUTF8("Radix"));
-    choices.Add(wxString::FromUTF8("Transit"));
-    choices.Add(wxString::FromUTF8("Synastrie"));
-    choices.Add(wxString::FromUTF8("Composit"));
-    choices.Add(wxString::FromUTF8("Solar"));
-    choices.Add(wxString::FromUTF8("Lunar"));
-    
-    wxSingleChoiceDialog dialog(this, 
-        wxString::FromUTF8("Wählen Sie den Horoskop-Typ:"),
-        wxString::FromUTF8("Horoskop-Typ Auswahl"),
-        choices);
-    
-    dialog.SetSelection(0); // Radix als Standard
-    
+    // HoroTypDialog öffnen (1:1 Legacy DlgHoroAuswahl)
+    HoroTypDialog dialog(this, data_manager_.get());
     if (dialog.ShowModal() == wxID_OK) {
-        wxString selected = dialog.GetStringSelection();
-        SetStatusText(wxString::FromUTF8("Horoskop-Typ: ") + selected, 0);
+        HoroType selected_type = dialog.GetHoroType();
+        wxString type_name;
         
-        // TODO: Horoskop-Typ in Einstellungen speichern und verwenden
-        if (selected == wxString::FromUTF8("Radix")) {
-            // Standard-Radix-Modus
-        } else if (selected == wxString::FromUTF8("Transit")) {
-            // Transit-Modus aktivieren
-        } else if (selected == wxString::FromUTF8("Synastrie")) {
-            // Synastrie-Modus aktivieren (2 Personen)
+        switch (selected_type) {
+            case HoroType::RADIX: type_name = wxString::FromUTF8("Radix"); break;
+            case HoroType::TRANSIT: type_name = wxString::FromUTF8("Transit"); break;
+            case HoroType::SYNASTRIE: type_name = wxString::FromUTF8("Synastrie"); break;
+            case HoroType::COMPOSIT: type_name = wxString::FromUTF8("Composit"); break;
+            case HoroType::SOLAR: type_name = wxString::FromUTF8("Solar Return"); break;
+            case HoroType::LUNAR: type_name = wxString::FromUTF8("Lunar Return"); break;
+            case HoroType::PROGRESSION: type_name = wxString::FromUTF8("Progression"); break;
         }
-        // Weitere Typen...
+        
+        SetStatusText(wxString::FromUTF8("Horoskop-Typ: ") + type_name, 0);
+        
+        // TODO: Horoskop-Typ in Einstellungen speichern und Chart-Berechnung anpassen
     }
 }
 
@@ -258,33 +248,10 @@ void MainFrame::OnFarben(wxCommandEvent& event) {
 
 void MainFrame::OnEinstellungen(wxCommandEvent& event) {
     // EinstellungenDialog öffnen (1:1 Legacy DlgAspekte)
-    // TODO: EinstellungenDialog implementieren - zeige aktuell verfügbare Einstellungen
-    wxString settings_info = wxString::Format(
-        wxString::FromUTF8("Aktuelle Einstellungen:\n\n"
-                          "Häusersystem: %s\n"
-                          "Aspekte anzeigen: %s\n"
-                          "Häuser anzeigen: %s\n"
-                          "Grade anzeigen: %s\n"
-                          "Retrograde anzeigen: %s\n\n"
-                          "Orben:\n"
-                          "• Sonne-Mond: %.1f°\n"
-                          "• Sonne-Planeten: %.1f°\n"
-                          "• Mond-Planeten: %.1f°\n"
-                          "• Planeten-Planeten: %.1f°\n"
-                          "• Nebenaspekte: %.1f°"),
-        "Placidus",
-        data_manager_->GetSettings().show_aspects ? "Ja" : "Nein",
-        data_manager_->GetSettings().show_houses ? "Ja" : "Nein", 
-        data_manager_->GetSettings().show_degrees ? "Ja" : "Nein",
-        data_manager_->GetSettings().show_retrograde ? "Ja" : "Nein",
-        data_manager_->GetSettings().orbs.sun_moon,
-        data_manager_->GetSettings().orbs.sun_planets,
-        data_manager_->GetSettings().orbs.moon_planets,
-        data_manager_->GetSettings().orbs.planets_planets,
-        data_manager_->GetSettings().orbs.minor_aspects
-    );
-    
-    wxMessageBox(settings_info, wxString::FromUTF8("Einstellungen"), wxOK | wxICON_INFORMATION);
+    EinstellungenDialog dialog(this, data_manager_.get());
+    if (dialog.ShowModal() == wxID_OK) {
+        SetStatusText(wxString::FromUTF8("Einstellungen gespeichert"), 0);
+    }
 }
 
 void MainFrame::OnOpen(wxCommandEvent& event) {

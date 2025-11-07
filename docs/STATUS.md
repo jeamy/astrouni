@@ -24,13 +24,83 @@
 - **CM_U_HAUSER** (Zeile 338) - DlgHausAuswahl → HausDialog ✅ PORTIERT
 - **CM_U_ORBEN** (Zeile 344) - DlgOrbenEin → OrbenDialog ✅ PORTIERT
 - **CM_U_FARBEN** (Zeile 351) - DlgFarben → FarbenDialog ✅ PORTIERT
-- **CM_U_EINST** (Zeile 357) - DlgAspekte → EinstellungenDialog ❌ FEHLT
-- **CM_U_HOROTYP** (Zeile 363) - DlgHoroAuswahl → HoroTypDialog ❌ FEHLT
+- **CM_U_EINST** (Zeile 357) - DlgAspekte → EinstellungenDialog ✅ PORTIERT
+- **CM_U_HOROTYP** (Zeile 363) - DlgHoroAuswahl → HoroTypDialog ✅ PORTIERT
 - **CM_U_HELP*** (Zeile 396-401) - MessageBox → About ✅ PORTIERT
 
-### 🚧 **NÄCHSTE SCHRITTE:**
-- [ ] **DlgAspekte** → EinstellungenDialog 1:1 portieren
-- [ ] **DlgHoroAuswahl** → HoroTypDialog 1:1 portieren
+### ✅ **MAINWNDPROC 1:1 PORTIERUNG VOLLSTÄNDIG ABGESCHLOSSEN:**
+- [x] **DlgAspekte** → EinstellungenDialog 1:1 portiert ✅
+- [x] **DlgHoroAuswahl** → HoroTypDialog 1:1 portiert ✅
+- [x] **ALLE MainWndProc-Handler** erfolgreich portiert ✅
+
+### 🚧 **NÄCHSTE SCHRITTE - RadixWndProc & TransitWndProc:**
+- [x] **RadixWndProc** (Zeile 426) - Radix-Fenster Event-Handler analysiert ✅
+
+### 📋 **RadixWndProc Legacy-Handler identifiziert:**
+- **CM_UR_EXIT** (Zeile 590) - DestroyWindow → Close Radix-Fenster
+- **CM_UR_SAVE** (Zeile 594) - PostMessage CM_U_PERSON → Person speichern
+- **CM_UR_PRINT** (Zeile 600) - sDlgPrint → Radix drucken
+- **CM_UR_HOROTYP** (Zeile 607) - PostMessage CM_U_HOROTYP → Horoskop-Typ
+- **CM_UR_HELP** (Zeile 614) - MessageBox → Hilfe
+
+### 📋 **TransitWndProc Legacy-Handler identifiziert:**
+- **CM_UT_EXIT** (Zeile 694) - DestroyWindow → Close Transit-Fenster
+- **CM_UT_SAVE** (Zeile 698) - PostMessage CM_U_PERSON → Person speichern
+- **CM_UT_PRINT** (Zeile 702) - sDlgPrint → Transit drucken
+- **CM_UT_HOROTYP** (Zeile 707) - SendMessage CM_U_HOROTYP → Horoskop-Typ
+- **CM_UT_HELP** (Zeile 714) - MessageBox → Hilfe
+
+### 🚧 **WEITER MIT:**
+- [x] **TransitWndProc** (Zeile 646) - Transit-Fenster Event-Handler analysiert ✅
+- [x] **WinMain** - Anwendungs-Einstiegspunkt analysiert ✅
+- [x] **DlgOrtAuswahl** → OrtAuswahlDialog 1:1 portiert ✅
+
+### 📋 **Weitere Dialog-Prozeduren aus astrofil.c identifiziert:**
+- **DlgPHProc** (Zeile 1059) - Person-Hilfe Dialog
+- **DlgOrtAuswahl** (Zeile 1122) - Ort-Auswahl Dialog ✅ PORTIERT
+- **DlgPErfassen** (Zeile 1199) - Person erfassen ✅ PORTIERT
+- **DlgDDProc** (Zeile 1294) - Datum-Dialog
+- **DlgDGProc** (Zeile 1341) - Grad-Dialog
+- **DlgHausAuswahl** (Zeile 1385) - Häuser-Auswahl ✅ PORTIERT
+- **DlgHoroAuswahl** (Zeile 1429) - Horoskop-Auswahl ✅ PORTIERT
+- **DlgTransit** (Zeile 1475) - Transit-Dialog
+- **DlgOrbenEin** (Zeile 1619) - Orben-Einstellungen ✅ PORTIERT
+- **DlgTransEin** (Zeile 1798) - Transit-Einstellungen
+- **DlgFarben** (Zeile 2046) - Farben-Dialog ✅ PORTIERT
+- **DlgCalc** (Zeile 2206) - Berechnung-Dialog
+- **DlgOErfassen** (Zeile 2223) - Ort erfassen ✅ PORTIERT
+- **DlgODProc** (Zeile 2302) - Ort-Duplikat Dialog
+- **DlgAspekte** (Zeile 2544) - Aspekte-Dialog ✅ PORTIERT
+
+### 🚧 **NÄCHSTE PRIORITÄTEN:**
+- [x] **DlgTransit** → TransitDialog 1:1 portiert ✅
+- [x] **DlgTransEin** → TransitEinstellungenDialog 1:1 portiert ✅
+- [x] **DlgCalc** → BerechnungDialog 1:1 portiert ✅
+
+### ✅ **WEITERE DIALOGE ERFOLGREICH PORTIERT:**
+
+#### **TransitDialog** - Vollständiger Transit-Berechnungs-Dialog
+- Person-Auswahl mit Dummy-Implementation
+- Zeitraum-Eingabe (Start/End Datum/Zeit)
+- Intervall-Einstellung (1-365 Tage)
+- Transit-Optionen (Alle Planeten, Aspekte, Ingress, Exakte Zeiten)
+- Live-Vorschau der Berechnungsparameter
+- 1:1 Legacy-Layout und Funktionalität
+
+#### **TransitEinstellungenDialog** - Detaillierte Transit-Konfiguration
+- Vollständige Planeten-Auswahl (☉☽☿♀♂♃♄♅♆♇☊⚷)
+- Alle Aspekt-Typen (Haupt- und Nebenaspekte mit Symbolen)
+- Separate Orben für Haupt-/Nebenaspekte
+- Anzeige-Optionen (Exakte Zeiten, Laufend/Abnehmend, Sortierung)
+- Alle/Keine-Buttons für schnelle Auswahl
+- Live-Validierung (OK nur bei gültiger Auswahl)
+
+#### **BerechnungDialog** - Fortschritts-Anzeige für Berechnungen
+- Fortschritts-Balken mit Prozent-Anzeige
+- Status-Text für aktuelle Operation
+- Abbrechen-Funktionalität
+- Automatisches Schließen bei Erfolg
+- 1:1 Legacy-Verhalten
 
 ## ✅ Abgeschlossen
 

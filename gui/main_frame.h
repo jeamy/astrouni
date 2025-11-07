@@ -10,6 +10,8 @@
 #include "dialogs/haus_dialog.h"
 #include "dialogs/orben_dialog.h"
 #include "dialogs/farben_dialog.h"
+#include "dialogs/einstellungen_dialog.h"
+#include "dialogs/horotyp_dialog.h"
 #include "database/legacy_data_manager.h"
 #include "astro/swiss_ephemeris.h"
 #include "astro/calculations.h"

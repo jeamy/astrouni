@@ -16,6 +16,12 @@ set(GUI_SOURCES
     dialogs/haus_dialog.cpp
     dialogs/orben_dialog.cpp
     dialogs/farben_dialog.cpp
+    dialogs/einstellungen_dialog.cpp
+    dialogs/horotyp_dialog.cpp
+    dialogs/ort_auswahl_dialog.cpp
+    dialogs/transit_dialog.cpp
+    dialogs/transit_einstellungen_dialog.cpp
+    dialogs/berechnung_dialog.cpp
     database/radix_database.cpp
     database/legacy_data_manager.cpp
 )
@@ -29,6 +35,12 @@ set(GUI_HEADERS
     dialogs/haus_dialog.h
     dialogs/orben_dialog.h
     dialogs/farben_dialog.h
+    dialogs/einstellungen_dialog.h
+    dialogs/horotyp_dialog.h
+    dialogs/ort_auswahl_dialog.h
+    dialogs/transit_dialog.h
+    dialogs/transit_einstellungen_dialog.h
+    dialogs/berechnung_dialog.h
     database/radix_database.h
     database/legacy_data_manager.h
 )

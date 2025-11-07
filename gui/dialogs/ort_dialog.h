@@ -8,6 +8,7 @@
 #include <wx/spinctrl.h>
 #include <wx/listctrl.h>
 #include "astro/data_types.h"
+#include "../database/legacy_data_manager.h"
 
 // 1:1 Port von DlgOErfassen (E_ORT Dialog)
 class OrtDialog : public wxDialog {
