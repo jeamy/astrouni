@@ -44,7 +44,7 @@ void ChartPanel::OnPaint(wxPaintEvent& event) {
     
     if (has_chart_ && chart_data_) {
         wxSize size = GetClientSize();
-        renderer_.DrawChart(dc, *chart_data_, size.x, size.y);
+        renderer_.DrawRadix(dc, size.x, size.y, *chart_data_);
     } else {
         // Platzhalter-Text
         wxSize size = GetClientSize();

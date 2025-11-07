@@ -467,6 +467,93 @@ TEST(HouseSystemTest, PlacidusConsistency) {
 
 ---
 
-*Stand: 6. November 2025, 20:07 UTC+1*  
-*Version: 1.1*  
-*Status: Phase 2 - Core Library Portierung gestartet*
+## 🔄 Aktuelle Strategie: 1:1 Legacy Portierung (7. November 2025)
+
+### Neue Herangehensweise
+
+**Problem**: Bisherige Ansätze waren zu abstrakt und wichen von der Legacy-Struktur ab.
+
+**Lösung**: **Exakte 1:1 Portierung** - Dateinamen, Funktionsnamen, Struktur bleiben identisch.
+
+### Phase 3.1: Komplette GUI-Portierung (IN ARBEIT)
+
+#### Menüstruktur (1:1 wie Legacy astrouni.c)
+- [x] Datei → Neu, Öffnen, Speichern, Drucken, Beenden
+- [ ] Daten → Person erfassen, Ort erfassen
+- [ ] Horoskop → Typ, Häusersystem, Orben, Farben, Einstellungen
+- [ ] Hilfe → About
+
+#### Dialoge (1:1 Port)
+- [ ] **DlgPErfassen** → PersonDialog (Person erfassen/auswählen)
+- [ ] **DlgOErfassen** → OrtDialog (Ort erfassen/auswählen)  
+- [ ] **DlgHausAuswahl** → HausDialog (Häusersystem wählen)
+- [ ] **DlgOrbenEin** → OrbenDialog (Orben einstellen)
+- [ ] **DlgFarben** → FarbenDialog (Farben konfigurieren)
+- [ ] **DlgAspekte** → EinstellungenDialog (Allgemeine Einstellungen)
+- [ ] **DlgHoroAuswahl** → HoroTypDialog (Radix/Transit/Synastrie)
+- [ ] **DlgTransit** → TransitDialog (Transit-Berechnung)
+
+#### Datenbank (astrofil.c → database/)
+- [ ] **sWriteDat()** → Radix speichern
+- [ ] **sReadDat()** → Radix laden
+- [ ] **sDeleteDat()** → Radix löschen
+- [ ] **sOrteWrite()** → Orte speichern
+- [ ] **sGetOrt()** → Orte laden
+- [ ] **.dat Files** → SQLite oder JSON (moderne Speicherung)
+
+#### Rendering (auwurzel.c → legacy_renderer.cpp)
+- [x] **sRadix()** → Kreise und Gradeinteilung
+- [x] **sHaus()** → Häusersystem zeichnen
+- [x] **sPlanet()** → Planeten zeichnen
+- [x] **sDrawAspekte()** → Aspekte zeichnen
+- [x] **vPlanetTicDraw()** → Planeten-Ticks
+- [x] **vPlanetDraw()** → Planeten-Symbole
+
+#### Settings (auhelper.c → settings/)
+- [ ] **sReadIni()** → Einstellungen laden
+- [ ] **sWriteIni()** → Einstellungen speichern
+- [ ] **sOrben()** → Orben verwalten
+- [ ] **sReadDefColor()** → Farben laden
+- [ ] **sWriteDefColor()** → Farben speichern
+
+### Dateistruktur (1:1 Legacy-Mapping)
+
+```
+gui/
+├── main.cpp                    # WinMain() Port
+├── main_frame.cpp/h            # MainWndProc Port
+├── radix_window.cpp/h          # RadixWndProc Port
+├── transit_window.cpp/h        # TransitWndProc Port
+├── legacy_renderer.cpp/h       # auwurzel.c Port ✅
+│
+├── dialogs/
+│   ├── person_dialog.cpp/h     # DlgPErfassen Port
+│   ├── ort_dialog.cpp/h        # DlgOErfassen Port
+│   ├── haus_dialog.cpp/h       # DlgHausAuswahl Port
+│   ├── orben_dialog.cpp/h      # DlgOrbenEin Port
+│   ├── farben_dialog.cpp/h     # DlgFarben Port
+│   ├── einstellungen_dialog.cpp/h  # DlgAspekte Port
+│   ├── horo_typ_dialog.cpp/h   # DlgHoroAuswahl Port
+│   └── transit_dialog.cpp/h    # DlgTransit Port
+│
+├── database/
+│   ├── radix_db.cpp/h          # astrofil.c Port
+│   ├── orte_db.cpp/h           # Orte-Verwaltung
+│   └── namen_db.cpp/h          # Namen-Verwaltung
+│
+└── settings/
+    ├── settings_manager.cpp/h  # auhelper.c Port
+    ├── orben_manager.cpp/h     # Orben-Verwaltung
+    └── color_manager.cpp/h     # Farben-Verwaltung
+```
+
+### Gelöschte/Zu ersetzende Dateien
+
+- ~~chart_renderer.cpp/h~~ → Ersetzt durch legacy_renderer.cpp/h
+- ~~dialogs/new_chart_dialog.cpp/h~~ → Ersetzt durch person_dialog.cpp/h
+
+---
+
+*Stand: 7. November 2025, 21:00 UTC+1*  
+*Version: 2.0 - Umstellung auf 1:1 Legacy Portierung*  
+*Status: Phase 3 - Komplette GUI-Portierung nach Legacy-Struktur*

@@ -22,15 +22,33 @@ void I18n::set_language(Language lang) {
 void I18n::init_translations() {
     // UI-Texte
     translations_["app.title"] = {{Language::German, "AstroUniverse"}, {Language::English, "AstroUniverse"}};
+    
+    // Menü: Datei
     translations_["menu.file"] = {{Language::German, "Datei"}, {Language::English, "File"}};
-    translations_["menu.new"] = {{Language::German, "Neues Chart..."}, {Language::English, "New Chart..."}};
+    translations_["menu.new"] = {{Language::German, "Neu"}, {Language::English, "New"}};
     translations_["menu.open"] = {{Language::German, "Öffnen..."}, {Language::English, "Open..."}};
-    translations_["menu.save"] = {{Language::German, "Speichern..."}, {Language::English, "Save..."}};
-    translations_["menu.export_png"] = {{Language::German, "Export als PNG..."}, {Language::English, "Export as PNG..."}};
-    translations_["menu.export_svg"] = {{Language::German, "Export als SVG..."}, {Language::English, "Export as SVG..."}};
+    translations_["menu.save"] = {{Language::German, "Speichern"}, {Language::English, "Save"}};
+    translations_["menu.save_as"] = {{Language::German, "Speichern unter..."}, {Language::English, "Save As..."}};
+    translations_["menu.print"] = {{Language::German, "Drucken..."}, {Language::English, "Print..."}};
+    translations_["menu.printer_setup"] = {{Language::German, "Druckereinrichtung..."}, {Language::English, "Printer Setup..."}};
     translations_["menu.exit"] = {{Language::German, "Beenden"}, {Language::English, "Exit"}};
+    
+    // Menü: Daten
+    translations_["menu.data"] = {{Language::German, "Daten"}, {Language::English, "Data"}};
+    translations_["menu.person"] = {{Language::German, "Person erfassen/auswählen..."}, {Language::English, "Enter/Select Person..."}};
+    translations_["menu.place"] = {{Language::German, "Ort erfassen/auswählen..."}, {Language::English, "Enter/Select Place..."}};
+    
+    // Menü: Horoskop
+    translations_["menu.horoscope"] = {{Language::German, "Horoskop"}, {Language::English, "Horoscope"}};
+    translations_["menu.horo_type"] = {{Language::German, "Horoskop-Typ..."}, {Language::English, "Horoscope Type..."}};
+    translations_["menu.house_system"] = {{Language::German, "Häusersystem..."}, {Language::English, "House System..."}};
+    translations_["menu.orbs"] = {{Language::German, "Orben..."}, {Language::English, "Orbs..."}};
+    translations_["menu.colors"] = {{Language::German, "Farben..."}, {Language::English, "Colors..."}};
+    translations_["menu.settings"] = {{Language::German, "Einstellungen..."}, {Language::English, "Settings..."}};
+    
+    // Menü: Hilfe
     translations_["menu.help"] = {{Language::German, "Hilfe"}, {Language::English, "Help"}};
-    translations_["menu.about"] = {{Language::German, "Über..."}, {Language::English, "About..."}};
+    translations_["menu.about"] = {{Language::German, "Über AstroUniverse..."}, {Language::English, "About AstroUniverse..."}};
     
     // Dialog-Texte
     translations_["dialog.new_chart"] = {{Language::German, "Neues Chart"}, {Language::English, "New Chart"}};

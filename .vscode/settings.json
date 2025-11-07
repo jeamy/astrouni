@@ -68,6 +68,7 @@
         "stop_token": "cpp",
         "thread": "cpp",
         "typeinfo": "cpp",
-        "hash_set": "cpp"
+        "hash_set": "cpp",
+        "cinttypes": "cpp"
     }
 }

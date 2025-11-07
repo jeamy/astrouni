@@ -1,6 +1,36 @@
 # Projekt-Status: AstroUniverse Portierung
 
-**Stand:** 6. November 2025, 20:10 UTC+1
+**Stand:** 7. November 2025, 21:58 UTC+1
+
+## 🎯 **SYSTEMATISCHE 1:1 LEGACY-PORTIERUNG GESTARTET**
+
+**Ziel:** JEDE Funktion aus astrouni.c 1:1 portieren - KEINE eigenen Ideen!
+
+### 📋 **Legacy-Funktionen in astrouni.c identifiziert:**
+1. **MainWndProc** - Hauptfenster-Event-Handler (Zeile 288)
+2. **RadixWndProc** - Radix-Fenster-Event-Handler (Zeile 426) 
+3. **TransitWndProc** - Transit-Fenster-Event-Handler (Zeile 646)
+4. **WinMain** - Anwendungs-Einstiegspunkt
+5. **InitApplication** - Anwendungs-Initialisierung
+6. **InitInstance** - Instanz-Initialisierung
+
+### 🚧 **Aktuell in Arbeit:**
+- [x] **MainWndProc** - 1:1 Port nach MainFrame (ANALYSIERT)
+
+### 📋 **MainWndProc Legacy-Handler identifiziert:**
+- **CM_U_EXIT** (Zeile 322) - DestroyWindow → Close()
+- **CM_U_PERSON** (Zeile 326) - DlgPErfassen → PersonDialog ✅ PORTIERT
+- **CM_U_ORT** (Zeile 332) - DlgOErfassen → OrtDialog ✅ PORTIERT  
+- **CM_U_HAUSER** (Zeile 338) - DlgHausAuswahl → HausDialog ✅ PORTIERT
+- **CM_U_ORBEN** (Zeile 344) - DlgOrbenEin → OrbenDialog ✅ PORTIERT
+- **CM_U_FARBEN** (Zeile 351) - DlgFarben → FarbenDialog ✅ PORTIERT
+- **CM_U_EINST** (Zeile 357) - DlgAspekte → EinstellungenDialog ❌ FEHLT
+- **CM_U_HOROTYP** (Zeile 363) - DlgHoroAuswahl → HoroTypDialog ❌ FEHLT
+- **CM_U_HELP*** (Zeile 396-401) - MessageBox → About ✅ PORTIERT
+
+### 🚧 **NÄCHSTE SCHRITTE:**
+- [ ] **DlgAspekte** → EinstellungenDialog 1:1 portieren
+- [ ] **DlgHoroAuswahl** → HoroTypDialog 1:1 portieren
 
 ## ✅ Abgeschlossen
 

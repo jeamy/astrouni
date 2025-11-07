@@ -6,7 +6,7 @@
 #include <wx/wx.h>
 #include <wx/dcbuffer.h>
 #include "astro/calculations.h"
-#include "chart_renderer.h"
+#include "legacy_renderer.h"
 #include <memory>
 
 class ChartPanel : public wxPanel {
@@ -23,8 +23,8 @@ private:
     void OnSize(wxSizeEvent& event);
     
     // Daten
+    legacy::LegacyRenderer renderer_;
     std::unique_ptr<astro::AstroCalculator::ChartData> chart_data_;
-    ChartRenderer renderer_;
     bool has_chart_;
     
     wxDECLARE_EVENT_TABLE();

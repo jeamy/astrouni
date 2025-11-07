@@ -5,20 +5,32 @@ cmake_minimum_required(VERSION 3.20)
 find_package(wxWidgets REQUIRED COMPONENTS core base gl)
 include(${wxWidgets_USE_FILE})
 
-# GUI Sources
+# GUI Sources (1:1 Legacy Port)
 set(GUI_SOURCES
     main.cpp
     main_frame.cpp
     chart_panel.cpp
-    chart_renderer.cpp
-    dialogs/new_chart_dialog.cpp
+    legacy_renderer.cpp
+    dialogs/person_dialog.cpp
+    dialogs/ort_dialog.cpp
+    dialogs/haus_dialog.cpp
+    dialogs/orben_dialog.cpp
+    dialogs/farben_dialog.cpp
+    database/radix_database.cpp
+    database/legacy_data_manager.cpp
 )
 
 set(GUI_HEADERS
     main_frame.h
     chart_panel.h
-    chart_renderer.h
-    dialogs/new_chart_dialog.h
+    legacy_renderer.h
+    dialogs/person_dialog.h
+    dialogs/ort_dialog.h
+    dialogs/haus_dialog.h
+    dialogs/orben_dialog.h
+    dialogs/farben_dialog.h
+    database/radix_database.h
+    database/legacy_data_manager.h
 )
 
 # GUI Executable
