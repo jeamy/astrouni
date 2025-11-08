@@ -52,23 +52,6 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
     CreateStatusBar();
     SetStatusText("Willkommen bei AstroUniverse 1:1 Port!");
 
-    // Temporäre Buttons als Ersatz für die defekte Menüleiste
-    wxPanel* panel = new wxPanel(this, wxID_ANY);
-    wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-    wxBoxSizer* row1 = new wxBoxSizer(wxHORIZONTAL);
-    row1->Add(new wxButton(panel, static_cast<int>(astro::MenuID::PERSON), "Personen-Dialog"), 0, wxALL, 5);
-    row1->Add(new wxButton(panel, static_cast<int>(astro::MenuID::ORT), "Orte-Dialog"), 0, wxALL, 5);
-    sizer->Add(row1);
-
-    wxBoxSizer* row2 = new wxBoxSizer(wxHORIZONTAL);
-    row2->Add(new wxButton(panel, static_cast<int>(astro::MenuID::HOROTYP), "Horoskop-Typ"), 0, wxALL, 5);
-    row2->Add(new wxButton(panel, static_cast<int>(astro::MenuID::HAUSER), "Häusersystem"), 0, wxALL, 5);
-    row2->Add(new wxButton(panel, static_cast<int>(astro::MenuID::ORBEN), "Orben"), 0, wxALL, 5);
-    row2->Add(new wxButton(panel, static_cast<int>(astro::MenuID::FARBEN), "Farben"), 0, wxALL, 5);
-    row2->Add(new wxButton(panel, static_cast<int>(astro::MenuID::EINST), "Einstellungen"), 0, wxALL, 5);
-    sizer->Add(row2);
-
-    panel->SetSizer(sizer);
 }
 
 void MainFrame::OnExit(wxCommandEvent& event) {

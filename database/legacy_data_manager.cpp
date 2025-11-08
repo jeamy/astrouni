@@ -91,4 +91,19 @@ bool LegacyDataManager::WriteOrte(const std::string& filename, const std::vector
     return file.good();
 }
 
+bool LegacyDataManager::ReadAllPersons(const std::string& filename, std::vector<LegacyRadix>& persons) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        return false;
+    }
+
+    persons.clear();
+    LegacyRadix person;
+    while (file.read(reinterpret_cast<char*>(&person), sizeof(LegacyRadix))) {
+        persons.push_back(person);
+    }
+
+    return true;
+}
+
 } // namespace astro

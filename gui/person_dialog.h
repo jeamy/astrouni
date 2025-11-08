@@ -10,11 +10,18 @@ public:
 
 private:
     void OnOk(wxCommandEvent& event);
+    void OnSearchName(wxCommandEvent& event);
+    void OnSearchOrt(wxCommandEvent& event);
 
     astro::LegacyRadix& radix_data_;
 
     // UI-Elemente
-    wxTextCtrl* name_ctrl_;
     wxTextCtrl* vorname_ctrl_;
-    // ... weitere UI-Elemente für Datum, Ort, etc.
+    wxTextCtrl* name_ctrl_;
+    wxTextCtrl* ort_ctrl_;
+    wxTextCtrl* zeit_ctrl_;
+    wxTextCtrl* datum_ctrl_;
+    wxTextCtrl* beruf_ctrl_;
+    wxTextCtrl* sommer_ctrl_;
+    wxTextCtrl* zeitzone_ctrl_;
 };

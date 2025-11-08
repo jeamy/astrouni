@@ -24,8 +24,8 @@
 ## Phase 3: Dialog-Portierung
 
 - [x] **Workaround für Menüleiste**: Temporäre Buttons im Hauptfenster ermöglichen das Aufrufen von Dialogen.
-- [x] **Personen-Dialog**: Basis-Implementierung (`PersonDialog`) erstellt und `assert`-Fehler beim Sizer-Layout behoben.
-- [x] **Orte-Dialog**: Basis-Implementierung (`OrtDialog`) erstellt und integriert.
+- [x] **Personen-Dialog**: Vollständiges UI-Layout portiert. Die Suchfunktion (`PersonSearchDialog`) ist implementiert und lädt alle Daten korrekt in den Hauptdialog. Diverse Sizer-Layout-Fehler wurden behoben.
+- [x] **Orte-Dialog**: Vollständiges UI-Layout 1:1 aus Legacy-Code portiert.
 
 ## Blockierende Probleme
 

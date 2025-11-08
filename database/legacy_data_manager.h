@@ -23,6 +23,8 @@ public:
     // Port von sWriteDat aus astrofil.c
     bool WritePerson(const std::string& filename, const LegacyRadix& radix, int index);
 
+    bool ReadAllPersons(const std::string& filename, std::vector<LegacyRadix>& persons);
+
     // Port von sOrteWrite aus astrofil.c (Lese-Teil)
     bool ReadOrte(const std::string& filename, std::vector<LegacyOrte>& orte);
 
