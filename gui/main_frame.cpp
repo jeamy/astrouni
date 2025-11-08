@@ -103,7 +103,7 @@ MainFrame::MainFrame(const wxString& title)
 // Datei-Menü Implementierung
 void MainFrame::OnNew(wxCommandEvent& event) {
     // PersonDialog öffnen (1:1 Legacy)
-    PersonDialog dialog(this);
+    PersonDialog dialog(this, data_manager_.get());
     if (dialog.ShowModal() != wxID_OK) return;
 
     SetStatusText(wxString::FromUTF8(tr("status.ready").c_str()), 0);
@@ -120,10 +120,10 @@ void MainFrame::OnNew(wxCommandEvent& event) {
         auto calculator = std::make_unique<astro::AstroCalculator>(ephemeris);
         auto chart = calculator->calculate_chart(
             radix,
-            astro::HouseSystem::Placidus,
+            data_manager_->GetSettings().house_system,
             astro::AstroCalculator::DEFAULT_PLANETS,
             astro::AstroCalculator::DEFAULT_ASPECTS,
-            8.0
+            data_manager_->GetSettings().orbs.planets_planets
         );
 
         // Anzeigen
@@ -153,21 +153,31 @@ void MainFrame::OnPrinterSetup(wxCommandEvent& event) {
 // Daten-Menü Implementierung
 void MainFrame::OnPersonDialog(wxCommandEvent& event) {
     // PersonDialog öffnen (1:1 Legacy DlgPErfassen)
-    PersonDialog dialog(this);
+    PersonDialog dialog(this, data_manager_.get());
     if (dialog.ShowModal() == wxID_OK) {
         astro::RadixData radix = dialog.GetRadixData();
-        wxString info = wxString::Format(
-            wxString::FromUTF8("Person gespeichert:\n%s\n%s"),
-            wxString::FromUTF8(radix.name.c_str()),
-            wxString::FromUTF8(radix.birth_location.country_code.c_str())
-        );
-        SetStatusText(info, 0);
+        try {
+            auto ephemeris = std::make_shared<astro::SwissEphemeris>();
+            ephemeris->initialize("../swisseph/ephe");
+            auto calculator = std::make_unique<astro::AstroCalculator>(ephemeris);
+            auto chart = calculator->calculate_chart(
+                radix,
+                data_manager_->GetSettings().house_system,
+                astro::AstroCalculator::DEFAULT_PLANETS,
+                astro::AstroCalculator::DEFAULT_ASPECTS,
+                data_manager_->GetSettings().orbs.planets_planets
+            );
+            chart_panel_->SetChart(chart);
+            SetStatusText(wxString::FromUTF8(tr("status.chart_created").c_str()), 0);
+        } catch (const std::exception& e) {
+            wxMessageBox(wxString::FromUTF8(e.what()), wxString::FromUTF8("Fehler"), wxOK | wxICON_ERROR);
+        }
     }
 }
 
 void MainFrame::OnOrtDialog(wxCommandEvent& event) {
     // OrtDialog öffnen (1:1 Legacy DlgOErfassen)
-    OrtDialog dialog(this);
+    OrtDialog dialog(this, data_manager_.get());
     if (dialog.ShowModal() == wxID_OK) {
         astro::GeoLocation location = dialog.GetGeoLocation();
         wxString info = wxString::Format(
@@ -207,7 +217,12 @@ void MainFrame::OnHoroTyp(wxCommandEvent& event) {
 void MainFrame::OnHausSystem(wxCommandEvent& event) {
     // HausDialog öffnen (1:1 Legacy DlgHausAuswahl)
     HausDialog dialog(this);
-    dialog.SetHouseSystem(astro::HouseSystem::Placidus); // Aktuelles System setzen
+    // Aktuelles System aus Einstellungen setzen
+    if (data_manager_) {
+        dialog.SetHouseSystem(data_manager_->GetSettings().house_system);
+    } else {
+        dialog.SetHouseSystem(astro::HouseSystem::Placidus);
+    }
     
     if (dialog.ShowModal() == wxID_OK) {
         astro::HouseSystem system = dialog.GetHouseSystem();
@@ -227,6 +242,13 @@ void MainFrame::OnHausSystem(wxCommandEvent& event) {
         }
         
         SetStatusText(wxString::FromUTF8("Häusersystem: ") + system_name, 0);
+        // Persistieren
+        if (data_manager_) {
+            LegacySettings s = data_manager_->GetSettings();
+            s.house_system = system;
+            data_manager_->SetSettings(s);
+            data_manager_->SaveUserSettings();
+        }
     }
 }
 

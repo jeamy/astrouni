@@ -201,7 +201,7 @@ void EinstellungenDialog::OnOK(wxCommandEvent& event) {
         // TODO: Erweiterte Einstellungen in LegacySettings-Struktur hinzufügen
         
         data_manager_->SetSettings(settings);
-        data_manager_->SaveDefaultSettings();
+        data_manager_->SaveUserSettings();
     }
     
     EndModal(wxID_OK);

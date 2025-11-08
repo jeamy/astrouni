@@ -4,6 +4,8 @@
 
 #include "person_dialog.h"
 #include "astro/i18n.h"
+#include "person_hilfe_dialog.h"
+#include "ort_auswahl_dialog.h"
 #include <wx/statbox.h>
 #include <wx/sizer.h>
 
@@ -18,10 +20,11 @@ wxBEGIN_EVENT_TABLE(PersonDialog, wxDialog)
     EVT_BUTTON(ID_BERECHNEN, PersonDialog::OnBerechnen)
 wxEND_EVENT_TABLE()
 
-PersonDialog::PersonDialog(wxWindow* parent)
+PersonDialog::PersonDialog(wxWindow* parent, LegacyDataManager* data_manager)
     : wxDialog(parent, wxID_ANY, wxString::FromUTF8("Personen Erfassen"), 
                wxDefaultPosition, wxSize(400, 500),
-               wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
+               wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
+      data_manager_(data_manager) {
     
     CreateLayout();
     InitializeControls();
@@ -187,7 +190,31 @@ void PersonDialog::OnOK(wxCommandEvent& event) {
         ort_ctrl_->SetFocus();
         return;
     }
-    
+    // In Datenbank speichern (1:1 Legacy)
+    if (data_manager_) {
+        LegacyPerson p;
+        p.name = name_ctrl_->GetValue().ToStdString();
+        p.first_name = vorname_ctrl_->GetValue().ToStdString();
+        wxDateTime d = datum_ctrl_->GetValue();
+        wxDateTime t = zeit_ctrl_->GetValue();
+        p.day = d.GetDay();
+        p.month = d.GetMonth() + 1;
+        p.year = d.GetYear();
+        p.hour = t.GetHour();
+        p.minute = t.GetMinute();
+        p.latitude = breite_ctrl_->GetValue();
+        p.longitude = laenge_ctrl_->GetValue();
+        p.altitude = hoehe_ctrl_->GetValue();
+        p.place = ort_ctrl_->GetValue().ToStdString();
+        p.country = land_ctrl_->GetValue().ToStdString();
+        p.timezone = ""; // LegacyPerson hat Feld, UI liefert hier nichts
+        
+        if (!data_manager_->AddPerson(p)) {
+            wxMessageBox(wxString::FromUTF8(data_manager_->GetLastError().c_str()),
+                         wxString::FromUTF8("Fehler"), wxOK | wxICON_ERROR);
+            return;
+        }
+    }
     EndModal(wxID_OK);
 }
 
@@ -196,13 +223,46 @@ void PersonDialog::OnCancel(wxCommandEvent& event) {
 }
 
 void PersonDialog::OnPersonAuswahl(wxCommandEvent& event) {
-    wxMessageBox(wxString::FromUTF8("Person-Datenbank wird implementiert..."), wxString::FromUTF8("Info"), wxOK | wxICON_INFORMATION);
-    // TODO: PersonAuswahl Dialog implementieren
+    if (!data_manager_) {
+        wxMessageBox(wxString::FromUTF8("Keine Personen-Datenbank verfügbar."), wxString::FromUTF8("Info"), wxOK | wxICON_INFORMATION);
+        return;
+    }
+    PersonHilfeDialog dlg(this, data_manager_);
+    if (dlg.ShowModal() == wxID_OK && dlg.HasSelection()) {
+        LegacyPerson person = dlg.GetSelectedPerson();
+        name_ctrl_->SetValue(wxString::FromUTF8(person.name.c_str()));
+        vorname_ctrl_->SetValue(wxString::FromUTF8(person.first_name.c_str()));
+        
+        wxDateTime datum;
+        datum.Set(person.day, static_cast<wxDateTime::Month>(person.month - 1), person.year);
+        datum_ctrl_->SetValue(datum);
+        
+        wxDateTime zeit;
+        zeit.Set(person.hour, person.minute, 0);
+        zeit_ctrl_->SetValue(zeit);
+        
+        ort_ctrl_->SetValue(wxString::FromUTF8(person.place.c_str()));
+        land_ctrl_->SetValue(wxString::FromUTF8(person.country.c_str()));
+        breite_ctrl_->SetValue(person.latitude);
+        laenge_ctrl_->SetValue(person.longitude);
+        hoehe_ctrl_->SetValue(person.altitude);
+    }
 }
 
 void PersonDialog::OnOrtAuswahl(wxCommandEvent& event) {
-    wxMessageBox(wxString::FromUTF8("Orte-Datenbank wird implementiert..."), wxString::FromUTF8("Info"), wxOK | wxICON_INFORMATION);
-    // TODO: OrtAuswahl Dialog implementieren
+    if (!data_manager_) {
+        wxMessageBox(wxString::FromUTF8("Keine Orte-Datenbank verfügbar."), wxString::FromUTF8("Info"), wxOK | wxICON_INFORMATION);
+        return;
+    }
+    OrtAuswahlDialog dlg(this, data_manager_);
+    if (dlg.ShowModal() == wxID_OK) {
+        LegacyPlace place = dlg.GetSelectedPlace();
+        ort_ctrl_->SetValue(wxString::FromUTF8(place.name.c_str()));
+        land_ctrl_->SetValue(wxString::FromUTF8(place.country.c_str()));
+        breite_ctrl_->SetValue(place.latitude);
+        laenge_ctrl_->SetValue(place.longitude);
+        hoehe_ctrl_->SetValue(place.altitude);
+    }
 }
 
 void PersonDialog::OnBerechnen(wxCommandEvent& event) {

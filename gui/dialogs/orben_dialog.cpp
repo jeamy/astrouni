@@ -175,7 +175,7 @@ void OrbenDialog::OnOK(wxCommandEvent& event) {
         LegacySettings settings = data_manager_->GetSettings();
         settings.orbs = GetOrbs();
         data_manager_->SetSettings(settings);
-        data_manager_->SaveDefaultSettings();
+        data_manager_->SaveUserSettings();
     }
     
     EndModal(wxID_OK);

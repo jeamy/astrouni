@@ -262,7 +262,7 @@ void FarbenDialog::OnOK(wxCommandEvent& event) {
         settings.print_colors = print_colors_;
         settings.mono_colors = mono_colors_;
         data_manager_->SetSettings(settings);
-        data_manager_->SaveDefaultSettings();
+        data_manager_->SaveUserSettings();
     }
     
     EndModal(wxID_OK);

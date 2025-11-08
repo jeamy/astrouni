@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cstdint>
 #include "astro/data_types.h"
 
 // Legacy-Datenstrukturen (1:1 aus astrouni.h)
@@ -34,6 +35,9 @@ struct LegacySettings {
     
     // Häusersystem
     astro::HouseSystem house_system;
+    
+    // Horoskop-Typ (0=Radix, 1=Transit, ...)
+    uint8_t horo_type;
     
     // Sonstige Einstellungen
     bool show_aspects;

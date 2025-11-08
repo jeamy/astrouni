@@ -13,11 +13,12 @@
 // 1:1 Port von DlgOErfassen (E_ORT Dialog)
 class OrtDialog : public wxDialog {
 public:
-    OrtDialog(wxWindow* parent);
+    OrtDialog(wxWindow* parent, LegacyDataManager* data_manager = nullptr);
     
     // Daten abrufen
     astro::GeoLocation GetGeoLocation() const;
     void SetGeoLocation(const astro::GeoLocation& location);
+    void SetGeoLocation(const LegacyPlace& place);
     
 private:
     // Event Handlers (1:1 Legacy)
@@ -56,8 +57,9 @@ private:
     void LoadOrteFromDatabase();
     void UpdateOrteList();
     
-    // Datenbank-Funktionen
-    std::vector<astro::GeoLocation> orte_database_;
+    // Daten-Manager und lokale Kopie der Orte
+    LegacyDataManager* data_manager_;
+    std::vector<LegacyPlace> orte_database_;
     
     // Event IDs (1:1 Legacy Mapping)
     enum {

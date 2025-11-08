@@ -9,11 +9,12 @@
 #include <wx/timectrl.h>
 #include <wx/spinctrl.h>
 #include "astro/data_types.h"
+#include "../database/legacy_data_manager.h"
 
 // 1:1 Port von DlgPErfassen (E_PERSON Dialog)
 class PersonDialog : public wxDialog {
 public:
-    PersonDialog(wxWindow* parent);
+    PersonDialog(wxWindow* parent, LegacyDataManager* data_manager = nullptr);
     
     // Daten abrufen
     astro::RadixData GetRadixData() const;
@@ -51,6 +52,9 @@ private:
     wxButton* berechnen_btn_;           // Berechnen
     wxButton* ok_btn_;
     wxButton* cancel_btn_;
+    
+    // Daten-Manager (für Personen-/Orte-DB)
+    LegacyDataManager* data_manager_;
     
     // Layout erstellen
     void CreateLayout();

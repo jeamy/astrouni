@@ -44,7 +44,12 @@ PlanetPosition SwissEphemeris::calculate_planet(Planet planet,
     int ret = swe_calc_ut(jd_ut, ipl, iflag, xx, serr);
     
     if (ret < 0) {
-        throw EphemerisError(std::string("Swiss Ephemeris error: ") + serr);
+        // Fallback: Versuche Moshier, wenn Swiss Ephemeris-Dateien fehlen
+        int32_t iflag_fallback = SEFLG_MOSEPH | SEFLG_SPEED;
+        ret = swe_calc_ut(jd_ut, ipl, iflag_fallback, xx, serr);
+        if (ret < 0) {
+            throw EphemerisError(std::string("Swiss Ephemeris error: ") + serr);
+        }
     }
     
     PlanetPosition pos;

@@ -15,6 +15,10 @@ LegacyRenderer::LegacyRenderer()
 
 void LegacyRenderer::DrawRadix(wxDC& dc, int width, int height,
                                const astro::AstroCalculator::ChartData& chart) {
+    // Sicherheitsprüfungen
+    if (width <= 0 || height <= 0) return;
+    if (chart.planets.empty() || chart.houses.empty()) return;
+    
     // Hintergrund
     dc.SetBackground(wxBrush(colors_.hinter));
     dc.Clear();
@@ -26,12 +30,18 @@ void LegacyRenderer::DrawRadix(wxDC& dc, int width, int height,
     
     if (sRadius_ < 60) return;
     
-    // 1:1 Legacy-Reihenfolge:
-    sRadix(dc, chart);      // Kreise und Gradeinteilung
-    sHaus(dc, chart);       // Häusersystem
-    sPlanet(dc, chart);     // Planeten
-    sDrawAspekte(dc, chart.aspects, chart.planets, 
-                 chart.houses.empty() ? 0.0 : chart.houses[0].longitude * PI / 180.0);
+    try {
+        // 1:1 Legacy-Reihenfolge:
+        sRadix(dc, chart);      // Kreise und Gradeinteilung
+        sHaus(dc, chart);       // Häusersystem
+        sPlanet(dc, chart);     // Planeten
+        sDrawAspekte(dc, chart.aspects, chart.planets, 
+                     chart.houses[0].longitude * PI / 180.0);
+    } catch (...) {
+        // Fallback: Nur Text anzeigen
+        dc.SetTextForeground(*wxBLACK);
+        dc.DrawText("Rendering-Fehler", 10, 10);
+    }
 }
 
 // 1:1 Port von sRadix() aus auwurzel.c Zeile 215-410
@@ -204,17 +214,21 @@ void LegacyRenderer::vPlanetTicDraw(wxDC& dc, const std::vector<astro::PlanetPos
 // 1:1 Port von vPlanetDraw() aus auwurzel.c Zeile 588-650
 void LegacyRenderer::vPlanetDraw(wxDC& dc, const std::vector<astro::PlanetPosition>& planets,
                                  double asc_rad) {
+    if (planets.empty()) return;
+    
     int sRPi = static_cast<int>(sRadius_ * KREIS_PLANET);
     
-    wxFont symbol_font(20, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, "Astrouniverse");
+    // Fallback-Fonts verwenden
+    wxFont symbol_font(16, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
     wxFont text_font(8, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
     
     for (size_t sA = 0; sA < planets.size() && sA < 11; sA++) {
         const auto& planet = planets[sA];
         double dA = planet.longitude * PI / 180.0;
         
-        // Planet-Symbol
-        wxString symbol = GetPlanetSymbol(static_cast<astro::Planet>(sA));
+        // Planet-Symbol (verwende den Index als Planeten-Typ)
+        astro::Planet planet_type = static_cast<astro::Planet>(sA);
+        wxString symbol = GetPlanetSymbol(planet_type);
         dc.SetFont(symbol_font);
         dc.SetTextForeground(colors_.plan);
         
@@ -251,13 +265,18 @@ void LegacyRenderer::vPlanetDraw(wxDC& dc, const std::vector<astro::PlanetPositi
 void LegacyRenderer::sDrawAspekte(wxDC& dc, const std::vector<astro::Aspect>& aspects,
                                   const std::vector<astro::PlanetPosition>& planets,
                                   double asc_rad) {
+    if (planets.empty() || aspects.empty()) return;
+    
     int sRH = static_cast<int>(sRadius_ * KREIS_ASP);
     
     for (const auto& aspect : aspects) {
+        // Aspect.planet1/planet2 sind Enums, müssen in int umgewandelt werden
         int sPa = static_cast<int>(aspect.planet1);
         int sPb = static_cast<int>(aspect.planet2);
         
-        if (sPa >= static_cast<int>(planets.size()) || sPb >= static_cast<int>(planets.size())) continue;
+        // Sicherheitsprüfung: Gültige Indizes
+        if (sPa < 0 || sPa >= static_cast<int>(planets.size()) || 
+            sPb < 0 || sPb >= static_cast<int>(planets.size())) continue;
         
         double dA1 = planets[sPa].longitude * PI / 180.0;
         double dA2 = planets[sPb].longitude * PI / 180.0;

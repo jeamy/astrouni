@@ -22,6 +22,12 @@ set(GUI_SOURCES
     dialogs/transit_dialog.cpp
     dialogs/transit_einstellungen_dialog.cpp
     dialogs/berechnung_dialog.cpp
+    dialogs/ruecklaeufig_dialog.cpp
+    dialogs/abbruch_dialog.cpp
+    dialogs/datum_dialog.cpp
+    dialogs/grad_dialog.cpp
+    dialogs/person_hilfe_dialog.cpp
+    dialogs/ort_duplikat_dialog.cpp
     database/radix_database.cpp
     database/legacy_data_manager.cpp
 )
@@ -41,6 +47,12 @@ set(GUI_HEADERS
     dialogs/transit_dialog.h
     dialogs/transit_einstellungen_dialog.h
     dialogs/berechnung_dialog.h
+    dialogs/ruecklaeufig_dialog.h
+    dialogs/abbruch_dialog.h
+    dialogs/datum_dialog.h
+    dialogs/grad_dialog.h
+    dialogs/person_hilfe_dialog.h
+    dialogs/ort_duplikat_dialog.h
     database/radix_database.h
     database/legacy_data_manager.h
 )

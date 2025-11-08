@@ -19,10 +19,11 @@ wxBEGIN_EVENT_TABLE(OrtDialog, wxDialog)
     EVT_LIST_ITEM_SELECTED(ID_ORTE_LISTE, OrtDialog::OnOrtAuswahl)
 wxEND_EVENT_TABLE()
 
-OrtDialog::OrtDialog(wxWindow* parent)
-    : wxDialog(parent, wxID_ANY, wxString::FromUTF8("Orte Erfassen"), 
-               wxDefaultPosition, wxSize(500, 600),
-               wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
+OrtDialog::OrtDialog(wxWindow* parent, LegacyDataManager* data_manager)
+    : wxDialog(parent, wxID_ANY, wxString::FromUTF8("Ort Erfassen"), 
+               wxDefaultPosition, wxSize(600, 500),
+               wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
+      data_manager_(data_manager) {
     
     CreateLayout();
     InitializeControls();
@@ -153,42 +154,13 @@ void OrtDialog::InitializeControls() {
 }
 
 void OrtDialog::LoadOrteFromDatabase() {
-    // Standard-Orte laden (1:1 Legacy)
     orte_database_.clear();
-    
-    // Einige Standard-Orte hinzufügen
-    astro::GeoLocation berlin;
-    berlin.latitude = 52.5200;
-    berlin.longitude = 13.4050;
-    berlin.altitude = 34;
-    berlin.country_code = "Deutschland";
-    berlin.timezone = "Europe/Berlin";
-    orte_database_.push_back(berlin);
-    
-    astro::GeoLocation muenchen;
-    muenchen.latitude = 48.1351;
-    muenchen.longitude = 11.5820;
-    muenchen.altitude = 519;
-    muenchen.country_code = "Deutschland";
-    muenchen.timezone = "Europe/Berlin";
-    orte_database_.push_back(muenchen);
-    
-    astro::GeoLocation wien;
-    wien.latitude = 48.2082;
-    wien.longitude = 16.3738;
-    wien.altitude = 171;
-    wien.country_code = "Österreich";
-    wien.timezone = "Europe/Vienna";
-    orte_database_.push_back(wien);
-    
-    astro::GeoLocation zuerich;
-    zuerich.latitude = 47.3769;
-    zuerich.longitude = 8.5417;
-    zuerich.altitude = 408;
-    zuerich.country_code = "Schweiz";
-    zuerich.timezone = "Europe/Zurich";
-    orte_database_.push_back(zuerich);
-    
+    if (data_manager_) {
+        const auto& places = data_manager_->GetPlaces();
+        orte_database_.insert(orte_database_.end(), places.begin(), places.end());
+        const auto& europa = data_manager_->GetEuropaPlaces();
+        orte_database_.insert(orte_database_.end(), europa.begin(), europa.end());
+    }
     UpdateOrteList();
 }
 
@@ -197,13 +169,11 @@ void OrtDialog::UpdateOrteList() {
     
     for (size_t i = 0; i < orte_database_.size(); ++i) {
         const auto& ort = orte_database_[i];
-        
-        long index = orte_liste_->InsertItem(i, wxString::FromUTF8("Ort")); // TODO: Ortsnamen aus DB
-        orte_liste_->SetItem(index, 1, wxString::FromUTF8(ort.country_code.c_str()));
+        long index = orte_liste_->InsertItem(i, wxString::FromUTF8(ort.name.c_str()));
+        orte_liste_->SetItem(index, 1, wxString::FromUTF8(ort.country.c_str()));
         orte_liste_->SetItem(index, 2, wxString::Format(wxT("%.4f"), ort.latitude));
         orte_liste_->SetItem(index, 3, wxString::Format(wxT("%.4f"), ort.longitude));
-        orte_liste_->SetItem(index, 4, wxString::Format(wxT("%.0f"), ort.altitude));
-        
+        orte_liste_->SetItem(index, 4, wxString::Format(wxT("%d"), ort.altitude));
         orte_liste_->SetItemData(index, i);
     }
 }
@@ -231,15 +201,24 @@ void OrtDialog::OnCancel(wxCommandEvent& event) {
 }
 
 void OrtDialog::OnNeu(wxCommandEvent& event) {
-    // Neuen Ort zur Datenbank hinzufügen
-    astro::GeoLocation neuer_ort = GetGeoLocation();
-    
+    // Neuen Ort zur Datenbank hinzufügen (1:1 Legacy)
     if (!ort_ctrl_->GetValue().IsEmpty() && !land_ctrl_->GetValue().IsEmpty()) {
-        orte_database_.push_back(neuer_ort);
-        UpdateOrteList();
+        LegacyPlace p;
+        p.name = ort_ctrl_->GetValue().ToStdString();
+        p.country = land_ctrl_->GetValue().ToStdString();
+        p.latitude = breite_ctrl_->GetValue();
+        p.longitude = laenge_ctrl_->GetValue();
+        p.altitude = static_cast<int>(hoehe_ctrl_->GetValue());
+        p.timezone = zeitzone_ctrl_->GetValue().ToStdString();
         
-        wxMessageBox(wxString::FromUTF8("Ort zur Datenbank hinzugefügt!"), 
-                    wxString::FromUTF8("Info"), wxOK | wxICON_INFORMATION);
+        if (data_manager_ && data_manager_->AddPlace(p)) {
+            LoadOrteFromDatabase();
+            wxMessageBox(wxString::FromUTF8("Ort zur Datenbank hinzugefügt!"), 
+                        wxString::FromUTF8("Info"), wxOK | wxICON_INFORMATION);
+        } else {
+            wxMessageBox(wxString::FromUTF8("Ort konnte nicht gespeichert werden."), 
+                        wxString::FromUTF8("Fehler"), wxOK | wxICON_ERROR);
+        }
     } else {
         wxMessageBox(wxString::FromUTF8("Bitte Ort und Land eingeben!"), 
                     wxString::FromUTF8("Fehler"), wxOK | wxICON_ERROR);
@@ -261,8 +240,12 @@ void OrtDialog::OnLoeschen(wxCommandEvent& event) {
     if (result == wxYES) {
         size_t index = orte_liste_->GetItemData(selected);
         if (index < orte_database_.size()) {
-            orte_database_.erase(orte_database_.begin() + index);
-            UpdateOrteList();
+            if (data_manager_ && data_manager_->DeletePlace(index)) {
+                LoadOrteFromDatabase();
+            } else {
+                wxMessageBox(wxString::FromUTF8("Ort konnte nicht gelöscht werden."), 
+                            wxString::FromUTF8("Fehler"), wxOK | wxICON_ERROR);
+            }
         }
     }
 }
@@ -318,4 +301,13 @@ void OrtDialog::SetGeoLocation(const astro::GeoLocation& location) {
     hoehe_ctrl_->SetValue(static_cast<int>(location.altitude));
     land_ctrl_->SetValue(wxString::FromUTF8(location.country_code.c_str()));
     zeitzone_ctrl_->SetValue(wxString::FromUTF8(location.timezone.c_str()));
+}
+
+void OrtDialog::SetGeoLocation(const LegacyPlace& place) {
+    ort_ctrl_->SetValue(wxString::FromUTF8(place.name.c_str()));
+    land_ctrl_->SetValue(wxString::FromUTF8(place.country.c_str()));
+    breite_ctrl_->SetValue(place.latitude);
+    laenge_ctrl_->SetValue(place.longitude);
+    hoehe_ctrl_->SetValue(place.altitude);
+    zeitzone_ctrl_->SetValue(wxString::FromUTF8(place.timezone.c_str()));
 }

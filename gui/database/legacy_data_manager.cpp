@@ -143,6 +143,9 @@ void LegacyDataManager::InitializeDefaultSettings() {
     // Legacy Standard-Häusersystem
     settings_.house_system = astro::HouseSystem::Placidus;
     
+    // Legacy Standard-Horoskop-Typ (0 = Radix)
+    settings_.horo_type = static_cast<uint8_t>(0);
+    
     // Legacy Standard-Optionen
     settings_.show_aspects = true;      // Aspekte anzeigen
     settings_.show_houses = true;       // Häuser anzeigen
@@ -209,16 +212,44 @@ bool LegacyDataManager::LoadUserSettings(const std::string& filename) {
         // Header prüfen
         uint32_t version;
         file.read(reinterpret_cast<char*>(&version), sizeof(version));
-        if (!file.good() || version != 1) {
+        if (!file.good() || (version != 1 && version != 2)) {
             file.close();
             return true; // Verwende Defaults bei ungültiger Version
         }
         
         // Benutzer-Einstellungen laden (überschreibt Defaults)
-        LegacySettings user_settings;
-        file.read(reinterpret_cast<char*>(&user_settings), sizeof(user_settings));
-        if (file.good()) {
-            settings_ = user_settings; // Übernehme Benutzer-Einstellungen
+        if (version == 1) {
+            // Alte Struktur ohne horo_type
+            struct LegacySettingsV1 {
+                LegacySettings::Colors screen_colors;
+                LegacySettings::Colors print_colors;
+                LegacySettings::Colors mono_colors;
+                LegacySettings::Orbs   orbs;
+                astro::HouseSystem     house_system;
+                bool show_aspects;
+                bool show_houses;
+                bool show_degrees;
+                bool show_retrograde;
+            } old_settings;
+            file.read(reinterpret_cast<char*>(&old_settings), sizeof(old_settings));
+            if (file.good()) {
+                settings_.screen_colors = old_settings.screen_colors;
+                settings_.print_colors  = old_settings.print_colors;
+                settings_.mono_colors   = old_settings.mono_colors;
+                settings_.orbs          = old_settings.orbs;
+                settings_.house_system  = old_settings.house_system;
+                settings_.show_aspects  = old_settings.show_aspects;
+                settings_.show_houses   = old_settings.show_houses;
+                settings_.show_degrees  = old_settings.show_degrees;
+                settings_.show_retrograde = old_settings.show_retrograde;
+                settings_.horo_type     = static_cast<uint8_t>(0); // Default Radix
+            }
+        } else { // version == 2
+            LegacySettings user_settings;
+            file.read(reinterpret_cast<char*>(&user_settings), sizeof(user_settings));
+            if (file.good()) {
+                settings_ = user_settings; // Übernehme Benutzer-Einstellungen
+            }
         }
         
         // Zuletzt verwendete Indizes
@@ -480,7 +511,7 @@ bool LegacyDataManager::SaveUserSettings(const std::string& filename) {
     try {
         // ECHTES astroini.dat Format (1:1 Legacy)
         // Header
-        uint32_t version = 1;
+        uint32_t version = 2;
         file.write(reinterpret_cast<const char*>(&version), sizeof(version));
         
         // Benutzer-Einstellungen (erweiterte Settings)

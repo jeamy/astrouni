@@ -90,9 +90,20 @@ void HoroTypDialog::CreateLayout() {
 }
 
 void HoroTypDialog::InitializeControls() {
-    // Radix als Standard auswählen (1:1 Legacy)
-    radix_rb_->SetValue(true);
-    current_type_ = HoroType::RADIX;
+    // Aus Einstellungen laden, sonst Radix als Standard (1:1 Legacy)
+    if (data_manager_) {
+        uint8_t saved = data_manager_->GetSettings().horo_type;
+        if (saved <= static_cast<uint8_t>(HoroType::PROGRESSION)) {
+            current_type_ = static_cast<HoroType>(saved);
+        } else {
+            current_type_ = HoroType::RADIX;
+        }
+    } else {
+        current_type_ = HoroType::RADIX;
+    }
+    
+    // Auswahl im UI setzen
+    SetHoroType(current_type_);
     UpdateBeschreibung();
 }
 
@@ -199,7 +210,13 @@ void HoroTypDialog::UpdateBeschreibung() {
 
 // Event Handlers (1:1 Legacy)
 void HoroTypDialog::OnOK(wxCommandEvent& event) {
-    // TODO: Horoskop-Typ in Einstellungen speichern
+    // Horoskop-Typ in Einstellungen speichern
+    if (data_manager_) {
+        LegacySettings s = data_manager_->GetSettings();
+        s.horo_type = static_cast<uint8_t>(current_type_);
+        data_manager_->SetSettings(s);
+        data_manager_->SaveUserSettings();
+    }
     EndModal(wxID_OK);
 }
 
