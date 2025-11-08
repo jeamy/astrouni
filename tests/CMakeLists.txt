@@ -1,30 +1,30 @@
-# Google Test
-find_package(GTest QUIET)
+# Tests CMakeLists.txt
 
-if(NOT GTest_FOUND)
-    message(STATUS "Google Test not found, downloading...")
-    include(FetchContent)
-    FetchContent_Declare(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG v1.14.0
-    )
-    FetchContent_MakeAvailable(googletest)
-endif()
+# Tests CMakeLists.txt
 
-# Test executable
+enable_testing()
+
+# Google Test via FetchContent herunterladen und einbinden
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+)
+FetchContent_MakeAvailable(googletest)
+
 add_executable(astro_tests
-    test_math_utils.cpp
-    test_swiss_ephemeris.cpp
-    test_calculations.cpp
+    test_data_manager.cpp
 )
 
-target_link_libraries(astro_tests
-    PRIVATE
-        astro_core
-        GTest::gtest_main
+# Den Test-Executable gegen GTest und die Datenbank-Bibliothek linken
+target_include_directories(astro_tests PRIVATE ${CMAKE_SOURCE_DIR}/core/include)
+
+target_link_libraries(astro_tests PRIVATE
+    GTest::gtest_main
+    astro_database
 )
 
-# Enable testing
+# Tests automatisch finden lassen
 include(GoogleTest)
 gtest_discover_tests(astro_tests)
+

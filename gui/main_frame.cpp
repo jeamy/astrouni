@@ -1,317 +1,113 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
-// Copyright (C) 2025 AstroUniverse Project
-
 #include "main_frame.h"
-#include "astro/i18n.h"
-#include <wx/filedlg.h>
-#include <wx/msgdlg.h>
+#include "person_dialog.h"
+#include "ort_dialog.h"
 
-using namespace astro::i18n;
-
-// Event Table (1:1 Legacy Mapping)
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
-    // Datei
-    EVT_MENU(CM_U_NEW, MainFrame::OnNew)
-    EVT_MENU(CM_U_FILEOPEN, MainFrame::OnOpen)
-    EVT_MENU(CM_U_SAVE, MainFrame::OnSave)
-    EVT_MENU(CM_U_SAVEU, MainFrame::OnSaveAs)
-    EVT_MENU(CM_U_PRINT, MainFrame::OnPrint)
-    EVT_MENU(CM_U_PINST, MainFrame::OnPrinterSetup)
-    EVT_MENU(wxID_EXIT, MainFrame::OnExit)
-    
-    // Daten
-    EVT_MENU(CM_U_PERSON, MainFrame::OnPersonDialog)
-    EVT_MENU(CM_U_ORT, MainFrame::OnOrtDialog)
-    
-    // Horoskop
-    EVT_MENU(CM_U_HOROTYP, MainFrame::OnHoroTyp)
-    EVT_MENU(CM_U_HAUSER, MainFrame::OnHausSystem)
-    EVT_MENU(CM_U_ORBEN, MainFrame::OnOrben)
-    EVT_MENU(CM_U_FARBEN, MainFrame::OnFarben)
-    EVT_MENU(CM_U_EINST, MainFrame::OnEinstellungen)
-    
-    // Hilfe
-    EVT_MENU(wxID_ABOUT, MainFrame::OnAbout)
+    EVT_BUTTON(static_cast<int>(astro::MenuID::PERSON), MainFrame::OnPerson)
+    EVT_MENU(static_cast<int>(astro::MenuID::PERSON), MainFrame::OnPerson)
+    EVT_BUTTON(static_cast<int>(astro::MenuID::ORT), MainFrame::OnOrt)
+    EVT_MENU(static_cast<int>(astro::MenuID::ORT), MainFrame::OnOrt)
+    EVT_MENU(static_cast<int>(astro::MenuID::DRUCK), MainFrame::OnDruck)
+    EVT_MENU(static_cast<int>(astro::MenuID::APP_EXIT), MainFrame::OnExit)
+    EVT_MENU(static_cast<int>(astro::MenuID::HOROTYP), MainFrame::OnHoroTyp)
+    EVT_MENU(static_cast<int>(astro::MenuID::HAUSER), MainFrame::OnHauser)
+    EVT_MENU(static_cast<int>(astro::MenuID::ORBEN), MainFrame::OnOrben)
+    EVT_MENU(static_cast<int>(astro::MenuID::FARBEN), MainFrame::OnFarben)
+    EVT_MENU(static_cast<int>(astro::MenuID::EINST), MainFrame::OnEinst)
+    EVT_MENU(static_cast<int>(astro::MenuID::APP_INFO), MainFrame::OnInfo)
 wxEND_EVENT_TABLE()
 
-MainFrame::MainFrame(const wxString& title)
-    : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxSize(1024, 768)) {
-    
-    // Legacy Data Manager initialisieren
-    data_manager_ = std::make_unique<LegacyDataManager>();
-    data_manager_->LoadDefaultSettings();
-    data_manager_->LoadUserSettings();
-    data_manager_->LoadPersonDatabase();
-    data_manager_->LoadPlaceDatabase();
-    data_manager_->LoadEuropaPlaces();
-    
-    // Menü erstellen (1:1 Legacy-Struktur mit i18n)
-    // Datei-Menü
-    wxMenu* file_menu = new wxMenu;
-    file_menu->Append(CM_U_NEW, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.new").c_str()) + wxString::FromUTF8("\tCtrl-N"));
-    file_menu->Append(CM_U_FILEOPEN, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.open").c_str()) + wxString::FromUTF8("\tCtrl-O"));
-    file_menu->Append(CM_U_SAVE, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.save").c_str()) + wxString::FromUTF8("\tCtrl-S"));
-    file_menu->Append(CM_U_SAVEU, wxString::FromUTF8(tr("menu.save_as").c_str()));
-    file_menu->AppendSeparator();
-    file_menu->Append(CM_U_PRINT, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.print").c_str()) + wxString::FromUTF8("\tCtrl-P"));
-    file_menu->Append(CM_U_PINST, wxString::FromUTF8(tr("menu.printer_setup").c_str()));
-    file_menu->AppendSeparator();
-    file_menu->Append(wxID_EXIT, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.exit").c_str()) + wxString::FromUTF8("\tAlt-F4"));
-    
-    // Daten-Menü
-    wxMenu* data_menu = new wxMenu;
-    data_menu->Append(CM_U_PERSON, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.person").c_str()));
-    data_menu->Append(CM_U_ORT, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.place").c_str()));
-    
-    // Horoskop-Menü
-    wxMenu* horo_menu = new wxMenu;
-    horo_menu->Append(CM_U_HOROTYP, wxString::FromUTF8(tr("menu.horo_type").c_str()));
-    horo_menu->Append(CM_U_HAUSER, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.house_system").c_str()));
-    horo_menu->AppendSeparator();
-    horo_menu->Append(CM_U_ORBEN, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.orbs").c_str()));
-    horo_menu->Append(CM_U_FARBEN, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.colors").c_str()));
-    horo_menu->Append(CM_U_EINST, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.settings").c_str()));
-    
-    // Hilfe-Menü
-    wxMenu* help_menu = new wxMenu;
-    help_menu->Append(wxID_ABOUT, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.about").c_str()));
-    
-    // Menüleiste zusammenbauen
-    menu_bar_ = new wxMenuBar;
-    menu_bar_->Append(file_menu, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.file").c_str()));
-    menu_bar_->Append(data_menu, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.data").c_str()));
-    menu_bar_->Append(horo_menu, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.horoscope").c_str()));
-    menu_bar_->Append(help_menu, wxString::FromUTF8("&") + wxString::FromUTF8(tr("menu.help").c_str()));
-    
-    SetMenuBar(menu_bar_);
-    
-    // Statusleiste
-    status_bar_ = CreateStatusBar(2);
-    SetStatusText(wxString::FromUTF8(tr("status.ready").c_str()), 0);
-    
-    // Chart Panel erstellen
-    chart_panel_ = new ChartPanel(this);
-    // Layout: Panel füllt das Fenster
+MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
+    : wxFrame(NULL, wxID_ANY, title, pos, size) {
+
+    // --- MENÜLEISTE TEMPORÄR DEAKTIVIERT WEGEN wxWidgets ASSERT-FEHLER ---
+    /*
+    // 1:1 Port der Menü-Erstellung aus legacy/astrouni.rc
+    wxMenu *menuFile = new wxMenu;
+    menuFile->Append(static_cast<int>(astro::MenuID::PERSON), "&Personen...\tCtrl-P");
+    menuFile->Append(static_cast<int>(astro::MenuID::ORT), "&Orte...\tCtrl-O");
+    menuFile->AppendSeparator();
+    menuFile->Append(static_cast<int>(astro::MenuID::DRUCK), "&Drucken...\tCtrl-D");
+    menuFile->AppendSeparator();
+    menuFile->Append(static_cast<int>(astro::MenuID::APP_EXIT), "&Beenden");
+
+    wxMenu *menuOptions = new wxMenu;
+    menuOptions->Append(static_cast<int>(astro::MenuID::HOROTYP), "&Horoskop-Typ...");
+    menuOptions->Append(static_cast<int>(astro::MenuID::HAUSER), "&Häusersystem...");
+    menuOptions->Append(static_cast<int>(astro::MenuID::ORBEN), "&Orben...");
+    menuOptions->Append(static_cast<int>(astro::MenuID::FARBEN), "&Farben...");
+    menuOptions->Append(static_cast<int>(astro::MenuID::EINST), "&Einstellungen...");
+
+    wxMenu *menuHelp = new wxMenu;
+    menuHelp->Append(static_cast<int>(astro::MenuID::APP_INFO), "&Info...");
+
+    wxMenuBar *menuBar = new wxMenuBar;
+    menuBar->Append(menuFile, "&Datei");
+    menuBar->Append(menuOptions, "&Optionen");
+    menuBar->Append(menuHelp, "&Hilfe");
+
+    SetMenuBar(menuBar);
+    */
+
+    CreateStatusBar();
+    SetStatusText("Willkommen bei AstroUniverse 1:1 Port!");
+
+    // Temporäre Buttons als Ersatz für die defekte Menüleiste
+    wxPanel* panel = new wxPanel(this, wxID_ANY);
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-    sizer->Add(chart_panel_, 1, wxEXPAND);
-    SetSizer(sizer);
+    wxBoxSizer* row1 = new wxBoxSizer(wxHORIZONTAL);
+    row1->Add(new wxButton(panel, static_cast<int>(astro::MenuID::PERSON), "Personen-Dialog"), 0, wxALL, 5);
+    row1->Add(new wxButton(panel, static_cast<int>(astro::MenuID::ORT), "Orte-Dialog"), 0, wxALL, 5);
+    sizer->Add(row1);
 
-    // Zentrieren
-    Centre();
-}
+    wxBoxSizer* row2 = new wxBoxSizer(wxHORIZONTAL);
+    row2->Add(new wxButton(panel, static_cast<int>(astro::MenuID::HOROTYP), "Horoskop-Typ"), 0, wxALL, 5);
+    row2->Add(new wxButton(panel, static_cast<int>(astro::MenuID::HAUSER), "Häusersystem"), 0, wxALL, 5);
+    row2->Add(new wxButton(panel, static_cast<int>(astro::MenuID::ORBEN), "Orben"), 0, wxALL, 5);
+    row2->Add(new wxButton(panel, static_cast<int>(astro::MenuID::FARBEN), "Farben"), 0, wxALL, 5);
+    row2->Add(new wxButton(panel, static_cast<int>(astro::MenuID::EINST), "Einstellungen"), 0, wxALL, 5);
+    sizer->Add(row2);
 
-// Datei-Menü Implementierung
-void MainFrame::OnNew(wxCommandEvent& event) {
-    // PersonDialog öffnen (1:1 Legacy)
-    PersonDialog dialog(this, data_manager_.get());
-    if (dialog.ShowModal() != wxID_OK) return;
-
-    SetStatusText(wxString::FromUTF8(tr("status.ready").c_str()), 0);
-
-    try {
-        // Daten aus Dialog
-        astro::RadixData radix = dialog.GetRadixData();
-
-        // Ephemeris
-        auto ephemeris = std::make_shared<astro::SwissEphemeris>();
-        ephemeris->initialize("../swisseph/ephe");
-
-        // Berechnen
-        auto calculator = std::make_unique<astro::AstroCalculator>(ephemeris);
-        auto chart = calculator->calculate_chart(
-            radix,
-            data_manager_->GetSettings().house_system,
-            astro::AstroCalculator::DEFAULT_PLANETS,
-            astro::AstroCalculator::DEFAULT_ASPECTS,
-            data_manager_->GetSettings().orbs.planets_planets
-        );
-
-        // Anzeigen
-        chart_panel_->SetChart(chart);
-        SetStatusText(wxString::FromUTF8(tr("status.chart_created").c_str()), 0);
-
-    } catch (const std::exception& e) {
-        wxMessageBox(wxString::FromUTF8(e.what()), wxString::FromUTF8("Fehler"), wxOK | wxICON_ERROR);
-    }
-}
-
-void MainFrame::OnSaveAs(wxCommandEvent& event) {
-    wxMessageBox("Speichern unter...", "Info", wxOK | wxICON_INFORMATION);
-    // TODO: Implementieren
-}
-
-void MainFrame::OnPrint(wxCommandEvent& event) {
-    wxMessageBox("Druck-Dialog wird implementiert...", "Info", wxOK | wxICON_INFORMATION);
-    // TODO: Implementieren
-}
-
-void MainFrame::OnPrinterSetup(wxCommandEvent& event) {
-    wxMessageBox("Drucker-Einrichtung...", "Info", wxOK | wxICON_INFORMATION);
-    // TODO: Implementieren
-}
-
-// Daten-Menü Implementierung
-void MainFrame::OnPersonDialog(wxCommandEvent& event) {
-    // PersonDialog öffnen (1:1 Legacy DlgPErfassen)
-    PersonDialog dialog(this, data_manager_.get());
-    if (dialog.ShowModal() == wxID_OK) {
-        astro::RadixData radix = dialog.GetRadixData();
-        try {
-            auto ephemeris = std::make_shared<astro::SwissEphemeris>();
-            ephemeris->initialize("../swisseph/ephe");
-            auto calculator = std::make_unique<astro::AstroCalculator>(ephemeris);
-            auto chart = calculator->calculate_chart(
-                radix,
-                data_manager_->GetSettings().house_system,
-                astro::AstroCalculator::DEFAULT_PLANETS,
-                astro::AstroCalculator::DEFAULT_ASPECTS,
-                data_manager_->GetSettings().orbs.planets_planets
-            );
-            chart_panel_->SetChart(chart);
-            SetStatusText(wxString::FromUTF8(tr("status.chart_created").c_str()), 0);
-        } catch (const std::exception& e) {
-            wxMessageBox(wxString::FromUTF8(e.what()), wxString::FromUTF8("Fehler"), wxOK | wxICON_ERROR);
-        }
-    }
-}
-
-void MainFrame::OnOrtDialog(wxCommandEvent& event) {
-    // OrtDialog öffnen (1:1 Legacy DlgOErfassen)
-    OrtDialog dialog(this, data_manager_.get());
-    if (dialog.ShowModal() == wxID_OK) {
-        astro::GeoLocation location = dialog.GetGeoLocation();
-        wxString info = wxString::Format(
-            wxString::FromUTF8("Ort gespeichert:\n%s\nBreite: %.4f°, Länge: %.4f°"),
-            wxString::FromUTF8(location.country_code.c_str()),
-            location.latitude,
-            location.longitude
-        );
-        SetStatusText(info, 0);
-    }
-}
-
-// Horoskop-Menü Implementierung
-void MainFrame::OnHoroTyp(wxCommandEvent& event) {
-    // HoroTypDialog öffnen (1:1 Legacy DlgHoroAuswahl)
-    HoroTypDialog dialog(this, data_manager_.get());
-    if (dialog.ShowModal() == wxID_OK) {
-        HoroType selected_type = dialog.GetHoroType();
-        wxString type_name;
-        
-        switch (selected_type) {
-            case HoroType::RADIX: type_name = wxString::FromUTF8("Radix"); break;
-            case HoroType::TRANSIT: type_name = wxString::FromUTF8("Transit"); break;
-            case HoroType::SYNASTRIE: type_name = wxString::FromUTF8("Synastrie"); break;
-            case HoroType::COMPOSIT: type_name = wxString::FromUTF8("Composit"); break;
-            case HoroType::SOLAR: type_name = wxString::FromUTF8("Solar Return"); break;
-            case HoroType::LUNAR: type_name = wxString::FromUTF8("Lunar Return"); break;
-            case HoroType::PROGRESSION: type_name = wxString::FromUTF8("Progression"); break;
-        }
-        
-        SetStatusText(wxString::FromUTF8("Horoskop-Typ: ") + type_name, 0);
-        
-        // TODO: Horoskop-Typ in Einstellungen speichern und Chart-Berechnung anpassen
-    }
-}
-
-void MainFrame::OnHausSystem(wxCommandEvent& event) {
-    // HausDialog öffnen (1:1 Legacy DlgHausAuswahl)
-    HausDialog dialog(this);
-    // Aktuelles System aus Einstellungen setzen
-    if (data_manager_) {
-        dialog.SetHouseSystem(data_manager_->GetSettings().house_system);
-    } else {
-        dialog.SetHouseSystem(astro::HouseSystem::Placidus);
-    }
-    
-    if (dialog.ShowModal() == wxID_OK) {
-        astro::HouseSystem system = dialog.GetHouseSystem();
-        wxString system_name;
-        
-        switch (system) {
-            case astro::HouseSystem::Placidus: system_name = wxString::FromUTF8("Placidus"); break;
-            case astro::HouseSystem::Koch: system_name = wxString::FromUTF8("Koch"); break;
-            case astro::HouseSystem::Porphyry: system_name = wxString::FromUTF8("Porphyry"); break;
-            case astro::HouseSystem::Regiomontanus: system_name = wxString::FromUTF8("Regiomontanus"); break;
-            case astro::HouseSystem::Campanus: system_name = wxString::FromUTF8("Campanus"); break;
-            case astro::HouseSystem::Equal: system_name = wxString::FromUTF8("Equal House"); break;
-            case astro::HouseSystem::WholeSign: system_name = wxString::FromUTF8("Whole Sign"); break;
-            case astro::HouseSystem::Alcabitius: system_name = wxString::FromUTF8("Alcabitius"); break;
-            case astro::HouseSystem::Morinus: system_name = wxString::FromUTF8("Morinus"); break;
-            case astro::HouseSystem::Topocentric: system_name = wxString::FromUTF8("Topocentric"); break;
-        }
-        
-        SetStatusText(wxString::FromUTF8("Häusersystem: ") + system_name, 0);
-        // Persistieren
-        if (data_manager_) {
-            LegacySettings s = data_manager_->GetSettings();
-            s.house_system = system;
-            data_manager_->SetSettings(s);
-            data_manager_->SaveUserSettings();
-        }
-    }
-}
-
-void MainFrame::OnOrben(wxCommandEvent& event) {
-    // OrbenDialog öffnen (1:1 Legacy DlgOrbenEin)
-    OrbenDialog dialog(this, data_manager_.get());
-    if (dialog.ShowModal() == wxID_OK) {
-        SetStatusText(wxString::FromUTF8("Orben-Einstellungen gespeichert"), 0);
-    }
-}
-
-void MainFrame::OnFarben(wxCommandEvent& event) {
-    // FarbenDialog öffnen (1:1 Legacy DlgFarben)
-    FarbenDialog dialog(this, data_manager_.get());
-    if (dialog.ShowModal() == wxID_OK) {
-        SetStatusText(wxString::FromUTF8("Farben-Einstellungen gespeichert"), 0);
-    }
-}
-
-void MainFrame::OnEinstellungen(wxCommandEvent& event) {
-    // EinstellungenDialog öffnen (1:1 Legacy DlgAspekte)
-    EinstellungenDialog dialog(this, data_manager_.get());
-    if (dialog.ShowModal() == wxID_OK) {
-        SetStatusText(wxString::FromUTF8("Einstellungen gespeichert"), 0);
-    }
-}
-
-void MainFrame::OnOpen(wxCommandEvent& event) {
-    wxFileDialog dialog(this, wxString::FromUTF8(tr("dialog.open_chart").c_str()), "", "",
-                       "AstroUniverse Daten (*.dat)|*.dat",
-                       wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-    
-    if (dialog.ShowModal() == wxID_OK) {
-        wxString path = dialog.GetPath();
-        SetStatusText(wxString::FromUTF8(tr("status.file_opened").c_str()) + " " + path, 0);
-        // TODO: .dat File laden
-    }
-}
-
-void MainFrame::OnSave(wxCommandEvent& event) {
-    wxFileDialog dialog(this, wxString::FromUTF8(tr("dialog.save_chart").c_str()), "", "",
-                       "AstroUniverse Daten (*.dat)|*.dat",
-                       wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-    
-    if (dialog.ShowModal() == wxID_OK) {
-        wxString path = dialog.GetPath();
-        SetStatusText(wxString::FromUTF8(tr("status.file_saved").c_str()) + " " + path, 0);
-        // TODO: Chart speichern
-    }
+    panel->SetSizer(sizer);
 }
 
 void MainFrame::OnExit(wxCommandEvent& event) {
     Close(true);
 }
 
-void MainFrame::OnAbout(wxCommandEvent& event) {
-    wxString about_text = 
-        "AstroUniverse - Astrologie-Software\n\n"
-        "Version 0.1.0 (Phase 3 - GUI)\n"
-        "Copyright (C) 2025 AstroUniverse Project\n\n"
-        "Lizenz: GPL v2\n"
-        "Swiss Ephemeris: GPL v2 / LGPL\n\n"
-        "Language: " + wxString(I18n::instance().get_language() == Language::German ? "Deutsch" : "English");
-    
-    wxMessageBox(about_text, tr("menu.about"), wxOK | wxICON_INFORMATION);
+void MainFrame::OnInfo(wxCommandEvent& event) {
+    wxMessageBox("AstroUniverse v0.04Beta\n\n1:1 Portierung nach C++ mit wxWidgets", "Info", wxOK | wxICON_INFORMATION);
 }
+
+// Placeholder für die restlichen Dialoge
+
+void MainFrame::OnPerson(wxCommandEvent& event) {
+    // Dummy-Daten für den Dialog
+    astro::LegacyRadix dummy_radix;
+    strcpy(dummy_radix.szName, "Mustermann");
+    strcpy(dummy_radix.szVorName, "Max");
+
+    PersonDialog dlg(this, dummy_radix);
+    if (dlg.ShowModal() == wxID_OK) {
+        // Daten wurden gespeichert, hier könnte man sie weiterverarbeiten
+        wxLogMessage("Gespeicherter Name: %s, %s", dummy_radix.szName, dummy_radix.szVorName);
+    }
+}
+
+void MainFrame::OnOrt(wxCommandEvent& event) {
+    // Dummy-Daten für den Dialog
+    astro::LegacyOrte dummy_ort;
+    strcpy(dummy_ort.szOrt, "Berlin");
+    strcpy(dummy_ort.szStaat, "Deutschland");
+
+    OrtDialog dlg(this, dummy_ort);
+    if (dlg.ShowModal() == wxID_OK) {
+        wxLogMessage("Gespeicherter Ort: %s, %s", dummy_ort.szOrt, dummy_ort.szStaat);
+    }
+}
+void MainFrame::OnDruck(wxCommandEvent& event) { wxMessageBox("Drucken-Dialog (noch nicht implementiert)", "Platzhalter"); }
+void MainFrame::OnHoroTyp(wxCommandEvent& event) { wxMessageBox("Horoskop-Typ-Dialog (noch nicht implementiert)", "Platzhalter"); }
+void MainFrame::OnHauser(wxCommandEvent& event) { wxMessageBox("Häusersystem-Dialog (noch nicht implementiert)", "Platzhalter"); }
+void MainFrame::OnOrben(wxCommandEvent& event) { wxMessageBox("Orben-Dialog (noch nicht implementiert)", "Platzhalter"); }
+void MainFrame::OnFarben(wxCommandEvent& event) { wxMessageBox("Farben-Dialog (noch nicht implementiert)", "Platzhalter"); }
+void MainFrame::OnEinst(wxCommandEvent& event) { wxMessageBox("Einstellungen-Dialog (noch nicht implementiert)", "Platzhalter"); }
