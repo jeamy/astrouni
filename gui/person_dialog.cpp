@@ -6,7 +6,9 @@
 
 // 1:1 Port von DlgPErfassen aus astrofil.c
 PersonDialog::PersonDialog(wxWindow* parent, astro::LegacyRadix& radix_data)
-    : wxDialog(parent, wxID_ANY, "Person Erfassen/Bearbeiten"), radix_data_(radix_data) {
+    : wxDialog(parent, wxID_ANY, "Person Erfassen/Bearbeiten", wxDefaultPosition, wxDefaultSize),
+      radix_data_(radix_data) {
+    SetBackgroundColour(*wxWHITE);
 
     wxGridBagSizer* sizer = new wxGridBagSizer(5, 5);
 

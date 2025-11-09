@@ -3,7 +3,9 @@
 
 // 1:1 Port von DlgOErfassen aus astrofil.c
 OrtDialog::OrtDialog(wxWindow* parent, astro::LegacyOrte& ort_data)
-    : wxDialog(parent, wxID_ANY, "Ort Erfassen/Bearbeiten"), ort_data_(ort_data) {
+    : wxDialog(parent, wxID_ANY, "Ort Erfassen/Bearbeiten", wxDefaultPosition, wxDefaultSize),
+      ort_data_(ort_data) {
+    SetBackgroundColour(*wxWHITE);
 
     wxGridBagSizer* sizer = new wxGridBagSizer(5, 5);
 

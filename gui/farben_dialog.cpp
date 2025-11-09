@@ -4,7 +4,8 @@
 
 // 1:1 Port von DlgFarben aus astrouni.rc
 FarbenDialog::FarbenDialog(wxWindow* parent)
-    : wxDialog(parent, wxID_ANY, "Farben auswählen", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE) {
+    : wxDialog(parent, wxID_ANY, "Farben", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
+    SetBackgroundColour(*wxWHITE);
 
     wxBoxSizer* main_sizer = new wxBoxSizer(wxVERTICAL);
     wxGridBagSizer* gbs = new wxGridBagSizer(5, 5);

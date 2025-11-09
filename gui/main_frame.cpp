@@ -6,6 +6,7 @@
 #include "orben_dialog.h"
 #include "farben_dialog.h"
 #include "einst_dialog.h"
+#include "symbol_panel.h"
 
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
 wxEND_EVENT_TABLE()

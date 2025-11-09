@@ -2,8 +2,9 @@
 
 // 1:1 Port von DlgHausAuswahl aus astrofil.c
 HauserDialog::HauserDialog(wxWindow* parent, int& selected_system)
-    : wxDialog(parent, wxID_ANY, "Häusersystem Wählen"), 
+    : wxDialog(parent, wxID_ANY, "Häusersystem Wählen", wxDefaultPosition, wxDefaultSize), 
       selected_system_(selected_system) {
+    SetBackgroundColour(*wxWHITE);
 
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 

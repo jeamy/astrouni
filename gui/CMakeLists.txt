@@ -11,6 +11,8 @@ target_include_directories(astro_gui PRIVATE
 
 target_compile_definitions(astro_gui PRIVATE wxNO_ASSERT_CHECK)
 
+file(COPY asu_____.ttf DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 target_link_libraries(astro_gui PRIVATE
     astro_core
     astro_database

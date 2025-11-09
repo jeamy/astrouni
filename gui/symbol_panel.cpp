@@ -5,6 +5,11 @@ PlanetOrAspectSymbolPanel::PlanetOrAspectSymbolPanel(wxWindow* parent, wxWindowI
     Bind(wxEVT_PAINT, &PlanetOrAspectSymbolPanel::OnPaint, this);
 }
 
+void PlanetOrAspectSymbolPanel::SetSymbol(const wxString& symbol) {
+    symbol_ = symbol;
+    Refresh();
+}
+
 void PlanetOrAspectSymbolPanel::OnPaint(wxPaintEvent& event) {
     wxPaintDC dc(this);
     dc.SetFont(font_);

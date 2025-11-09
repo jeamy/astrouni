@@ -3,7 +3,8 @@
 
 // 1:1 Port von EINSTELL DIALOG aus astrouni.rc
 EinstDialog::EinstDialog(wxWindow* parent)
-    : wxDialog(parent, wxID_ANY, "Einstellungen", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE) {
+    : wxDialog(parent, wxID_ANY, "Einstellungen", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
+    SetBackgroundColour(*wxWHITE);
 
     wxBoxSizer* main_sizer = new wxBoxSizer(wxVERTICAL);
     wxGridBagSizer* gbs = new wxGridBagSizer(5, 5);

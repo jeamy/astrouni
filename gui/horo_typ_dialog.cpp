@@ -2,8 +2,9 @@
 
 // 1:1 Port von DlgHoroAuswahl aus astrofil.c
 HoroTypDialog::HoroTypDialog(wxWindow* parent, int& selected_typ)
-    : wxDialog(parent, wxID_ANY, "Horoskop-Typ Wählen"), 
+    : wxDialog(parent, wxID_ANY, "Horoskop-Typ Wählen", wxDefaultPosition, wxDefaultSize), 
       selected_typ_(selected_typ) {
+    SetBackgroundColour(*wxWHITE);
 
     wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
