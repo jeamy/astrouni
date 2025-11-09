@@ -5,6 +5,7 @@
 #include "horo_typ_dialog.h"
 #include "orben_dialog.h"
 #include "farben_dialog.h"
+#include "einst_dialog.h"
 
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
 wxEND_EVENT_TABLE()
@@ -111,4 +112,7 @@ void MainFrame::OnFarben(wxCommandEvent&) {
     FarbenDialog dlg(this);
     dlg.ShowModal();
 }
-void MainFrame::OnEinst(wxCommandEvent&) { wxMessageBox("Einstellungen-Dialog (noch nicht implementiert)", "Platzhalter"); }
+void MainFrame::OnEinst(wxCommandEvent&) {
+    EinstDialog dlg(this);
+    dlg.ShowModal();
+}
