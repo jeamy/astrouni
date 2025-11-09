@@ -1,5 +1,6 @@
 #include "person_dialog.h"
 #include "person_search_dialog.h"
+#include "ort_search_dialog.h"
 #include "legacy_data_manager.h"
 #include <wx/gbsizer.h>
 
@@ -97,7 +98,22 @@ void PersonDialog::OnSearchName(wxCommandEvent& event) {
 }
 
 void PersonDialog::OnSearchOrt(wxCommandEvent& event) {
-    wxMessageBox("Orte-Suche (noch nicht implementiert)", "Platzhalter");
+    astro::LegacyDataManager dm;
+    std::vector<astro::LegacyOrte> all_orte;
+    if (dm.ReadOrte("astroorg.dat", all_orte)) {
+        OrtSearchDialog dlg(this, all_orte);
+        if (dlg.ShowModal() == wxID_OK) {
+            int selected_index = dlg.GetSelectedIndex();
+            if (selected_index != -1) {
+                radix_data_.o = all_orte[selected_index];
+                // UI aktualisieren
+                ort_ctrl_->SetValue(radix_data_.o.szOrt);
+                // ... weitere Felder aktualisieren
+            }
+        }
+    } else {
+        wxMessageBox("Fehler beim Lesen der Ortsdaten!", "Fehler", wxOK | wxICON_ERROR);
+    }
 }
 
 void PersonDialog::OnOk(wxCommandEvent& event) {

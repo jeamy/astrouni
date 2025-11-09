@@ -1,84 +1,83 @@
 #include "main_frame.h"
 #include "person_dialog.h"
 #include "ort_dialog.h"
+#include "hauser_dialog.h"
 
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
-    EVT_BUTTON(static_cast<int>(astro::MenuID::PERSON), MainFrame::OnPerson)
-    EVT_MENU(static_cast<int>(astro::MenuID::PERSON), MainFrame::OnPerson)
-    EVT_BUTTON(static_cast<int>(astro::MenuID::ORT), MainFrame::OnOrt)
-    EVT_MENU(static_cast<int>(astro::MenuID::ORT), MainFrame::OnOrt)
-    EVT_MENU(static_cast<int>(astro::MenuID::DRUCK), MainFrame::OnDruck)
-    EVT_MENU(static_cast<int>(astro::MenuID::APP_EXIT), MainFrame::OnExit)
-    EVT_MENU(static_cast<int>(astro::MenuID::HOROTYP), MainFrame::OnHoroTyp)
-    EVT_MENU(static_cast<int>(astro::MenuID::HAUSER), MainFrame::OnHauser)
-    EVT_MENU(static_cast<int>(astro::MenuID::ORBEN), MainFrame::OnOrben)
-    EVT_MENU(static_cast<int>(astro::MenuID::FARBEN), MainFrame::OnFarben)
-    EVT_MENU(static_cast<int>(astro::MenuID::EINST), MainFrame::OnEinst)
-    EVT_MENU(static_cast<int>(astro::MenuID::APP_INFO), MainFrame::OnInfo)
 wxEND_EVENT_TABLE()
 
 MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
     : wxFrame(NULL, wxID_ANY, title, pos, size) {
 
-    // --- MENÜLEISTE TEMPORÄR DEAKTIVIERT WEGEN wxWidgets ASSERT-FEHLER ---
-    /*
-    // 1:1 Port der Menü-Erstellung aus legacy/astrouni.rc
-    wxMenu *menuFile = new wxMenu;
-    menuFile->Append(static_cast<int>(astro::MenuID::PERSON), "&Personen...\tCtrl-P");
-    menuFile->Append(static_cast<int>(astro::MenuID::ORT), "&Orte...\tCtrl-O");
-    menuFile->AppendSeparator();
-    menuFile->Append(static_cast<int>(astro::MenuID::DRUCK), "&Drucken...\tCtrl-D");
-    menuFile->AppendSeparator();
-    menuFile->Append(static_cast<int>(astro::MenuID::APP_EXIT), "&Beenden");
+    // 1:1 Port der MAINMENU Menüstruktur aus astrouni.rc
+    wxMenuBar* menuBar = new wxMenuBar();
 
-    wxMenu *menuOptions = new wxMenu;
-    menuOptions->Append(static_cast<int>(astro::MenuID::HOROTYP), "&Horoskop-Typ...");
-    menuOptions->Append(static_cast<int>(astro::MenuID::HAUSER), "&Häusersystem...");
-    menuOptions->Append(static_cast<int>(astro::MenuID::ORBEN), "&Orben...");
-    menuOptions->Append(static_cast<int>(astro::MenuID::FARBEN), "&Farben...");
-    menuOptions->Append(static_cast<int>(astro::MenuID::EINST), "&Einstellungen...");
+    // &Datei
+    wxMenu* menuDatei = new wxMenu();
+    menuDatei->Append(wxID_EXIT, wxT("&Beenden"));
+    menuBar->Append(menuDatei, wxT("&Datei"));
+    Bind(wxEVT_MENU, &MainFrame::OnExit, this, wxID_EXIT);
 
-    wxMenu *menuHelp = new wxMenu;
-    menuHelp->Append(static_cast<int>(astro::MenuID::APP_INFO), "&Info...");
+    // &Erfassen
+    wxMenu* menuErfassen = new wxMenu();
+    int idPerson = wxWindow::NewControlId();
+    int idOrt = wxWindow::NewControlId();
+    menuErfassen->Append(idPerson, wxT("&Personen Erfassen"));
+    menuErfassen->Append(idOrt, wxT("&Orte Erfassen"));
+    menuBar->Append(menuErfassen, wxT("&Erfassen"));
+    Bind(wxEVT_MENU, &MainFrame::OnPerson, this, idPerson);
+    Bind(wxEVT_MENU, &MainFrame::OnOrt, this, idOrt);
 
-    wxMenuBar *menuBar = new wxMenuBar;
-    menuBar->Append(menuFile, "&Datei");
-    menuBar->Append(menuOptions, "&Optionen");
-    menuBar->Append(menuHelp, "&Hilfe");
+    // &Horoskop
+    wxMenu* menuHoroskop = new wxMenu();
+    int idHorotyp = wxWindow::NewControlId();
+    int idHauser = wxWindow::NewControlId();
+    int idOrben = wxWindow::NewControlId();
+    int idFarben = wxWindow::NewControlId();
+    int idEinst = wxWindow::NewControlId();
+    menuHoroskop->Append(idHorotyp, wxT("&Horoskoptyp"));
+    menuHoroskop->Append(idHauser, wxT("&Häusersystem"));
+    menuHoroskop->Append(idOrben, wxT("&Orben"));
+    menuHoroskop->Append(idFarben, wxT("&Farben"));
+    menuHoroskop->Append(idEinst, wxT("&Einstellungen"));
+    menuBar->Append(menuHoroskop, wxT("&Horoskop"));
+    Bind(wxEVT_MENU, &MainFrame::OnHoroTyp, this, idHorotyp);
+    Bind(wxEVT_MENU, &MainFrame::OnHauser, this, idHauser);
+    Bind(wxEVT_MENU, &MainFrame::OnOrben, this, idOrben);
+    Bind(wxEVT_MENU, &MainFrame::OnFarben, this, idFarben);
+    Bind(wxEVT_MENU, &MainFrame::OnEinst, this, idEinst);
+
+    // &Hilfe
+    wxMenu* menuHilfe = new wxMenu();
+    int idInfo = wxWindow::NewControlId();
+    menuHilfe->Append(idInfo, wxT("&Info über..."));
+    menuBar->Append(menuHilfe, wxT("&Hilfe"));
+    Bind(wxEVT_MENU, &MainFrame::OnInfo, this, idInfo);
 
     SetMenuBar(menuBar);
-    */
 
     CreateStatusBar();
     SetStatusText("Willkommen bei AstroUniverse 1:1 Port!");
-
 }
 
-void MainFrame::OnExit(wxCommandEvent& event) {
-    Close(true);
+void MainFrame::OnExit(wxCommandEvent&) { Close(true); }
+
+void MainFrame::OnInfo(wxCommandEvent&) { 
+    wxMessageBox("AstroUniverse v0.04Beta\n\n1:1 Portierung nach C++ mit wxWidgets", "Info", wxOK | wxICON_INFORMATION); 
 }
 
-void MainFrame::OnInfo(wxCommandEvent& event) {
-    wxMessageBox("AstroUniverse v0.04Beta\n\n1:1 Portierung nach C++ mit wxWidgets", "Info", wxOK | wxICON_INFORMATION);
-}
-
-// Placeholder für die restlichen Dialoge
-
-void MainFrame::OnPerson(wxCommandEvent& event) {
-    // Dummy-Daten für den Dialog
+void MainFrame::OnPerson(wxCommandEvent&) {
     astro::LegacyRadix dummy_radix;
     strcpy(dummy_radix.szName, "Mustermann");
     strcpy(dummy_radix.szVorName, "Max");
-
+    
     PersonDialog dlg(this, dummy_radix);
     if (dlg.ShowModal() == wxID_OK) {
-        // Daten wurden gespeichert, hier könnte man sie weiterverarbeiten
         wxLogMessage("Gespeicherter Name: %s, %s", dummy_radix.szName, dummy_radix.szVorName);
     }
 }
 
-void MainFrame::OnOrt(wxCommandEvent& event) {
-    // Dummy-Daten für den Dialog
+void MainFrame::OnOrt(wxCommandEvent&) {
     astro::LegacyOrte dummy_ort;
     strcpy(dummy_ort.szOrt, "Berlin");
     strcpy(dummy_ort.szStaat, "Deutschland");
@@ -88,9 +87,15 @@ void MainFrame::OnOrt(wxCommandEvent& event) {
         wxLogMessage("Gespeicherter Ort: %s, %s", dummy_ort.szOrt, dummy_ort.szStaat);
     }
 }
-void MainFrame::OnDruck(wxCommandEvent& event) { wxMessageBox("Drucken-Dialog (noch nicht implementiert)", "Platzhalter"); }
-void MainFrame::OnHoroTyp(wxCommandEvent& event) { wxMessageBox("Horoskop-Typ-Dialog (noch nicht implementiert)", "Platzhalter"); }
-void MainFrame::OnHauser(wxCommandEvent& event) { wxMessageBox("Häusersystem-Dialog (noch nicht implementiert)", "Platzhalter"); }
-void MainFrame::OnOrben(wxCommandEvent& event) { wxMessageBox("Orben-Dialog (noch nicht implementiert)", "Platzhalter"); }
-void MainFrame::OnFarben(wxCommandEvent& event) { wxMessageBox("Farben-Dialog (noch nicht implementiert)", "Platzhalter"); }
-void MainFrame::OnEinst(wxCommandEvent& event) { wxMessageBox("Einstellungen-Dialog (noch nicht implementiert)", "Platzhalter"); }
+
+void MainFrame::OnHauser(wxCommandEvent&) {
+    int selected_system = 0;
+    HauserDialog dlg(this, selected_system);
+    dlg.ShowModal();
+}
+
+void MainFrame::OnDruck(wxCommandEvent&) { wxMessageBox("Drucken-Dialog (noch nicht implementiert)", "Platzhalter"); }
+void MainFrame::OnHoroTyp(wxCommandEvent&) { wxMessageBox("Horoskop-Typ-Dialog (noch nicht implementiert)", "Platzhalter"); }
+void MainFrame::OnOrben(wxCommandEvent&) { wxMessageBox("Orben-Dialog (noch nicht implementiert)", "Platzhalter"); }
+void MainFrame::OnFarben(wxCommandEvent&) { wxMessageBox("Farben-Dialog (noch nicht implementiert)", "Platzhalter"); }
+void MainFrame::OnEinst(wxCommandEvent&) { wxMessageBox("Einstellungen-Dialog (noch nicht implementiert)", "Platzhalter"); }
