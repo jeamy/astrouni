@@ -2,6 +2,9 @@
 #include "person_dialog.h"
 #include "ort_dialog.h"
 #include "hauser_dialog.h"
+#include "horo_typ_dialog.h"
+#include "orben_dialog.h"
+#include "farben_dialog.h"
 
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
 wxEND_EVENT_TABLE()
@@ -95,7 +98,17 @@ void MainFrame::OnHauser(wxCommandEvent&) {
 }
 
 void MainFrame::OnDruck(wxCommandEvent&) { wxMessageBox("Drucken-Dialog (noch nicht implementiert)", "Platzhalter"); }
-void MainFrame::OnHoroTyp(wxCommandEvent&) { wxMessageBox("Horoskop-Typ-Dialog (noch nicht implementiert)", "Platzhalter"); }
-void MainFrame::OnOrben(wxCommandEvent&) { wxMessageBox("Orben-Dialog (noch nicht implementiert)", "Platzhalter"); }
-void MainFrame::OnFarben(wxCommandEvent&) { wxMessageBox("Farben-Dialog (noch nicht implementiert)", "Platzhalter"); }
+void MainFrame::OnHoroTyp(wxCommandEvent&) {
+    int selected_typ = 0; // Radix
+    HoroTypDialog dlg(this, selected_typ);
+    dlg.ShowModal();
+}
+void MainFrame::OnOrben(wxCommandEvent&) {
+    OrbenDialog dlg(this);
+    dlg.ShowModal();
+}
+void MainFrame::OnFarben(wxCommandEvent&) {
+    FarbenDialog dlg(this);
+    dlg.ShowModal();
+}
 void MainFrame::OnEinst(wxCommandEvent&) { wxMessageBox("Einstellungen-Dialog (noch nicht implementiert)", "Platzhalter"); }
