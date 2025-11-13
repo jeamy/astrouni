@@ -27,20 +27,23 @@ OrbenDialog::OrbenDialog(wxWindow* parent)
     wxGridBagSizer* gbs = new wxGridBagSizer(0, 0);
 
     // Symbol-Mapping: Korrekte Unicode-Codepunkte aus der AstroUniverse-Schriftart
-    // Planeten: U+00AA bis U+00B4 (Sonne, Mond, Merkur, Venus, Mars, Jupiter, Saturn, Uranus, Neptun, Pluto, Mondknoten)
-    const wchar_t* planet_symbols[] = { L"\u00AA", L"\u00AB", L"\u00AC", L"\u00AD", L"\u00AE", L"\u00AF", L"\u00B0", L"\u00B1", L"\u00B2", L"\u00B3", L"\u00B4" };
-    // Aspekte: U+0041 bis U+0047 (Konjunktion, Sextil, Quadrat, Trigon, Opposition, Quincunx, Halbsextil)
+    // Planeten/Objekte: U+00AA bis U+00BA (17 Objekte: Sonne, Mond, Merkur, Venus, Mars, Jupiter, Saturn, Uranus, Neptun, Pluto, Mondknoten, Chiron, Lilith, Aszendent, MC, Pars Fortunae, Vesta)
+    const wchar_t* planet_symbols[] = { 
+        L"\u00AA", L"\u00AB", L"\u00AC", L"\u00AD", L"\u00AE", L"\u00AF", L"\u00B0", L"\u00B1", 
+        L"\u00B2", L"\u00B3", L"\u00B4", L"\u00B5", L"\u00B6", L"\u00B7", L"\u00B8", L"\u00B9", L"\u00BA" 
+    };
+    // Aspekte: 7 Aspekte (Konjunktion, Sextil, Quadrat, Trigon, Opposition, Quincunx, Halbsextil)
     const wchar_t* aspect_symbols[] = { L"\u2018", L"\u2014", L"\u201C", L"\u201D", L"\u2019", L"\u2022", L"\u2013" };
 
-    // Obere Leiste (Alle Planeten-Symbole) - jedes Symbol in einer eigenen Spalte
-    for (int i = 0; i < 11; ++i) {
+    // Obere Leiste (Alle 17 Planeten-Symbole) - jedes Symbol in einer eigenen Spalte
+    for (int i = 0; i < 17; ++i) {
         PlanetOrAspectSymbolPanel* panel = new PlanetOrAspectSymbolPanel(this, wxID_ANY, planet_symbols[i], astro_font);
         panel->SetMinSize(wxSize(45, 30));
         panel->SetBackgroundColour(*wxWHITE);
         gbs->Add(panel, wxGBPosition(0, i + 1), wxGBSpan(1, 1), wxEXPAND | wxALIGN_CENTER);
     }
 
-    // Linke Leiste (Alle Aspekt-Symbole) - jedes Symbol in einer eigenen Zeile
+    // Linke Leiste (Alle 7 Aspekt-Symbole) - jedes Symbol in einer eigenen Zeile
     for (int i = 0; i < 7; ++i) {
         PlanetOrAspectSymbolPanel* panel = new PlanetOrAspectSymbolPanel(this, wxID_ANY, aspect_symbols[i], astro_font);
         panel->SetMinSize(wxSize(30, 30));
@@ -48,9 +51,9 @@ OrbenDialog::OrbenDialog(wxWindow* parent)
         gbs->Add(panel, wxGBPosition(i + 1, 0), wxGBSpan(1, 1), wxEXPAND | wxALIGN_CENTER);
     }
 
-    // Gitter für die Orben-Werte - jede Zelle einzeln hinzufügen für präzise Kontrolle
+    // Gitter für die Orben-Werte - 7 Zeilen × 17 Spalten = 119 Eingabefelder
     for (int row = 0; row < 7; ++row) {
-        for (int col = 0; col < 11; ++col) {
+        for (int col = 0; col < 17; ++col) {
             wxTextCtrl* textCtrl = new wxTextCtrl(this, wxID_ANY, "10.0", wxDefaultPosition, wxSize(45, -1), wxTE_CENTER);
             gbs->Add(textCtrl, wxGBPosition(row + 1, col + 1), wxGBSpan(1, 1), wxEXPAND);
         }
@@ -64,7 +67,7 @@ OrbenDialog::OrbenDialog(wxWindow* parent)
     wxRadioBox* typ_radio = new wxRadioBox(this, wxID_ANY, "Orben für:", wxDefaultPosition, wxDefaultSize, 3, typ_choices, 1, wxRA_SPECIFY_COLS);
     right_column->Add(typ_radio, 0, wxEXPAND | wxALL, 5);
     right_column->Add(new wxCheckBox(this, wxID_ANY, "Zombie"), 0, wxALIGN_LEFT | wxALL, 5);
-    gbs->Add(right_column, wxGBPosition(0, 12), wxGBSpan(8, 1), wxEXPAND | wxLEFT | wxRIGHT, 10);
+    gbs->Add(right_column, wxGBPosition(0, 18), wxGBSpan(8, 1), wxEXPAND | wxLEFT | wxRIGHT, 10);
 
     main_sizer->Add(gbs, 1, wxEXPAND | wxALL, 10);
 
