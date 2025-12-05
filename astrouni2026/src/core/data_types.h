@@ -33,7 +33,7 @@ struct LBColor {
 
 #pragma pack(push, 1)
 struct OrteLegacy {
-    int16_t  cGultig;       // Record gültig?
+    int16_t  cGultig;       // Record gültig? (short = 2 Bytes)
     int32_t  lIndex;        // Index im File
     int16_t  slRec;         // Record-Länge
     int16_t  slOrt;         // Ort-Länge
@@ -222,16 +222,28 @@ struct AuInit {
     int16_t  sSelHaus = TYP_PLACIDUS;   // Gewähltes Häusersystem
     int16_t  sSelHoro = TYP_RADIX;      // Gewählter Horoskop-Typ
     int16_t  sRotRadix = 0;             // Radix-Rotation
+    int16_t  sRotation = ROT_ASC;       // Rotation (ASC links oder Sonne oben)
     int16_t  sAspekte = S_KON | S_SEX | S_QUA | S_TRI | S_OPO;  // Aspekt-Auswahl
     int16_t  sTeilung = 0;              // Teilung (3er/9er)
+    int16_t  sAnzahlPlanet = 10;        // Anzahl der angezeigten Planeten
     
-    // Orben-Arrays (ASPEKTE x MAX_PLANET)
-    QVector<float> orbenPlanet;         // Orben Planeten
-    QVector<float> orbenHaus;           // Orben Häuser
+    // Anzeige-Optionen
+    bool     bShowMinutes = true;       // Minuten anzeigen
+    bool     bShowSeconds = false;      // Sekunden anzeigen
+    
+    // Orben-Arrays (MAX_PLANET x MAX_PLANET x ASPEKTE) - wie im Legacy
+    // Index: [planet1 * MAX_PLANET + planet2] * ASPEKTE + aspekt
+    // oder vereinfacht: [planet1][planet2][aspekt]
+    QVector<float> orbenPlanet;         // Orben Planeten (Radix)
+    QVector<float> orbenHaus;           // Orben Häuser (Radix)
     QVector<float> orbenTPlanet;        // Orben Transit-Planeten
     QVector<float> orbenTHaus;          // Orben Transit-Häuser
     QVector<float> orbenSPlanet;        // Orben Synastrie-Planeten
     QVector<float> orbenSHaus;          // Orben Synastrie-Häuser
+    
+    // Farb-Arrays
+    QVector<QColor> planetColor;        // Planeten-Farben
+    QVector<QColor> aspektColor;        // Aspekt-Farben
     
     int16_t  sRet = 0;                  // Return-Wert
     QString  bDatum;                    // Basis-Datum
@@ -246,6 +258,9 @@ struct AuInit {
     
     // Orben initialisieren
     void initOrben();
+    
+    // Farben initialisieren
+    void initColors();
 };
 
 //==============================================================================

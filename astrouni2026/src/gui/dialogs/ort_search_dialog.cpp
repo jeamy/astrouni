@@ -10,6 +10,26 @@ namespace astro {
 OrtSearchDialog::OrtSearchDialog(QWidget* parent) : QDialog(parent) {
     setWindowTitle(tr("Ort suchen"));
     setupUI();
+    
+    // Initial alle Orte anzeigen (erste 100)
+    loadInitialOrte();
+}
+
+void OrtSearchDialog::loadInitialOrte() {
+    m_listWidget->clear();
+    
+    // Zeige erste 100 Orte
+    int count = orteDB().count();
+    int maxShow = qMin(count, 100);
+    
+    for (int i = 0; i < maxShow; ++i) {
+        Orte ort = orteDB().getByIndex(i);
+        if (ort.gultig) {
+            auto* item = new QListWidgetItem(QString("%1 (%2)").arg(ort.name, ort.land));
+            item->setData(Qt::UserRole, ort.index);
+            m_listWidget->addItem(item);
+        }
+    }
 }
 
 Orte OrtSearchDialog::getSelectedOrt() const {
@@ -52,9 +72,15 @@ void OrtSearchDialog::setupUI() {
 
 void OrtSearchDialog::onSearchTextChanged(const QString& text) {
     m_listWidget->clear();
-    if (text.length() < 2) return;
     
-    auto orte = orteDB().search(text, 50);
+    if (text.isEmpty()) {
+        // Zeige erste 100 Orte wenn leer
+        loadInitialOrte();
+        return;
+    }
+    
+    // Suche ab 1 Zeichen
+    auto orte = orteDB().search(text, 100);
     for (const auto& ort : orte) {
         auto* item = new QListWidgetItem(QString("%1 (%2)").arg(ort.name, ort.land));
         item->setData(Qt::UserRole, ort.index);

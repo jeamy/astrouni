@@ -5,7 +5,6 @@
 
 #include "orte_db.h"
 #include <QFile>
-#include <QDataStream>
 #include <algorithm>
 
 namespace astro {
@@ -41,37 +40,34 @@ int OrteDB::load(const QString& filepath) {
         return -1;
     }
     
-    QDataStream stream(&file);
-    stream.setByteOrder(QDataStream::LittleEndian);
-    
-    // Legacy-Format: Jeder Record hat feste Größe
-    // OrteLegacy Struktur + Ortsname (variable Länge)
-    
-    while (!stream.atEnd()) {
+    // Direkt binär lesen (nicht QDataStream, da das Probleme mit packed structs hat)
+    while (!file.atEnd()) {
         OrteLegacy legacy;
         
-        // Legacy-Struktur lesen
-        stream >> legacy.cGultig;
-        stream >> legacy.lIndex;
-        stream >> legacy.slRec;
-        stream >> legacy.slOrt;
-        stream.readRawData(legacy.szLand, 4);
-        stream >> legacy.fZone;
-        stream >> legacy.dBreite;
-        stream >> legacy.dLange;
+        // Struktur direkt lesen
+        if (file.read(reinterpret_cast<char*>(&legacy), sizeof(OrteLegacy)) != sizeof(OrteLegacy)) {
+            break;
+        }
         
-        // Ortsname lesen
-        QByteArray nameBytes(legacy.slOrt, '\0');
-        stream.readRawData(nameBytes.data(), legacy.slOrt);
-        
-        // In Latin1 kodiert (ISO-8859-1)
-        QString ortName = QString::fromLatin1(nameBytes).trimmed();
-        
-        // Nur gültige Records übernehmen
-        if (legacy.cGultig) {
-            Orte ort = Orte::fromLegacy(legacy, ortName);
-            ort.index = m_orte.size();
-            m_orte.append(ort);
+        // Ortsname lesen (slOrt enthält die Länge)
+        if (legacy.slOrt > 0 && legacy.slOrt < 256) {
+            QByteArray nameBytes = file.read(legacy.slOrt);
+            if (nameBytes.size() != legacy.slOrt) {
+                break;
+            }
+            
+            // In Latin1 kodiert (ISO-8859-1)
+            QString ortName = QString::fromLatin1(nameBytes).trimmed();
+            
+            // Nur gültige Records übernehmen
+            if (legacy.cGultig) {
+                Orte ort = Orte::fromLegacy(legacy, ortName);
+                ort.index = m_orte.size();
+                m_orte.append(ort);
+            }
+        } else {
+            // Ungültiger Record - überspringen
+            break;
         }
     }
     
@@ -79,6 +75,60 @@ int OrteDB::load(const QString& filepath) {
     m_loaded = true;
     
     return m_orte.size();
+}
+
+int OrteDB::loadAll(const QString& dataPath) {
+    m_orte.clear();
+    m_loaded = false;
+    m_modified = false;
+    
+    int totalLoaded = 0;
+    
+    // Lade alle Orte-Dateien
+    QStringList files = {"astroorg.dat", "astroger.dat", "europa.dat"};
+    
+    for (const QString& filename : files) {
+        QString filepath = dataPath + "/" + filename;
+        QFile file(filepath);
+        
+        if (!file.open(QIODevice::ReadOnly)) {
+            continue;  // Datei nicht vorhanden, überspringen
+        }
+        
+        // Direkt binär lesen
+        while (!file.atEnd()) {
+            OrteLegacy legacy;
+            
+            if (file.read(reinterpret_cast<char*>(&legacy), sizeof(OrteLegacy)) != sizeof(OrteLegacy)) {
+                break;
+            }
+            
+            if (legacy.slOrt > 0 && legacy.slOrt < 256) {
+                QByteArray nameBytes = file.read(legacy.slOrt);
+                if (nameBytes.size() != legacy.slOrt) {
+                    break;
+                }
+                
+                QString ortName = QString::fromLatin1(nameBytes).trimmed();
+                
+                if (legacy.cGultig && !ortName.isEmpty()) {
+                    Orte ort = Orte::fromLegacy(legacy, ortName);
+                    ort.index = m_orte.size();
+                    m_orte.append(ort);
+                    totalLoaded++;
+                }
+            } else {
+                break;
+            }
+        }
+        
+        file.close();
+    }
+    
+    m_loaded = (totalLoaded > 0);
+    m_filepath = dataPath + "/astroorg.dat";  // Hauptdatei für Speichern
+    
+    return totalLoaded;
 }
 
 int OrteDB::count() const {
@@ -195,26 +245,16 @@ bool OrteDB::save(const QString& filepath) {
         return false;
     }
     
-    QDataStream stream(&file);
-    stream.setByteOrder(QDataStream::LittleEndian);
-    
     for (const Orte& ort : m_orte) {
         OrteLegacy legacy = ort.toLegacy();
         QByteArray nameBytes = ort.name.toLatin1();
         legacy.slOrt = nameBytes.size();
         
-        // Legacy-Struktur schreiben
-        stream << legacy.cGultig;
-        stream << legacy.lIndex;
-        stream << legacy.slRec;
-        stream << legacy.slOrt;
-        stream.writeRawData(legacy.szLand, 4);
-        stream << legacy.fZone;
-        stream << legacy.dBreite;
-        stream << legacy.dLange;
+        // Struktur direkt schreiben
+        file.write(reinterpret_cast<const char*>(&legacy), sizeof(OrteLegacy));
         
         // Ortsname schreiben
-        stream.writeRawData(nameBytes.constData(), nameBytes.size());
+        file.write(nameBytes);
     }
     
     file.close();

@@ -34,6 +34,13 @@ public:
     int load(const QString& filepath);
     
     /**
+     * @brief Lädt alle Orte-Datenbanken aus einem Verzeichnis
+     * @param dataPath Pfad zum Datenverzeichnis
+     * @return Anzahl geladener Orte
+     */
+    int loadAll(const QString& dataPath);
+    
+    /**
      * @brief Gibt die Anzahl der Orte zurück
      */
     int count() const;

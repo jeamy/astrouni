@@ -61,15 +61,13 @@ int main(int argc, char *argv[]) {
     // Legacy I/O initialisieren
     astro::legacyIO().setDataPath(dataPath);
     
-    // Orte-Datenbank laden
-    QString ortePath = dataPath + "/" + astro::ORTDAT;
-    if (QFile::exists(ortePath)) {
-        int count = astro::orteDB().load(ortePath);
-        if (count < 0) {
-            QMessageBox::warning(nullptr, "Warnung",
-                QString("Fehler beim Laden der Orte-Datenbank:\n%1")
-                .arg(astro::orteDB().getLastError()));
-        }
+    // Orte-Datenbank laden (alle Dateien: astroorg.dat, astroger.dat, europa.dat)
+    int orteCount = astro::orteDB().loadAll(dataPath);
+    if (orteCount == 0) {
+        QMessageBox::warning(nullptr, "Warnung",
+            QString("Keine Orte-Datenbank gefunden in:\n%1\n\n"
+                    "Erwartet: astroorg.dat, astroger.dat, europa.dat")
+            .arg(dataPath));
     }
     
     // Hauptfenster erstellen und anzeigen

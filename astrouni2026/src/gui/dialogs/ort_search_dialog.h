@@ -24,7 +24,7 @@ private slots:
     
 private:
     void setupUI();
-    void updateList();
+    void loadInitialOrte();
     
     QLineEdit* m_searchEdit;
     QListWidget* m_listWidget;

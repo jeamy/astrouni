@@ -251,20 +251,53 @@ void Radix::allocate(int16_t numPlanets) {
 
 AuInit::AuInit() {
     initOrben();
+    initColors();
+}
+
+void AuInit::initColors() {
+    // Planeten-Farben initialisieren
+    planetColor.resize(MAX_PLANET);
+    planetColor[P_SONNE]   = QColor(255, 200, 0);    // Gold
+    planetColor[P_MOND]    = QColor(192, 192, 192);  // Silber
+    planetColor[P_MERKUR]  = QColor(255, 255, 0);    // Gelb
+    planetColor[P_VENUS]   = QColor(0, 255, 0);      // Grün
+    planetColor[P_MARS]    = QColor(255, 0, 0);      // Rot
+    planetColor[P_JUPITER] = QColor(128, 0, 255);    // Violett
+    planetColor[P_SATURN]  = QColor(128, 64, 0);     // Braun
+    planetColor[P_URANUS]  = QColor(0, 255, 255);    // Cyan
+    planetColor[P_NEPTUN]  = QColor(0, 128, 255);    // Blau
+    planetColor[P_PLUTO]   = QColor(128, 0, 0);      // Dunkelrot
+    for (int i = 10; i < MAX_PLANET; ++i) {
+        planetColor[i] = QColor(128, 128, 128);      // Grau für Rest
+    }
+    
+    // Aspekt-Farben initialisieren
+    aspektColor.resize(MAX_ASPEKT);
+    aspektColor[0] = QColor(128, 0, 0);    // Konjunktion - Rot
+    aspektColor[1] = QColor(0, 128, 0);    // Halbsextil - Grün
+    aspektColor[2] = QColor(0, 128, 0);    // Sextil - Grün
+    aspektColor[3] = QColor(255, 0, 0);    // Quadrat - Rot
+    aspektColor[4] = QColor(0, 255, 0);    // Trigon - Grün
+    aspektColor[5] = QColor(128, 128, 0);  // Quincunx - Olive
+    aspektColor[6] = QColor(128, 0, 128);  // Opposition - Magenta
+    for (int i = 7; i < MAX_ASPEKT; ++i) {
+        aspektColor[i] = QColor(128, 128, 128);
+    }
 }
 
 void AuInit::initOrben() {
     // Standard-Orben initialisieren
-    // Format: [Aspekt][Planet] - Werte aus legacy/default.dat
+    // Format: [Planet1 * MAX_PLANET + Planet2] * ASPEKTE + Aspekt
+    // Wie im Legacy: MAX_PLANET * MAX_PLANET * ASPEKTE
     
-    int size = ASPEKTE * MAX_PLANET;
+    int size = MAX_PLANET * MAX_PLANET * ASPEKTE;
     
     orbenPlanet.resize(size);
-    orbenHaus.resize(size);
+    orbenHaus.resize(MAX_PLANET * MAX_HAUS * ASPEKTE);
     orbenTPlanet.resize(size);
-    orbenTHaus.resize(size);
+    orbenTHaus.resize(MAX_PLANET * MAX_HAUS * ASPEKTE);
     orbenSPlanet.resize(size);
-    orbenSHaus.resize(size);
+    orbenSHaus.resize(MAX_PLANET * MAX_HAUS * ASPEKTE);
     
     // Standard-Orben (aus Legacy-Code)
     // Konjunktion: 10°, Sextil: 6°, Quadrat: 8°, Trigon: 8°, Opposition: 10°
@@ -280,27 +313,49 @@ void AuInit::initOrben() {
         10.0f   // Opposition
     };
     
-    for (int asp = 0; asp < ASPEKTE; ++asp) {
-        for (int pl = 0; pl < MAX_PLANET; ++pl) {
-            int idx = asp * MAX_PLANET + pl;
-            float orb = defaultOrben[asp];
-            
-            // Sonne und Mond haben größere Orben
-            if (pl == P_SONNE || pl == P_MOND) {
-                orb += 2.0f;
+    // Planet-zu-Planet Orben
+    for (int pl1 = 0; pl1 < MAX_PLANET; ++pl1) {
+        for (int pl2 = 0; pl2 < MAX_PLANET; ++pl2) {
+            for (int asp = 0; asp < ASPEKTE; ++asp) {
+                int idx = (pl1 * MAX_PLANET + pl2) * ASPEKTE + asp;
+                float orb = defaultOrben[asp];
+                
+                // Sonne und Mond haben größere Orben
+                if (pl1 == P_SONNE || pl1 == P_MOND || pl2 == P_SONNE || pl2 == P_MOND) {
+                    orb += 2.0f;
+                }
+                // Asteroiden haben kleinere Orben
+                if (pl1 >= P_CHIRON || pl2 >= P_CHIRON) {
+                    orb -= 2.0f;
+                    if (orb < 1.0f) orb = 1.0f;
+                }
+                
+                orbenPlanet[idx] = orb;
+                orbenTPlanet[idx] = orb - 1.0f;  // Transit etwas enger
+                orbenSPlanet[idx] = orb;
             }
-            // Asteroiden haben kleinere Orben
-            if (pl >= P_CHIRON) {
-                orb -= 2.0f;
-                if (orb < 1.0f) orb = 1.0f;
+        }
+    }
+    
+    // Planet-zu-Haus Orben
+    for (int pl = 0; pl < MAX_PLANET; ++pl) {
+        for (int haus = 0; haus < MAX_HAUS; ++haus) {
+            for (int asp = 0; asp < ASPEKTE; ++asp) {
+                int idx = (pl * MAX_HAUS + haus) * ASPEKTE + asp;
+                float orb = defaultOrben[asp];
+                
+                if (pl == P_SONNE || pl == P_MOND) {
+                    orb += 2.0f;
+                }
+                if (pl >= P_CHIRON) {
+                    orb -= 2.0f;
+                    if (orb < 1.0f) orb = 1.0f;
+                }
+                
+                orbenHaus[idx] = orb;
+                orbenTHaus[idx] = orb - 1.0f;
+                orbenSHaus[idx] = orb;
             }
-            
-            orbenPlanet[idx] = orb;
-            orbenHaus[idx] = orb;
-            orbenTPlanet[idx] = orb - 1.0f;  // Transit etwas enger
-            orbenTHaus[idx] = orb - 1.0f;
-            orbenSPlanet[idx] = orb;
-            orbenSHaus[idx] = orb;
         }
     }
 }

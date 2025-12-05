@@ -86,6 +86,7 @@ inline constexpr int P_VESTA    = 16;
 inline constexpr int MAX_PLANET     = 17;
 inline constexpr int MAX_HAUS       = 12;
 inline constexpr int MAX_QUALITATEN = 9;
+inline constexpr int MAX_ASPEKT     = 12;
 
 //==============================================================================
 // Sternzeichen-Indizes (aus astrouni.h Zeile 201-225)
@@ -132,7 +133,8 @@ inline constexpr int TYP_WHOLE      = 4;
 inline constexpr int TYP_TOPOZEN    = 5;
 inline constexpr int TYP_CAMPANUS   = 6;
 inline constexpr int TYP_MERIDIAN   = 7;
-inline constexpr int TYP_REGIOMON   = 8;
+inline constexpr int TYP_REGIOMON      = 8;
+inline constexpr int TYP_REGIOMONTANUS = 8;  // Alias
 inline constexpr int TYP_PORPHYRY   = 9;
 inline constexpr int TYP_PORPHYRYN  = 10;
 inline constexpr int TYP_MORINUS    = 11;
@@ -144,9 +146,11 @@ inline constexpr int TYP_NULL       = 13;
 //==============================================================================
 
 inline constexpr int TYP_RADIX      = 0;
-inline constexpr int TYP_TRANSIT    = 1;
-inline constexpr int TYP_SYNASTRIE  = 2;
-inline constexpr int TYP_COMPOSIT   = 3;
+inline constexpr int TYP_SOLAR      = 1;
+inline constexpr int TYP_LUNAR      = 2;
+inline constexpr int TYP_TRANSIT    = 3;
+inline constexpr int TYP_SYNASTRIE  = 4;
+inline constexpr int TYP_COMPOSIT   = 5;
 
 //==============================================================================
 // Planet-Typen (aus astrouni.h Zeile 315-320)

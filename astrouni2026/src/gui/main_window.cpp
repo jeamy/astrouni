@@ -23,6 +23,7 @@
 #include <QApplication>
 #include <QDir>
 #include <QIcon>
+#include <QFile>
 
 namespace astro {
 
@@ -100,23 +101,23 @@ void MainWindow::setupActions() {
     connect(m_exitAction, &QAction::triggered, this, &MainWindow::onFileExit);
     
     // Erfassen-Menü Aktionen
-    m_personAction = new QAction(tr("&Person erfassen..."), this);
+    m_personAction = new QAction(tr("&Person erfassen"), this);
     connect(m_personAction, &QAction::triggered, this, &MainWindow::onPersonErfassen);
     
-    m_ortAction = new QAction(tr("&Ort erfassen..."), this);
+    m_ortAction = new QAction(tr("&Ort erfassen"), this);
     connect(m_ortAction, &QAction::triggered, this, &MainWindow::onOrtErfassen);
     
     // Horoskop-Menü Aktionen
-    m_horoTypAction = new QAction(tr("&Horoskoptyp..."), this);
+    m_horoTypAction = new QAction(tr("&Horoskoptyp"), this);
     connect(m_horoTypAction, &QAction::triggered, this, &MainWindow::onHoroTyp);
     
-    m_orbenAction = new QAction(tr("&Orben..."), this);
+    m_orbenAction = new QAction(tr("&Orben"), this);
     connect(m_orbenAction, &QAction::triggered, this, &MainWindow::onOrben);
     
-    m_farbenAction = new QAction(tr("&Farben..."), this);
+    m_farbenAction = new QAction(tr("&Farben"), this);
     connect(m_farbenAction, &QAction::triggered, this, &MainWindow::onFarben);
     
-    m_einstAction = new QAction(tr("&Einstellungen..."), this);
+    m_einstAction = new QAction(tr("&Einstellungen"), this);
     connect(m_einstAction, &QAction::triggered, this, &MainWindow::onEinstellungen);
     
     // Hilfe-Menü Aktionen
@@ -124,7 +125,7 @@ void MainWindow::setupActions() {
     m_helpIndexAction->setShortcut(QKeySequence::HelpContents);
     connect(m_helpIndexAction, &QAction::triggered, this, &MainWindow::onHelpIndex);
     
-    m_helpAboutAction = new QAction(tr("Ü&ber AstroUniverse..."), this);
+    m_helpAboutAction = new QAction(tr("Ü&ber AstroUniverse"), this);
     connect(m_helpAboutAction, &QAction::triggered, this, &MainWindow::onHelpAbout);
 }
 
@@ -132,11 +133,13 @@ void MainWindow::setupMenus() {
     // Datei-Menü (Port von MAINMENU -> "&Datei")
     m_fileMenu = menuBar()->addMenu(tr("&Datei"));
     m_fileMenu->addAction(m_exitAction);
-    
+    m_fileMenu->setMinimumWidth(200);  // Mindestbreite für vollständige Texte
+
     // Erfassen-Menü (Port von MAINMENU -> "&Erfassen")
     m_erfassenMenu = menuBar()->addMenu(tr("&Erfassen"));
     m_erfassenMenu->addAction(m_personAction);
     m_erfassenMenu->addAction(m_ortAction);
+    m_erfassenMenu->setMinimumWidth(200);  // Mindestbreite für vollständige Texte
     
     // Horoskop-Menü (Port von MAINMENU -> "&Horoskop")
     m_horoskopMenu = menuBar()->addMenu(tr("&Horoskop"));
@@ -144,12 +147,15 @@ void MainWindow::setupMenus() {
     m_horoskopMenu->addAction(m_orbenAction);
     m_horoskopMenu->addAction(m_farbenAction);
     m_horoskopMenu->addAction(m_einstAction);
+    m_horoskopMenu->setMinimumWidth(200);  // Mindestbreite für vollständige Texte
     
     // Hilfe-Menü (Port von MAINMENU -> "&Hilfe")
     m_hilfeMenu = menuBar()->addMenu(tr("&Hilfe"));
     m_hilfeMenu->addAction(m_helpIndexAction);
     m_hilfeMenu->addSeparator();
     m_hilfeMenu->addAction(m_helpAboutAction);
+    m_hilfeMenu->setMinimumWidth(250);  // Mindestbreite für vollständige Texte
+
 }
 
 //==============================================================================
@@ -207,7 +213,7 @@ void MainWindow::onOrtErfassen() {
 
 void MainWindow::onHoroTyp() {
     // Port von: DlgHoroAuswahl
-    Horo_typDialog dialog(this);
+    Horo_typDialog dialog(m_auinit, this);
     
     if (dialog.exec() == QDialog::Accepted) {
         emit settingsChanged();
@@ -216,7 +222,7 @@ void MainWindow::onHoroTyp() {
 
 void MainWindow::onOrben() {
     // Port von: DlgOrbenEin
-    OrbenDialog dialog(this);
+    OrbenDialog dialog(m_auinit, this);
     
     if (dialog.exec() == QDialog::Accepted) {
         emit settingsChanged();
@@ -225,7 +231,7 @@ void MainWindow::onOrben() {
 
 void MainWindow::onFarben() {
     // Port von: DlgFarben
-    FarbenDialog dialog(this);
+    FarbenDialog dialog(m_auinit, this);
     
     if (dialog.exec() == QDialog::Accepted) {
         emit settingsChanged();
@@ -234,7 +240,7 @@ void MainWindow::onFarben() {
 
 void MainWindow::onEinstellungen() {
     // Port von: EINSTELL Dialog
-    SettingsDialog dialog(this);
+    SettingsDialog dialog(m_auinit, this);
     
     if (dialog.exec() == QDialog::Accepted) {
         emit settingsChanged();
