@@ -31,11 +31,11 @@ private:
     
     AuInit& m_auinit;
     
-    // Horoskoptyp
+    // Horoskoptyp (STRICT LEGACY: nur Radix, Synastrie, Transit)
     QButtonGroup* m_horoGroup;
     QRadioButton* m_radixRadio;
-    QRadioButton* m_solarRadio;
-    QRadioButton* m_lunarRadio;
+    QRadioButton* m_synastrieRadio;
+    QRadioButton* m_transitRadio;
     
     // Häusersystem
     QButtonGroup* m_hausGroup;

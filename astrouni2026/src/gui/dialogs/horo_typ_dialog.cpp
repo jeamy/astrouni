@@ -30,23 +30,23 @@ Horo_typDialog::Horo_typDialog(AuInit& auinit, QWidget* parent)
 void Horo_typDialog::setupUI() {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
     
-    // Horoskoptyp-Gruppe
+    // Horoskoptyp-Gruppe (STRICT LEGACY: nur Radix, Synastrie, Transit)
     QGroupBox* horoGroup = new QGroupBox(tr("Horoskoptyp"), this);
     QVBoxLayout* horoLayout = new QVBoxLayout(horoGroup);
     
     m_horoGroup = new QButtonGroup(this);
     
     m_radixRadio = new QRadioButton(tr("Radix"), this);
-    m_solarRadio = new QRadioButton(tr("Solar"), this);
-    m_lunarRadio = new QRadioButton(tr("Lunar"), this);
+    m_synastrieRadio = new QRadioButton(tr("Synastrie"), this);
+    m_transitRadio = new QRadioButton(tr("Transit"), this);
     
     m_horoGroup->addButton(m_radixRadio, TYP_RADIX);
-    m_horoGroup->addButton(m_solarRadio, TYP_SOLAR);
-    m_horoGroup->addButton(m_lunarRadio, TYP_LUNAR);
+    m_horoGroup->addButton(m_synastrieRadio, TYP_SYNASTRIE);
+    m_horoGroup->addButton(m_transitRadio, TYP_TRANSIT);
     
     horoLayout->addWidget(m_radixRadio);
-    horoLayout->addWidget(m_solarRadio);
-    horoLayout->addWidget(m_lunarRadio);
+    horoLayout->addWidget(m_synastrieRadio);
+    horoLayout->addWidget(m_transitRadio);
     
     mainLayout->addWidget(horoGroup);
     

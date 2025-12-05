@@ -142,15 +142,12 @@ inline constexpr int TYP_ALCABIT    = 12;
 inline constexpr int TYP_NULL       = 13;
 
 //==============================================================================
-// Horoskop-Typen (aus astrouni.h Zeile 306-312)
+// Horoskop-Typen (STRICT LEGACY: nur Radix, Synastrie, Transit)
 //==============================================================================
 
 inline constexpr int TYP_RADIX      = 0;
-inline constexpr int TYP_SOLAR      = 1;
-inline constexpr int TYP_LUNAR      = 2;
-inline constexpr int TYP_TRANSIT    = 3;
-inline constexpr int TYP_SYNASTRIE  = 4;
-inline constexpr int TYP_COMPOSIT   = 5;
+inline constexpr int TYP_SYNASTRIE  = 1;
+inline constexpr int TYP_TRANSIT    = 2;
 
 //==============================================================================
 // Planet-Typen (aus astrouni.h Zeile 315-320)

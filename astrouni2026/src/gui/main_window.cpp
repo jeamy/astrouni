@@ -34,7 +34,7 @@ namespace astro {
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , m_radixWindow(nullptr) {
+    , m_tabWidget(nullptr) {
     
     // Fenster-Titel (wie im Legacy: MainMenuText)
     setWindowTitle(tr("AstroUniverse 2026"));
@@ -53,6 +53,14 @@ MainWindow::MainWindow(QWidget* parent)
     
     // Fenster maximiert starten (wie im Legacy: SW_SHOWMAXIMIZED)
     setWindowState(Qt::WindowMaximized);
+    
+    // Tab-Widget als zentrales Widget
+    m_tabWidget = new QTabWidget(this);
+    m_tabWidget->setTabsClosable(true);
+    m_tabWidget->setMovable(true);
+    connect(m_tabWidget, &QTabWidget::tabCloseRequested, 
+            this, &MainWindow::onTabCloseRequested);
+    setCentralWidget(m_tabWidget);
     
     // Menüs und Aktionen einrichten
     setupActions();
@@ -208,18 +216,14 @@ void MainWindow::onPersonErfassen() {
     PersonDialog dialog(this, m_auinit, m_currentRadix);
     
     if (dialog.exec() == QDialog::Accepted) {
-        // Nur Radix-Fenster öffnen wenn berechnet wurde
+        // Nur Radix-Tab öffnen wenn berechnet wurde
         if (dialog.wasCalculated()) {
-            if (m_radixWindow == nullptr) {
-                m_radixWindow = new RadixWindow(this, m_auinit, m_currentRadix);
-                connect(m_radixWindow, &RadixWindow::destroyed, 
-                        this, &MainWindow::onRadixWindowClosed);
-            }
-            m_radixWindow->setRadix(m_currentRadix);
-            m_radixWindow->show();
-            m_radixWindow->raise();
+            // Neues Radix-Widget als Tab erstellen
+            RadixWindow* radixWidget = new RadixWindow(m_tabWidget, m_auinit, m_currentRadix);
+            int tabIndex = m_tabWidget->addTab(radixWidget, radixWidget->getTabTitle());
+            m_tabWidget->setCurrentIndex(tabIndex);
         }
-        // Bei OK ohne Berechnung: nur gespeichert, kein Radix-Fenster
+        // Bei OK ohne Berechnung: nur gespeichert, kein Radix-Tab
     }
 }
 
@@ -243,22 +247,20 @@ void MainWindow::onHoroTyp() {
             // Keine Person aktiv - PersonDialog öffnen
             onPersonErfassen();
         } else {
-            // Person aktiv - Radix berechnen mit neuem Horoskop-Typ
+            // Häusersystem aus Einstellungen übernehmen!
+            m_currentRadix.hausSys = m_auinit.sSelHaus;
+            
+            // Person aktiv - Radix berechnen mit neuem Horoskop-Typ und Häusersystem
             int result = ChartCalc::calculate(m_currentRadix, nullptr, m_auinit.sSelHoro);
             
             if (result == ERR_OK) {
                 ChartCalc::calcAspects(m_currentRadix, m_auinit.orbenPlanet);
                 ChartCalc::calcAngles(m_currentRadix, nullptr, m_auinit.sSelHoro);
                 
-                // Radix-Fenster öffnen/aktualisieren
-                if (!m_radixWindow) {
-                    m_radixWindow = new RadixWindow(nullptr, m_auinit, m_currentRadix);
-                    connect(m_radixWindow, &QObject::destroyed, 
-                            this, &MainWindow::onRadixWindowClosed);
-                }
-                m_radixWindow->setRadix(m_currentRadix);
-                m_radixWindow->show();
-                m_radixWindow->raise();
+                // Neues Radix-Widget als Tab erstellen
+                RadixWindow* radixWidget = new RadixWindow(m_tabWidget, m_auinit, m_currentRadix);
+                int tabIndex = m_tabWidget->addTab(radixWidget, radixWidget->getTabTitle());
+                m_tabWidget->setCurrentIndex(tabIndex);
             } else {
                 QMessageBox::warning(this, tr("Fehler"), 
                     tr("Fehler bei der Berechnung (Code: %1)").arg(result));
@@ -320,11 +322,14 @@ void MainWindow::onHelpAbout() {
 }
 
 //==============================================================================
-// Radix-Fenster
+// Tab-Verwaltung
 //==============================================================================
 
-void MainWindow::onRadixWindowClosed() {
-    m_radixWindow = nullptr;
+void MainWindow::onTabCloseRequested(int index) {
+    // Tab schließen und Widget löschen
+    QWidget* widget = m_tabWidget->widget(index);
+    m_tabWidget->removeTab(index);
+    delete widget;
 }
 
 } // namespace astro

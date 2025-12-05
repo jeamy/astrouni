@@ -1,12 +1,12 @@
 #pragma once
 /**
  * @file radix_window.h
- * @brief Radix-Fenster für die Horoskop-Anzeige
+ * @brief Radix-Widget für die Horoskop-Anzeige (als Tab im Hauptfenster)
  * 
  * 1:1 Port von RadixWndProc aus legacy/astrouni.c
  */
 
-#include <QMainWindow>
+#include <QWidget>
 #include <QListWidget>
 #include <QPushButton>
 #include "../core/data_types.h"
@@ -16,16 +16,21 @@ namespace astro {
 class ChartWidget;
 
 /**
- * @brief Radix-Fenster
+ * @brief Radix-Widget (als Tab im Hauptfenster)
  * 
  * Port von: RadixWndProc, PaintRadixWnd
  */
-class RadixWindow : public QMainWindow {
+class RadixWindow : public QWidget {
     Q_OBJECT
     
 public:
-    RadixWindow(QWidget* parent, AuInit& auinit, Radix& radix);
+    RadixWindow(QWidget* parent, const AuInit& auinit, const Radix& radix);
     ~RadixWindow();
+    
+    /**
+     * @brief Gibt den Tab-Titel zurück
+     */
+    QString getTabTitle() const;
     
     /**
      * @brief Setzt die Radix-Daten
@@ -38,12 +43,6 @@ public:
     void updateDisplay();
     
 private slots:
-    // Menü-Aktionen
-    void onSave();
-    void onPrint();
-    void onClose();
-    void onHoroTyp();
-    
     // Buttons
     void onDatenClicked();
     void onPositionenClicked();
@@ -53,15 +52,14 @@ private slots:
     void onListItemClicked(QListWidgetItem* item);
     
 private:
-    void setupMenus();
     void setupUI();
     void fillDatenList();
     void fillPositionenList();
     void fillAspekteList();
     
-    // Referenzen
-    AuInit& m_auinit;
-    Radix& m_radix;
+    // Eigene Kopien der Daten (für parallele Fenster)
+    AuInit m_auinit;
+    Radix m_radix;
     
     // Widgets
     ChartWidget* m_chartWidget;

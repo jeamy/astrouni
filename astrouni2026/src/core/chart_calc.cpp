@@ -42,8 +42,8 @@ int ChartCalc::calculate(Radix& radix, Radix* transit, int typ) {
     // 6. Qualitäten berechnen
     calcQualities(radix);
     
-    // 7. Fehlende Werte für Synastrie/Composit
-    if (transit != nullptr && (typ == TYP_SYNASTRIE || typ == TYP_COMPOSIT)) {
+    // 7. Fehlende Werte für Synastrie (STRICT LEGACY: kein Composit)
+    if (transit != nullptr && typ == TYP_SYNASTRIE) {
         calcMissing(radix, transit, typ);
     }
     
@@ -162,25 +162,12 @@ void ChartCalc::calcPlanets(Radix& radix) {
 }
 
 void ChartCalc::calcMissing(Radix& radix, Radix* transit, int typ) {
-    if (transit == nullptr) return;
-    
-    if (typ == TYP_COMPOSIT) {
-        // Composit: Mittelpunkte berechnen
-        for (int i = 0; i < radix.anzahlPlanet; ++i) {
-            double diff = Calculations::minDist(radix.planet[i], transit->planet[i]);
-            radix.planet[i] = Calculations::mod360(radix.planet[i] + diff / 2.0);
-            radix.planetRad[i] = radix.planet[i] * PI / DEGHALB;
-            radix.stzPlanet[i] = Calculations::getZeichen(radix.planet[i]);
-        }
-        
-        // Häuser-Mittelpunkte
-        for (int i = 0; i < MAX_HAUS; ++i) {
-            double diff = Calculations::minDist(radix.haus[i], transit->haus[i]);
-            radix.haus[i] = Calculations::mod360(radix.haus[i] + diff / 2.0);
-            radix.hausRad[i] = radix.haus[i] * PI / DEGHALB;
-            radix.stzHaus[i] = Calculations::getZeichen(radix.haus[i]);
-        }
-    }
+    // STRICT LEGACY: Nur Radix, Synastrie, Transit - kein Composit
+    // Synastrie: Beide Radixe bleiben unverändert
+    // Transit: Transit-Planeten werden separat berechnet
+    Q_UNUSED(radix);
+    Q_UNUSED(transit);
+    Q_UNUSED(typ);
 }
 
 //==============================================================================
@@ -337,16 +324,13 @@ void ChartCalc::setPlanetType(Radix& radix, int typ) {
             radix.planetTyp[i] |= P_TYP_RUCK;
         }
         
-        // Horoskop-Typ
+        // Horoskop-Typ (STRICT LEGACY: nur Radix, Synastrie, Transit)
         switch (typ) {
             case TYP_TRANSIT:
                 radix.planetTyp[i] |= P_TYP_TRANSIT;
                 break;
             case TYP_SYNASTRIE:
                 radix.planetTyp[i] |= P_TYP_SYNASTRIE;
-                break;
-            case TYP_COMPOSIT:
-                radix.planetTyp[i] |= P_TYP_COMPOSIT;
                 break;
         }
     }

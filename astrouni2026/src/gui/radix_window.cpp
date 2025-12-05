@@ -1,6 +1,6 @@
 /**
  * @file radix_window.cpp
- * @brief Implementierung des Radix-Fensters
+ * @brief Implementierung des Radix-Widgets (als Tab im Hauptfenster)
  */
 
 #include "radix_window.h"
@@ -9,13 +9,9 @@
 #include "../core/calculations.h"
 #include "../core/chart_calc.h"
 
-#include <QMenuBar>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QSplitter>
-#include <QPrintDialog>
-#include <QPrinter>
-#include <QFileDialog>
 
 namespace astro {
 
@@ -23,16 +19,12 @@ namespace astro {
 // Konstruktor / Destruktor
 //==============================================================================
 
-RadixWindow::RadixWindow(QWidget* parent, AuInit& auinit, Radix& radix)
-    : QMainWindow(parent)
-    , m_auinit(auinit)
-    , m_radix(radix)
+RadixWindow::RadixWindow(QWidget* parent, const AuInit& auinit, const Radix& radix)
+    : QWidget(parent)
+    , m_auinit(auinit)   // Kopie erstellen
+    , m_radix(radix)     // Kopie erstellen
     , m_listMode(Daten) {
     
-    setWindowTitle(tr("AstroUniverse - Radix"));
-    setAttribute(Qt::WA_DeleteOnClose);
-    
-    setupMenus();
     setupUI();
     
     // Initiale Anzeige
@@ -43,31 +35,31 @@ RadixWindow::~RadixWindow() {
 }
 
 //==============================================================================
-// Menü-Setup
+// Tab-Titel
 //==============================================================================
 
-void RadixWindow::setupMenus() {
-    // Datei-Menü (Port von RADIXMENU)
-    QMenu* fileMenu = menuBar()->addMenu(tr("&Datei"));
+QString RadixWindow::getTabTitle() const {
+    // Häusersystem-Namen
+    static const char* hausTypen[] = {
+        "Koch", "Placidus", "Equal", "Equal(MC)", "Whole",
+        "Topo", "Campanus", "Meridian", "Regio",
+        "Porphyry", "Neo-Porph", "Morinus", "Alcab", "Null"
+    };
     
-    QAction* saveAction = fileMenu->addAction(tr("&Speichern"));
-    connect(saveAction, &QAction::triggered, this, &RadixWindow::onSave);
+    QString name = m_radix.rFix.vorname;
+    if (!m_radix.rFix.name.isEmpty()) {
+        if (!name.isEmpty()) name += " ";
+        name += m_radix.rFix.name;
+    }
+    if (name.isEmpty()) name = tr("Radix");
     
-    QAction* printAction = fileMenu->addAction(tr("D&rucken"));
-    printAction->setShortcut(QKeySequence::Print);
-    connect(printAction, &QAction::triggered, this, &RadixWindow::onPrint);
+    // Häusersystem anhängen
+    int hausIdx = m_radix.hausSys;
+    if (hausIdx >= 0 && hausIdx < 14) {
+        name += QString(" (%1)").arg(hausTypen[hausIdx]);
+    }
     
-    fileMenu->addSeparator();
-    
-    QAction* closeAction = fileMenu->addAction(tr("E&xit"));
-    connect(closeAction, &QAction::triggered, this, &RadixWindow::onClose);
-    
-    // Horoskop-Menü
-    QAction* horoAction = menuBar()->addAction(tr("&Horoskop"));
-    connect(horoAction, &QAction::triggered, this, &RadixWindow::onHoroTyp);
-    
-    // Hilfe-Menü
-    menuBar()->addAction(tr("&Help"));
+    return name;
 }
 
 //==============================================================================
@@ -75,13 +67,11 @@ void RadixWindow::setupMenus() {
 //==============================================================================
 
 void RadixWindow::setupUI() {
-    QWidget* centralWidget = new QWidget(this);
-    setCentralWidget(centralWidget);
-    
-    QHBoxLayout* mainLayout = new QHBoxLayout(centralWidget);
+    QHBoxLayout* mainLayout = new QHBoxLayout(this);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
     
     // Splitter für Chart und Liste
-    QSplitter* splitter = new QSplitter(Qt::Horizontal, centralWidget);
+    QSplitter* splitter = new QSplitter(Qt::Horizontal, this);
     mainLayout->addWidget(splitter);
     
     // Chart-Widget
@@ -123,9 +113,6 @@ void RadixWindow::setupUI() {
     // Splitter-Proportionen
     splitter->setStretchFactor(0, 3);  // Chart größer
     splitter->setStretchFactor(1, 1);  // Liste kleiner
-    
-    // Fenster-Größe
-    resize(900, 700);
 }
 
 //==============================================================================
@@ -429,27 +416,6 @@ void RadixWindow::fillAspekteList() {
 //==============================================================================
 // Slots
 //==============================================================================
-
-void RadixWindow::onSave() {
-    // TODO: Radix speichern
-}
-
-void RadixWindow::onPrint() {
-    QPrinter printer;
-    QPrintDialog dialog(&printer, this);
-    
-    if (dialog.exec() == QDialog::Accepted) {
-        // TODO: Drucken implementieren
-    }
-}
-
-void RadixWindow::onClose() {
-    close();
-}
-
-void RadixWindow::onHoroTyp() {
-    // TODO: Horoskop-Typ Dialog
-}
 
 void RadixWindow::onDatenClicked() {
     m_listMode = Daten;

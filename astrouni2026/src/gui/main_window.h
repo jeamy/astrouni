@@ -9,6 +9,8 @@
 #include <QMainWindow>
 #include <QMenu>
 #include <QAction>
+#include <QList>
+#include <QTabWidget>
 #include "../core/data_types.h"
 
 namespace astro {
@@ -61,8 +63,8 @@ private slots:
     void onHelpIndex();
     void onHelpAbout();
     
-    // Radix-Fenster
-    void onRadixWindowClosed();
+    // Radix-Tabs
+    void onTabCloseRequested(int index);
     
 private:
     void setupMenus();
@@ -91,8 +93,8 @@ private:
     AuInit m_auinit;
     Radix m_currentRadix;
     
-    // Radix-Fenster
-    RadixWindow* m_radixWindow;
+    // Tab-Widget für Radix-Anzeigen
+    QTabWidget* m_tabWidget;
 };
 
 } // namespace astro
