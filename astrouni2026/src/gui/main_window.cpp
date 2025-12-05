@@ -22,6 +22,7 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QDir>
+#include <QIcon>
 
 namespace astro {
 
@@ -35,6 +36,18 @@ MainWindow::MainWindow(QWidget* parent)
     
     // Fenster-Titel (wie im Legacy: MainMenuText)
     setWindowTitle(tr("AstroUniverse 2026"));
+    
+    // Fenster-Icon setzen
+    QString iconPath = QApplication::applicationDirPath() + "/resources/icons/astrouni.ico";
+    if (QFile::exists(iconPath)) {
+        setWindowIcon(QIcon(iconPath));
+    } else {
+        // Fallback: Icon aus Ressourcen-Verzeichnis relativ zum Build
+        iconPath = QApplication::applicationDirPath() + "/../resources/icons/astrouni.ico";
+        if (QFile::exists(iconPath)) {
+            setWindowIcon(QIcon(iconPath));
+        }
+    }
     
     // Fenster maximiert starten (wie im Legacy: SW_SHOWMAXIMIZED)
     setWindowState(Qt::WindowMaximized);
@@ -87,23 +100,23 @@ void MainWindow::setupActions() {
     connect(m_exitAction, &QAction::triggered, this, &MainWindow::onFileExit);
     
     // Erfassen-Menü Aktionen
-    m_personAction = new QAction(tr("&Personen Erfassen"), this);
+    m_personAction = new QAction(tr("&Person erfassen..."), this);
     connect(m_personAction, &QAction::triggered, this, &MainWindow::onPersonErfassen);
     
-    m_ortAction = new QAction(tr("&Orte Erfassen"), this);
+    m_ortAction = new QAction(tr("&Ort erfassen..."), this);
     connect(m_ortAction, &QAction::triggered, this, &MainWindow::onOrtErfassen);
     
     // Horoskop-Menü Aktionen
-    m_horoTypAction = new QAction(tr("&Horoskoptyp"), this);
+    m_horoTypAction = new QAction(tr("&Horoskoptyp..."), this);
     connect(m_horoTypAction, &QAction::triggered, this, &MainWindow::onHoroTyp);
     
-    m_orbenAction = new QAction(tr("&Orben"), this);
+    m_orbenAction = new QAction(tr("&Orben..."), this);
     connect(m_orbenAction, &QAction::triggered, this, &MainWindow::onOrben);
     
-    m_farbenAction = new QAction(tr("&Farben"), this);
+    m_farbenAction = new QAction(tr("&Farben..."), this);
     connect(m_farbenAction, &QAction::triggered, this, &MainWindow::onFarben);
     
-    m_einstAction = new QAction(tr("&Einstellungen"), this);
+    m_einstAction = new QAction(tr("&Einstellungen..."), this);
     connect(m_einstAction, &QAction::triggered, this, &MainWindow::onEinstellungen);
     
     // Hilfe-Menü Aktionen
@@ -111,7 +124,7 @@ void MainWindow::setupActions() {
     m_helpIndexAction->setShortcut(QKeySequence::HelpContents);
     connect(m_helpIndexAction, &QAction::triggered, this, &MainWindow::onHelpIndex);
     
-    m_helpAboutAction = new QAction(tr("Ü&ber AstroUniverse"), this);
+    m_helpAboutAction = new QAction(tr("Ü&ber AstroUniverse..."), this);
     connect(m_helpAboutAction, &QAction::triggered, this, &MainWindow::onHelpAbout);
 }
 
