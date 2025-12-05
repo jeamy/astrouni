@@ -1,185 +1,41 @@
-# AstroUniverse - Astrology Software
+# AstroUniverse 2026 - Astrology Software
 
-Moderne C++20 Portierung der deutschen Astrologie-Software **AstroUnivers v0.04Beta**.
+Moderne C++20/Qt6 Portierung der deutschen Astrologie-Software **AstroUnivers v0.04Beta**.
 
 ## Features
 
-- ✅ **Präzise Berechnungen** - Swiss Ephemeris (JPL DE431)
+- ✅ **Präzise Berechnungen** - Swiss Ephemeris (eingebettet, Cross-Platform)
 - ✅ **Cross-Platform** - Linux, macOS, Windows
-- ✅ **Moderne GUI** - wxWidgets 3.2+ ✅ **Funktioniert!**
-- ✅ **i18n** - Deutsch & Englisch
+- ✅ **Moderne GUI** - Qt6
 - ✅ **Legacy-Kompatibel** - Liest AstroUnivers .dat Dateien
-- ✅ **Unit Tests** - 19 Tests, alle bestanden
+- ✅ **Unit Tests** - Alle bestanden
 - ✅ **Open Source** - GPL v2
 
-## Quick Start
+## Voraussetzungen
 
-### 1. Voraussetzungen
-
+**Ubuntu/Debian:**
 ```bash
-# Ubuntu/Debian
-sudo apt-get install build-essential cmake git libgtest-dev
-
-# macOS
-brew install cmake googletest
-
-# Windows
-# Visual Studio 2019+ oder MinGW-w64
+sudo apt-get install build-essential cmake git qt6-base-dev qt6-tools-dev
 ```
 
-### 2. Build
-
-**Linux/macOS:**
+**macOS:**
 ```bash
-./build.sh          # Release Build
-./build.sh Debug    # Debug Build
+brew install cmake qt@6
 ```
 
 **Windows:**
-```cmd
-build.bat           # Release Build
-build.bat Debug     # Debug Build
-```
+- Visual Studio 2022 mit C++ Desktop Development
+- Qt6 von https://www.qt.io/download-qt-installer
 
-**Oder manuell:**
+## Build
+
 ```bash
+cd astrouni2026
 mkdir build && cd build
 cmake ..
-cmake --build . -j$(nproc)
+make -j$(nproc)      # Linux/macOS
+# oder: cmake --build . --config Release  # Windows
 ```
-
-### 3. Tests
-
-**Linux/macOS:**
-```bash
-./test.sh
-```
-
-**Windows:**
-```cmd
-test.bat
-```
-
-### 4. Ausführen
-
-**GUI (wxWidgets):**
-```bash
-cd build/gui && ./astro_gui          # Linux/macOS
-cd build\gui\Release && astro_gui.exe  # Windows
-```
-
-**Konsolen-Demo:**
-```bash
-cd build && ./example_chart          # Linux/macOS
-cd build\Release && example_chart.exe  # Windows
-```
-
-**Ausgabe:**
-```
-═══════════════════════════════════════════
-  AstroUniverse - Chart Calculation Demo
-═══════════════════════════════════════════
-
-Planeten-Positionen:
-═══════════════════════════════════════════════════════════════════
-Sonne         280.23°  Lat:   0.00°  Dist:  0.98334 AU  Speed:   1.02°/day
-Mond           98.45°  Lat:   4.12°  Dist:  0.00257 AU  Speed:  13.18°/day
-Merkur        271.56°  Lat:  -2.34°  Dist:  0.46789 AU  Speed:   1.45°/day
-...
-```
-
-## Projekt-Struktur
-
-```
-astrouni/
-├── CMakeLists.txt           # Haupt-Build-Konfiguration
-├── build.sh / build.bat     # Build-Scripts (Linux/macOS/Windows)
-├── test.sh / test.bat       # Test-Scripts
-├── clean.sh / clean.bat     # Clean-Scripts
-│
-├── core/                    # Core Library
-│   ├── CMakeLists.txt
-│   ├── include/astro/
-│   │   ├── data_types.h     # Datenstrukturen
-│   │   ├── swiss_ephemeris.h # Swiss Ephemeris Wrapper
-│   │   ├── math_utils.h     # Mathematik-Funktionen
-│   │   └── calculations.h   # Berechnungs-Engine
-│   └── src/
-│       ├── data_types.cpp
-│       ├── swiss_ephemeris.cpp
-│       ├── math_utils.cpp
-│       └── calculations.cpp
-│
-├── tests/                   # Unit Tests
-│   ├── CMakeLists.txt
-│   ├── test_math_utils.cpp
-│   ├── test_swiss_ephemeris.cpp
-│   └── test_calculations.cpp
-│
-├── gui/                     # wxWidgets GUI ✅
-│   ├── main.cpp             # Entry Point
-│   ├── main_frame.cpp       # Hauptfenster
-│   ├── chart_panel.cpp      # Chart-Darstellung
-│   └── dialogs/             # Dialoge
-│
-├── swisseph/               # Swiss Ephemeris
-│   ├── README.md
-│   ├── download_ephe.sh    # Download von GitHub
-│   └── ephe/               # Ephemeriden-Files
-│       ├── seas_18.se1     # Planeten (218 KB)
-│       ├── semo_18.se1     # Mond (1.3 MB)
-│       └── sepl_18.se1     # Äußere Planeten (473 KB)
-│
-├── legacy/                 # Original Legacy Code (Referenz)
-├── example_chart.cpp       # Beispielprogramm
-│
-└── docs/                   # Dokumentation
-    ├── QUICKSTART.md       # Quick Start Guide
-    ├── BUILD.md            # Build-Anleitung
-    ├── INSTALLATION.md     # Installation
-    ├── DATENFORMAT.md      # Datenformat-Spezifikation
-    ├── PORTIERUNGSPLAN.md  # Portierungsplan
-    ├── STATUS.md           # Projekt-Status
-    └── SWISS_EPHEMERIS_INTEGRATION.md # Swiss Ephemeris Details
-```
-
-## API-Beispiel
-
-```cpp
-#include "astro/swiss_ephemeris.h"
-#include "astro/calculations.h"
-
-using namespace astro;
-
-// Swiss Ephemeris initialisieren
-auto ephemeris = std::make_shared<SwissEphemeris>();
-ephemeris->initialize("data/ephe");
-
-// Calculator erstellen
-auto calculator = std::make_unique<AstroCalculator>(ephemeris);
-
-// Radix-Daten
-RadixData radix;
-radix.name = "Max Mustermann";
-radix.birth_datetime = DateTime(1990, 6, 15, 14, 30, 0.0);
-radix.birth_location = GeoLocation(52.52, 13.40);  // Berlin
-radix.julian_date = JulianDate(radix.birth_datetime);
-
-// Chart berechnen
-auto chart = calculator->calculate_chart(radix, HouseSystem::Placidus);
-
-// Planeten ausgeben
-for (const auto& planet : chart.planets) {
-    std::cout << "Longitude: " << planet.longitude << "°\n";
-}
-```
-
-## Dokumentation
-
-- **[BUILD.md](BUILD.md)** - Detaillierte Build-Anleitung
-- **[PORTIERUNGSPLAN.md](PORTIERUNGSPLAN.md)** - Migrations-Strategie
-- **[SWISS_EPHEMERIS_INTEGRATION.md](SWISS_EPHEMERIS_INTEGRATION.md)** - Swiss Ephemeris Details
-- **[DATEI_ANALYSE.md](DATEI_ANALYSE.md)** - Legacy Code Analyse
 
 ## Tests
 
@@ -188,23 +44,89 @@ cd build
 ctest --output-on-failure
 ```
 
-Oder direkt:
+## Ausführen
+
 ```bash
-./astro_tests
+./astrouni2026       # Linux/macOS
+astrouni2026.exe     # Windows
 ```
 
-**Test-Coverage:**
-- ✅ Mathematik-Funktionen (Julianisches Datum, Winkel, Koordinaten)
-- ✅ Swiss Ephemeris Integration (Planeten, Häuser, Delta T)
-- ✅ Berechnungs-Engine (Charts, Aspekte)
+## Projekt-Struktur
+
+```
+astrouni2026/
+├── CMakeLists.txt           # CMake Build-Konfiguration
+├── src/
+│   ├── main.cpp             # Entry Point
+│   ├── core/                # Berechnungs-Engine
+│   │   ├── constants.h      # Konstanten
+│   │   ├── data_types.h     # RADIX, ORTE, AU_INIT
+│   │   ├── calculations.h   # Mathematik
+│   │   ├── chart_calc.h     # Horoskop-Berechnung
+│   │   ├── transit_calc.h   # Transit-Berechnung
+│   │   └── swiss_eph.h      # Swiss Ephemeris Wrapper
+│   ├── data/                # Daten-I/O
+│   │   ├── legacy_io.h      # .dat Dateien
+│   │   ├── orte_db.h        # Orte-Datenbank
+│   │   └── person_db.h      # Personen-Datenbank
+│   └── gui/                 # Qt6 GUI
+│       ├── main_window.h
+│       ├── radix_window.h
+│       ├── chart_widget.h
+│       └── dialogs/         # Dialoge
+├── swisseph/                # Swiss Ephemeris (eingebettet)
+│   ├── src/                 # Quellcode (Cross-Platform)
+│   └── ephe/                # Ephemeriden-Dateien
+├── data/                    # Legacy .dat Dateien
+├── tests/                   # Unit Tests
+└── docs/                    # Dokumentation
+```
+
+## API-Beispiel (Qt6 Version)
+
+```cpp
+#include "core/swiss_eph.h"
+#include "core/chart_calc.h"
+#include "core/calculations.h"
+
+using namespace astro;
+
+// Swiss Ephemeris initialisieren
+swissEph().setEphePath("swisseph/ephe");
+
+// Radix-Daten vorbereiten
+Radix radix;
+radix.rFix.vorname = "Max";
+radix.rFix.name = "Mustermann";
+radix.rFix.tag = 15;
+radix.rFix.monat = 6;
+radix.rFix.jahr = 1990;
+radix.rFix.zeit = 14.5;  // 14:30
+radix.rFix.breite = 52.52;  // Berlin
+radix.rFix.laenge = 13.40;
+radix.rFix.zone = 1.0;  // MEZ
+radix.hausSys = TYP_PLACIDUS;
+
+// Chart berechnen
+ChartCalc::calculate(radix);
+
+// Planeten ausgeben
+for (int i = 0; i < radix.anzahlPlanet; ++i) {
+    QString pos = Calculations::degToString(radix.planet[i], true, true);
+    qDebug() << "Planet" << i << ":" << pos;
+}
+```
+
+## Dokumentation
+
+- **[astrouni2026/docs/PORTIERUNGSPLAN_QT6.md](astrouni2026/docs/PORTIERUNGSPLAN_QT6.md)** - Qt6 Portierungsplan
 
 ## Technologie-Stack
 
-- **C++20** - Modern C++ mit Concepts, Modules
-- **CMake 3.20+** - Build System
-- **Swiss Ephemeris 2.10+** - Ephemeriden-Berechnungen
-- **Google Test** - Unit Testing
-- **Git** - Version Control
+- **C++20** - Modern C++ Standard
+- **Qt6 ≥ 6.2** - GUI Framework (Cross-Platform)
+- **CMake 3.16+** - Build System
+- **Swiss Ephemeris 2.10** - Eingebettet (keine externe Abhängigkeit)
 
 ## Lizenz
 
@@ -219,9 +141,7 @@ AstroUniverse ist freie Software unter der GPL v2 Lizenz.
 ### Drittanbieter-Komponenten
 
 - **Swiss Ephemeris** - GPL v2 / LGPL (Astrodienst AG)
-- **Google Test** - BSD-3-Clause (Google Inc.)
-
-Siehe [COPYRIGHT](COPYRIGHT) für Details.
+- **Qt6** - LGPL v3 (The Qt Company)
 
 ### Swiss Ephemeris
 - **GPL v2** oder **LGPL** für Open Source
@@ -230,60 +150,52 @@ Siehe [COPYRIGHT](COPYRIGHT) für Details.
 
 ## Roadmap
 
-### Phase 1: Analyse (Abgeschlossen)
-- [x] Legacy Code analysiert
-- [x] Abhängigkeiten identifiziert
-- [x] Architektur entworfen
-
-### Phase 2: Core Library (Abgeschlossen)
-- [x] Swiss Ephemeris integriert
-- [x] Datenstrukturen portiert
-- [x] Mathematik-Module portiert
+### Phase 1: Core (Abgeschlossen)
+- [x] Projektstruktur erstellt
+- [x] Swiss Ephemeris eingebettet (Cross-Platform)
+- [x] Datenstrukturen portiert (RADIX, ORTE, AU_INIT)
+- [x] Mathematik-Funktionen portiert
 - [x] Berechnungs-Engine portiert
-- [x] Unit Tests (19/19 bestanden)
-- [x] Build-System (CMake)
-- [x] Cross-Platform Scripts
+- [x] Unit Tests
 
-### Phase 3: GUI (In Arbeit - 80% fertig)
-- [x] wxWidgets integriert
-- [x] Hauptfenster implementiert
-- [x] Chart-Panel implementiert
-- [x] Dialoge implementiert
-- [x] i18n (Deutsch/Englisch)
-- [ ] Chart-Rendering verbessern
-- [ ] Speichern/Laden implementieren
-- [ ] Export-Funktionen (PNG, SVG)
+### Phase 2: GUI (In Arbeit)
+- [x] Qt6 Hauptfenster
+- [x] Radix-Fenster
+- [x] Chart-Widget (Radix-Zeichnung)
+- [x] Personen-Dialog
+- [x] Ort-Suche Dialog
+- [ ] Weitere Dialoge vervollständigen
+- [ ] Drucken implementieren
+- [ ] Speichern/Laden
 
-### Phase 4: Erweiterte Features (Geplant)
-- [ ] Orte-Datenbank (SQLite)
-- [ ] Transite
-- [ ] Progressionen
+### Phase 3: Erweiterte Features (Geplant)
+- [ ] Transit-Fenster
 - [ ] Synastrie
-- [ ] Kompositebank
-- [ ] Transite und Progressionen
-- [ ] Synastrie (Partner-Vergleich)
+- [ ] Composit
+- [ ] Export (PNG, PDF)
 
 ## Entwicklung
 
 ### Anforderungen
-- GCC 10+ oder Clang 10+ (C++20 Support)
-- CMake 3.20+
-- Swiss Ephemeris Library
+- GCC 11+ oder Clang 15+ oder MSVC 2022 (C++20)
+- CMake 3.16+
+- Qt6 ≥ 6.2
 
 ### Build-Optionen
 
 ```bash
+cd astrouni2026
+
 # Debug-Build
-cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake -DCMAKE_BUILD_TYPE=Debug -B build-debug
+cmake --build build-debug
 
 # Release-Build (optimiert)
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_BUILD_TYPE=Release -B build
+cmake --build build
 
 # Ohne Tests
-cmake -DBUILD_TESTS=OFF ..
-
-# Mit AddressSanitizer
-cmake -DCMAKE_CXX_FLAGS="-fsanitize=address" ..
+cmake -DBUILD_TESTS=OFF -B build
 ```
 
 ## Beitragen
@@ -297,15 +209,15 @@ cmake -DCMAKE_CXX_FLAGS="-fsanitize=address" ..
 ## Kontakt
 
 - **Projekt**: AstroUniverse
-- **Status**: Phase 2 - Core Library abgeschlossen
-- **Version**: 1.0.0-alpha
+- **Status**: Qt6 GUI in Entwicklung
+- **Version**: 2026.1.0
 
 ## Credits
 
-- **Original AstroUnivers**: Legacy Windows-Software (16-bit Borland C++)
+- **Original AstroUnivers v0.04Beta**: Legacy Windows-Software (16-bit Borland C++)
 - **Swiss Ephemeris**: Astrodienst Zürich (https://www.astro.com/swisseph/)
-- **Portierung**: Modern C++20 Implementation
+- **Portierung**: Modern C++20 mit Qt6
 
 ---
 
-*Stand: November 2025*
+*Stand: Dezember 2025*
