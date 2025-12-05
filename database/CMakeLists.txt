@@ -4,6 +4,7 @@ add_library(astro_database STATIC)
 
 target_sources(astro_database PRIVATE
     legacy_data_manager.cpp
+    orben_file_manager.cpp
 )
 
 target_include_directories(astro_database PUBLIC

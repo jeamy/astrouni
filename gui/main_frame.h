@@ -2,6 +2,7 @@
 
 #include <wx/wx.h>
 #include "astro/constants.h"
+#include "astro/orben_data.h"
 
 // 1:1 Port von MainWndProc aus legacy/astrouni.c
 class MainFrame : public wxFrame {
@@ -20,6 +21,10 @@ private:
     void OnOrben(wxCommandEvent& event);
     void OnFarben(wxCommandEvent& event);
     void OnEinst(wxCommandEvent& event);
+    
+    void InitializeDefaultOrbenData();  // Initialisiert Default-Orben-Werte
+    
+    OrbenData orben_data_;  // Orben-Daten für die Anwendung
 
     wxDECLARE_EVENT_TABLE();
 };

@@ -14,4 +14,8 @@ endif()
 add_subdirectory(core)
 add_subdirectory(gui)
 add_subdirectory(database)
+add_subdirectory(tools)
 add_subdirectory(tests)
+
+# Kopiere Daten-Dateien ins Build-Verzeichnis (1:1 Port: Legacy verwendet .dat-Dateien)
+file(COPY ${CMAKE_SOURCE_DIR}/data DESTINATION ${CMAKE_BINARY_DIR})

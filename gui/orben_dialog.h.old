@@ -21,12 +21,10 @@ private:
     void LoadDefaultValues();    // Lädt Default-Werte
     
     OrbenData& orben_data_;
-    std::vector<wxTextCtrl*> text_ctrls_;  // 7×17 = 119 TextCtrls (Aspekte × Planeten)
+    std::vector<wxTextCtrl*> text_ctrls_planet_;  // 7×17 = 119 TextCtrls für Planeten
+    std::vector<wxTextCtrl*> text_ctrls_haus_;    // 7×12 = 84 TextCtrls für Häuser
     int current_typ_;  // 0=Radix, 1=Transit, 2=Synastrie
-    int current_planet_;  // 0-16: Aktueller "Ursprungs-Planet" (links oben)
-    
-    PlanetOrAspectSymbolPanel* planet_symbol_panel_;  // Links oben: Aktueller Planet
-    wxStaticText* planet_name_text_;  // Rechts oben: Planetenname zwischen Linien
+    bool show_houses_;  // false=Planeten, true=Häuser
 
     wxDECLARE_EVENT_TABLE();
 };

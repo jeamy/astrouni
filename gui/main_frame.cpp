@@ -7,12 +7,16 @@
 #include "farben_dialog.h"
 #include "einst_dialog.h"
 #include "symbol_panel.h"
+#include "../database/orben_file_manager.h"
 
 wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
 wxEND_EVENT_TABLE()
 
 MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size)
     : wxFrame(NULL, wxID_ANY, title, pos, size) {
+
+    // Initialisiere Default-Orben-Werte
+    InitializeDefaultOrbenData();
 
     // 1:1 Port der MAINMENU Menüstruktur aus astrouni.rc
     wxMenuBar* menuBar = new wxMenuBar();
@@ -106,8 +110,17 @@ void MainFrame::OnHoroTyp(wxCommandEvent&) {
     dlg.ShowModal();
 }
 void MainFrame::OnOrben(wxCommandEvent&) {
-    OrbenDialog dlg(this);
+    OrbenDialog dlg(this, orben_data_);
     dlg.ShowModal();
+}
+
+void MainFrame::InitializeDefaultOrbenData() {
+    // Versuche Orben-Daten aus astroini.dat zu laden
+    OrbenFileManager file_mgr;
+    if (!file_mgr.LoadFromIniFile(orben_data_)) {
+        // Falls keine Datei vorhanden, verwende Hard-Coded Defaults
+        file_mgr.InitializeHardcodedDefaults(orben_data_);
+    }
 }
 void MainFrame::OnFarben(wxCommandEvent&) {
     FarbenDialog dlg(this);
