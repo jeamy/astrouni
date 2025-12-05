@@ -5,6 +5,7 @@
 
 #include "person_dialog.h"
 #include "ort_search_dialog.h"
+#include "person_search_dialog.h"
 #include "../../core/calculations.h"
 #include "../../core/chart_calc.h"
 #include "../../data/person_db.h"
@@ -226,8 +227,29 @@ bool PersonDialog::validateInput() {
 //==============================================================================
 
 void PersonDialog::onNamenSuchen() {
-    // TODO: Personen-Suche Dialog
-    QMessageBox::information(this, tr("Info"), tr("Personen-Suche noch nicht implementiert."));
+    PersonSearchDialog dialog(this);
+    
+    if (dialog.exec() == QDialog::Accepted && dialog.hasSelection()) {
+        RadixFix person = dialog.getSelectedPerson();
+        
+        // Felder füllen
+        m_vornameEdit->setText(person.vorname);
+        m_nameEdit->setText(person.name);
+        m_berufEdit->setText(person.beruf);
+        m_ortEdit->setText(person.ort);
+        m_landEdit->setText(person.land);
+        
+        m_datumEdit->setDate(QDate(person.jahr, person.monat, person.tag));
+        
+        int16_t stunden, minuten;
+        Calculations::decimalToTime(person.zeit, stunden, minuten);
+        m_zeitEdit->setTime(QTime(stunden, minuten));
+        
+        m_sommerEdit->setValue(person.sommerzeit);
+        m_zoneEdit->setValue(person.zone);
+        m_laengeEdit->setValue(person.laenge);
+        m_breiteEdit->setValue(person.breite);
+    }
 }
 
 void PersonDialog::onOrtSuchen() {
@@ -256,10 +278,15 @@ void PersonDialog::onCalc() {
         ChartCalc::calcAspects(m_radix, m_auinit.orbenPlanet);
         ChartCalc::calcAngles(m_radix, nullptr, m_auinit.sSelHoro);
         
-        QMessageBox::information(this, tr("Berechnung"), 
-            tr("Horoskop wurde berechnet.\nASC: %1\nMC: %2")
-            .arg(Calculations::degToString(m_radix.asc, true, true))
-            .arg(Calculations::degToString(m_radix.mc, true, true)));
+        // Person in Datenbank speichern
+        personDB().add(m_radix);
+        personDB().save();
+        
+        // Flag setzen dass berechnet wurde
+        m_calculated = true;
+        
+        // Dialog schließen und Radix-Fenster öffnen
+        accept();
     } else {
         QMessageBox::warning(this, tr("Fehler"), 
             tr("Fehler bei der Berechnung (Code: %1)").arg(result));
@@ -267,21 +294,26 @@ void PersonDialog::onCalc() {
 }
 
 void PersonDialog::onAccept() {
-    if (!validateInput()) return;
+    qDebug("PersonDialog::onAccept() - AUFGERUFEN");
+    
+    if (!validateInput()) {
+        qDebug("PersonDialog::onAccept() - Validierung fehlgeschlagen");
+        return;
+    }
     
     saveToRadix();
     
-    // Horoskop berechnen
-    int result = ChartCalc::calculate(m_radix, nullptr, m_auinit.sSelHoro);
+    qDebug("PersonDialog::onAccept() - Speichere Person: %s %s",
+           qPrintable(m_radix.rFix.vorname), qPrintable(m_radix.rFix.name));
     
-    if (result == ERR_OK) {
-        ChartCalc::calcAspects(m_radix, m_auinit.orbenPlanet);
-        ChartCalc::calcAngles(m_radix, nullptr, m_auinit.sSelHoro);
-        accept();
-    } else {
-        QMessageBox::warning(this, tr("Fehler"), 
-            tr("Fehler bei der Berechnung (Code: %1)").arg(result));
-    }
+    // Person in Datenbank speichern (ohne Berechnung)
+    int idx = personDB().add(m_radix);
+    bool saved = personDB().save();
+    
+    qDebug("PersonDialog::onAccept() - Index: %d, Gespeichert: %s",
+           idx, saved ? "ja" : "nein");
+    
+    accept();
 }
 
 } // namespace astro

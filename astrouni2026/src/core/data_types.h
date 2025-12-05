@@ -63,9 +63,11 @@ struct Orte {
 // RADIXFIX - Personen-Stammdaten (aus astrouni.h Zeile 608-630)
 //==============================================================================
 
+// Legacy RADIXFIX Struktur aus astrouni.h (73 Bytes)
+// Die Namen folgen direkt nach der Struktur mit variabler Länge
 #pragma pack(push, 1)
 struct RadixFixLegacy {
-    char     cGultig;           // Record gültig?
+    int8_t   cGultig;           // Record gültig? (1 Byte)
     int32_t  lIndexRadix;       // Index Record im Radix-Datenfile
     int16_t  slRadix;           // Recordlänge RadixDaten
     int32_t  lIndexName;        // Index im Namen-Datenfile
@@ -76,17 +78,21 @@ struct RadixFixLegacy {
     int16_t  clName;            // Länge Name
     int16_t  clBeruf;           // Länge Beruf
     int16_t  clOrt;             // Länge Ort
-    double   fSommer;           // Sommerzeit
+    double   fSommer;           // Sommerzeit (8 Bytes!)
     float    fZone;             // Zeitzone
-    char     szLand[4];         // Land
+    char     szLand[4];         // Land-Kürzel
     double   dLange;            // Geographische Länge
     double   dBreite;           // Geographische Breite
     double   dTime;             // Zeit (dezimal)
     int16_t  sTag;              // Tag
     int16_t  sMonat;            // Monat
     int16_t  sJahr;             // Jahr
+    // Total: 73 Bytes
+    // Namen folgen direkt danach: Vorname (clVorName), Name (clName), Beruf (clBeruf), Ort (clOrt)
 };
 #pragma pack(pop)
+
+constexpr int RADIXFIX_SIZE = 73;  // sizeof(RadixFixLegacy) sollte 73 sein
 
 // Moderne RadixFix-Struktur
 struct RadixFix {
@@ -221,7 +227,7 @@ struct Ephem {
 struct AuInit {
     int16_t  sSelHaus = TYP_PLACIDUS;   // Gewähltes Häusersystem
     int16_t  sSelHoro = TYP_RADIX;      // Gewählter Horoskop-Typ
-    int16_t  sRotRadix = 0;             // Radix-Rotation
+    int16_t  sRotRadix = ROT_ASC;       // Radix-Rotation (ASC links = Standard)
     int16_t  sRotation = ROT_ASC;       // Rotation (ASC links oder Sonne oben)
     int16_t  sAspekte = S_KON | S_SEX | S_QUA | S_TRI | S_OPO;  // Aspekt-Auswahl
     int16_t  sTeilung = 0;              // Teilung (3er/9er)

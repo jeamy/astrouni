@@ -16,6 +16,8 @@ add_library(astrouni_gui STATIC
     dialogs/ort_dialog.cpp
     dialogs/ort_search_dialog.h
     dialogs/ort_search_dialog.cpp
+    dialogs/person_search_dialog.h
+    dialogs/person_search_dialog.cpp
     dialogs/haus_dialog.h
     dialogs/haus_dialog.cpp
     dialogs/horo_typ_dialog.h

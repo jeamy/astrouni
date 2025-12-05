@@ -46,6 +46,7 @@ private:
     void saveSettings();
     void setDefaultOrben();
     void updateTable();
+    float getDefaultOrb(int aspekt, int planet1, int planet2);
     
     AuInit& m_auinit;
     int m_currentTyp;

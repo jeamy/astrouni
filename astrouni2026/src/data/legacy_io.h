@@ -63,13 +63,20 @@ public:
     //==========================================================================
     
     /**
-     * @brief Liest die Orben aus der Default-Datei
+     * @brief Liest die Orben aus der INI-Datei (binär)
+     * @param auinit [out] Einstellungen mit Orben
+     * @return ERR_OK bei Erfolg
+     */
+    int readOrben(AuInit& auinit);
+    
+    /**
+     * @brief Liest die Orben aus der default.dat Textdatei
      * @param auinit [out] Einstellungen mit Orben
      * @return ERR_OK bei Erfolg
      * 
-     * Port von: sOrben(FILE*)
+     * Port von: sOrben(FILE*) in auhelper.c
      */
-    int readOrben(AuInit& auinit);
+    int readDefaultOrben(AuInit& auinit);
     
     /**
      * @brief Schreibt die Orben in die Default-Datei

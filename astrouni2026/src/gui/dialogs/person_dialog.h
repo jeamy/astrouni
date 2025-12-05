@@ -28,6 +28,11 @@ public:
     PersonDialog(QWidget* parent, AuInit& auinit, Radix& radix);
     ~PersonDialog();
     
+    /**
+     * @brief Gibt zurück ob Radix berechnet wurde
+     */
+    bool wasCalculated() const { return m_calculated; }
+    
 private slots:
     void onNamenSuchen();
     void onOrtSuchen();
@@ -56,6 +61,9 @@ private:
     QDoubleSpinBox* m_laengeEdit;  // TXT_Lange
     QDoubleSpinBox* m_breiteEdit;  // TXT_Breite
     QLineEdit* m_landEdit;         // TXT_LAND
+    
+    // Flag ob berechnet wurde
+    bool m_calculated = false;
 };
 
 } // namespace astro

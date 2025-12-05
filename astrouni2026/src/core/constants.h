@@ -335,6 +335,57 @@ inline constexpr const char* JUNO_TXT     = "Juno";
 inline constexpr const char* VESTA_TXT    = "Vesta";
 inline constexpr const char* LILITH_TXT   = "Lilith";
 
+// Planeten-Symbole (Unicode Astrologie-Symbole)
+// Port von szLNANamen aus legacy/auwurzel.h
+inline constexpr const char* PLANET_SYMBOLS[] = {
+    "☉",  // P_SONNE (U+2609)
+    "☽",  // P_MOND (U+263D)
+    "☿",  // P_MERKUR (U+263F)
+    "♀",  // P_VENUS (U+2640)
+    "♂",  // P_MARS (U+2642)
+    "♃",  // P_JUPITER (U+2643)
+    "♄",  // P_SATURN (U+2644)
+    "♅",  // P_URANUS (U+2645)
+    "♆",  // P_NEPTUN (U+2646)
+    "♇",  // P_PLUTO (U+2647)
+    "☊",  // P_NMKL (Nordknoten U+260A)
+    "⚸",  // P_LILITH (U+26B8)
+    "⚷",  // P_CHIRON (U+26B7)
+    "⚳",  // P_CERES (U+26B3)
+    "⚴",  // P_PALLAS (U+26B4)
+    "⚵",  // P_JUNO (U+26B5)
+    "⚶"   // P_VESTA (U+26B6)
+};
+
+// Aspekt-Symbole (Unicode)
+// Port von cAspektGly aus legacy/auwurzel.h
+inline constexpr const char* ASPEKT_SYMBOLS[] = {
+    "☌",  // KONJUNKTION (U+260C)
+    "⚺",  // HALBSEXTIL (U+26BA)
+    "⚹",  // SEXTIL (U+26B9)
+    "□",  // QUADRATUR (U+25A1)
+    "△",  // TRIGON (U+25B3)
+    "⚻",  // QUINCUNX (U+26BB)
+    "☍"   // OPPOSITION (U+260D)
+};
+
+// Sternzeichen-Symbole (Unicode)
+// Port von szANamen/szBNamen aus legacy/auwurzel.h
+inline constexpr const char* STERNZEICHEN_SYMBOLS[] = {
+    "♈",  // Widder (U+2648)
+    "♉",  // Stier (U+2649)
+    "♊",  // Zwillinge (U+264A)
+    "♋",  // Krebs (U+264B)
+    "♌",  // Löwe (U+264C)
+    "♍",  // Jungfrau (U+264D)
+    "♎",  // Waage (U+264E)
+    "♏",  // Skorpion (U+264F)
+    "♐",  // Schütze (U+2650)
+    "♑",  // Steinbock (U+2651)
+    "♒",  // Wassermann (U+2652)
+    "♓"   // Fische (U+2653)
+};
+
 // Sternzeichen-Namen
 inline constexpr const char* WIDDER_TXT     = "Widder";
 inline constexpr const char* STIER_TXT      = "Stier";

@@ -5,6 +5,7 @@
 
 #include "radix_window.h"
 #include "chart_widget.h"
+#include "html_item_delegate.h"
 #include "../core/calculations.h"
 #include "../core/chart_calc.h"
 
@@ -95,6 +96,7 @@ void RadixWindow::setupUI() {
     // Listbox (Port von LB_DATEN, LB_POSITION, LB_ASPEKTE)
     m_listWidget = new QListWidget(rightWidget);
     m_listWidget->setMinimumWidth(200);
+    m_listWidget->setItemDelegate(new HtmlItemDelegate(m_listWidget));
     connect(m_listWidget, &QListWidget::itemClicked, 
             this, &RadixWindow::onListItemClicked);
     rightLayout->addWidget(m_listWidget);
@@ -200,62 +202,131 @@ void RadixWindow::fillDatenList() {
         .arg(hausTypen[m_radix.hausSys]));
 }
 
+// Hilfsfunktion: QColor zu HTML-Farbstring
+static QString colorToHtml(const QColor& color) {
+    return QString("#%1%2%3")
+        .arg(color.red(), 2, 16, QChar('0'))
+        .arg(color.green(), 2, 16, QChar('0'))
+        .arg(color.blue(), 2, 16, QChar('0'));
+}
+
 void RadixWindow::fillPositionenList() {
     m_listWidget->clear();
     
-    // Planeten-Positionen
-    m_listWidget->addItem(tr("-Planeten-"));
+    // STRICT LEGACY: Planeten-Header wie im Original
+    QListWidgetItem* headerItem = new QListWidgetItem(tr("-Planeten-"));
+    headerItem->setBackground(QColor(0, 0, 128));  // Dunkelblau wie Legacy
+    headerItem->setForeground(Qt::white);
+    m_listWidget->addItem(headerItem);
     
-    static const char* planetenNamen[] = {
-        SONNE_TXT, MOND_TXT, MERKUR_TXT, VENUS_TXT, MARS_TXT,
-        JUPITER_TXT, SATURN_TXT, URANUS_TXT, NEPTUN_TXT, PLUTO_TXT,
-        NMKL_TXT, LILITH_TXT, CHIRON_TXT, CERES_TXT, PALLAS_TXT,
-        JUNO_TXT, VESTA_TXT
-    };
-    
+    // STRICT LEGACY: Format mit verschiedenen Farben für Symbol, Position, Zeichen
     for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
-        QString pos = Calculations::degToString(m_radix.planet[i], true, true);
-        QString retro = (m_radix.planetTyp[i] & P_TYP_RUCK) ? " R" : "";
-        QString haus = QString(" (H%1)").arg(m_radix.inHaus[i] + 1);
+        QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
         
-        m_listWidget->addItem(QString("%1: %2%3%4")
-            .arg(QString::fromUtf8(planetenNamen[i]), -12)
+        // Position im Sternzeichen (0-30°)
+        QString pos = Calculations::degToZeichenString(m_radix.planet[i], true);
+        
+        // Sternzeichen-Symbol und Farbe
+        int stz = static_cast<int>(m_radix.planet[i] / 30.0) % 12;
+        QString stzSymbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+        
+        // Rückläufigkeit
+        QString retro = (m_radix.planetTyp[i] & P_TYP_RUCK) ? " R" : "";
+        
+        // Farben - Sternzeichen in Element-Farbe
+        bool isTransit = (m_radix.planetTyp[i] & P_TYP_TRANSIT) != 0;
+        QString planetColor = colorToHtml(isTransit ? sColor[COL_PLAN_T] : sColor[COL_PLAN]);
+        // Element-Farbe für Sternzeichen (Feuer=0,3,6,9 Erde=1,4,7,10 Luft=2,5,8,11 Wasser=3,6,9,12)
+        int element = stz % 4;  // 0=Feuer, 1=Erde, 2=Luft, 3=Wasser
+        QString stzColor = colorToHtml(sColor[COL_FEUER + element]);
+        
+        // HTML-formatierter Text
+        QString html = QString("<span style='color:%1'>%2</span> %3 <span style='color:%4'>%5</span>%6")
+            .arg(planetColor)
+            .arg(symbol)
             .arg(pos)
-            .arg(retro)
-            .arg(haus));
+            .arg(stzColor)
+            .arg(stzSymbol)
+            .arg(retro);
+        
+        QListWidgetItem* item = new QListWidgetItem(html);
+        item->setData(Qt::UserRole, i);
+        m_listWidget->addItem(item);
     }
     
-    // Häuser-Positionen
-    m_listWidget->addItem(tr("-Häuser-"));
+    // STRICT LEGACY: Häuser-Header wie im Original
+    QListWidgetItem* hausHeader = new QListWidgetItem(tr("-Häuser-"));
+    hausHeader->setBackground(QColor(0, 0, 128));  // Dunkelblau wie Legacy
+    hausHeader->setForeground(Qt::white);
+    m_listWidget->addItem(hausHeader);
     
-    static const char* hausNamen[] = {
-        ASZENDENT_TXT, HAUS2_TXT, HAUS3_TXT, HAUS4_TXT,
-        HAUS5_TXT, HAUS6_TXT, HAUS7_TXT, HAUS8_TXT,
-        HAUS9_TXT, HAUS10_TXT, HAUS11_TXT, HAUS12_TXT
-    };
-    
+    // STRICT LEGACY: Format "◇01 18°06'39" ♏"
     for (int i = 0; i < MAX_HAUS; ++i) {
-        QString pos = Calculations::degToString(m_radix.haus[i], true, true);
-        m_listWidget->addItem(QString("%1: %2")
-            .arg(QString::fromUtf8(hausNamen[i]), -12)
-            .arg(pos));
+        // Position im Sternzeichen (0-30°)
+        QString pos = Calculations::degToZeichenString(m_radix.haus[i], true);
+        
+        // Sternzeichen-Symbol
+        int stz = static_cast<int>(m_radix.haus[i] / 30.0) % 12;
+        QString stzSymbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+        
+        // Farben - Sternzeichen in Element-Farbe
+        QString hausColor = colorToHtml(sColor[COL_HAUSER]);
+        int element = stz % 4;  // 0=Feuer, 1=Erde, 2=Luft, 3=Wasser
+        QString stzColor = colorToHtml(sColor[COL_FEUER + element]);
+        
+        // HTML-formatierter Text
+        QString html = QString("<span style='color:%1'>◇%2</span> %3 <span style='color:%4'>%5</span>")
+            .arg(hausColor)
+            .arg(i + 1, 2, 10, QChar('0'))
+            .arg(pos)
+            .arg(stzColor)
+            .arg(stzSymbol);
+        
+        QListWidgetItem* item = new QListWidgetItem(html);
+        m_listWidget->addItem(item);
     }
 }
 
 void RadixWindow::fillAspekteList() {
     m_listWidget->clear();
     
-    m_listWidget->addItem(tr("-Aspekte-"));
-    
-    static const char* planetenNamen[] = {
-        SONNE_TXT, MOND_TXT, MERKUR_TXT, VENUS_TXT, MARS_TXT,
-        JUPITER_TXT, SATURN_TXT, URANUS_TXT, NEPTUN_TXT, PLUTO_TXT,
-        NMKL_TXT, LILITH_TXT, CHIRON_TXT, CERES_TXT, PALLAS_TXT,
-        JUNO_TXT, VESTA_TXT
+    // Aspekt-Index zu Farb-Index Mapping
+    auto getAspektColorIndex = [](int asp) -> int {
+        switch (asp) {
+            case KONJUNKTION: return CKONJUNKTION;
+            case HALBSEX:     return CHALBSEX;
+            case SEXTIL:      return CSEXTIL;
+            case QUADRATUR:   return CQUADRATUR;
+            case TRIGON:      return CTRIGON;
+            case QUINCUNX:    return CQUINCUNX;
+            case OPOSITION:   return COPOSITION;
+            default:          return COL_TXT;
+        }
     };
+    
+    // Aspekt-Index zu Symbol-Index Mapping
+    auto getAspektSymbolIndex = [](int asp) -> int {
+        switch (asp) {
+            case KONJUNKTION: return 0;
+            case HALBSEX:     return 1;
+            case SEXTIL:      return 2;
+            case QUADRATUR:   return 3;
+            case TRIGON:      return 4;
+            case QUINCUNX:    return 5;
+            case OPOSITION:   return 6;
+            default:          return 0;
+        }
+    };
+    
+    // STRICT LEGACY: Planeten-Aspekte Header
+    QListWidgetItem* headerItem = new QListWidgetItem(tr("-Planeten-"));
+    headerItem->setBackground(QColor(0, 0, 128));  // Dunkelblau wie Legacy
+    headerItem->setForeground(Qt::white);
+    m_listWidget->addItem(headerItem);
     
     int numPlanets = m_radix.anzahlPlanet;
     
+    // STRICT LEGACY Format: "☉ in ♈ △ ☽ in ♉" mit verschiedenen Farben
     for (int i = 0; i < numPlanets; ++i) {
         for (int j = i + 1; j < numPlanets; ++j) {
             int idx = i * numPlanets + j;
@@ -263,15 +334,94 @@ void RadixWindow::fillAspekteList() {
             
             if (asp == KEIN_ASP) continue;
             
-            QString aspName = Calculations::getAspektName(asp);
-            double winkel = m_radix.winkelPlanet[idx];
-            double orb = std::fabs(winkel - asp);
+            // Planeten-Symbole
+            QString symbol1 = QString::fromUtf8(PLANET_SYMBOLS[i]);
+            QString symbol2 = QString::fromUtf8(PLANET_SYMBOLS[j]);
             
-            m_listWidget->addItem(QString("%1 - %2: %3 (%4°)")
-                .arg(QString::fromUtf8(planetenNamen[i]))
-                .arg(QString::fromUtf8(planetenNamen[j]))
-                .arg(aspName)
-                .arg(orb, 0, 'f', 2));
+            // Sternzeichen-Symbole
+            int stz1 = static_cast<int>(m_radix.planet[i] / 30.0) % 12;
+            int stz2 = static_cast<int>(m_radix.planet[j] / 30.0) % 12;
+            QString stzSymbol1 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz1]);
+            QString stzSymbol2 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz2]);
+            
+            // Aspekt-Symbol
+            int aspSymIdx = getAspektSymbolIndex(asp);
+            QString aspSymbol = QString::fromUtf8(ASPEKT_SYMBOLS[aspSymIdx]);
+            
+            // Farben - Sternzeichen in Element-Farbe
+            QString planetColor = colorToHtml(sColor[COL_PLAN]);
+            int element1 = stz1 % 4;
+            int element2 = stz2 % 4;
+            QString stzColor1 = colorToHtml(sColor[COL_FEUER + element1]);
+            QString stzColor2 = colorToHtml(sColor[COL_FEUER + element2]);
+            QString aspColor = colorToHtml(sColor[getAspektColorIndex(asp)]);
+            
+            // HTML-formatierter Text
+            QString html = QString("<span style='color:%1'>%2</span> in <span style='color:%3'>%4</span> "
+                                   "<span style='color:%5'>%6</span> "
+                                   "<span style='color:%7'>%8</span> in <span style='color:%9'>%10</span>")
+                .arg(planetColor).arg(symbol1)
+                .arg(stzColor1).arg(stzSymbol1)
+                .arg(aspColor).arg(aspSymbol)
+                .arg(planetColor).arg(symbol2)
+                .arg(stzColor2).arg(stzSymbol2);
+            
+            QListWidgetItem* item = new QListWidgetItem(html);
+            item->setData(Qt::UserRole, QPoint(i, j));
+            m_listWidget->addItem(item);
+        }
+    }
+    
+    // STRICT LEGACY: Häuser-Aspekte Header
+    QListWidgetItem* hausHeader = new QListWidgetItem(tr("-Häuser-"));
+    hausHeader->setBackground(QColor(0, 0, 128));  // Dunkelblau wie Legacy
+    hausHeader->setForeground(Qt::white);
+    m_listWidget->addItem(hausHeader);
+    
+    // Häuser-Aspekte (Planeten zu Häusern)
+    for (int i = 0; i < numPlanets; ++i) {
+        for (int h = 0; h < MAX_HAUS; ++h) {
+            int idx = i * MAX_HAUS + h;
+            if (idx >= m_radix.aspHaus.size()) continue;
+            
+            int8_t asp = m_radix.aspHaus[idx];
+            if (asp == KEIN_ASP) continue;
+            
+            // Planet-Symbol
+            QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
+            
+            // Sternzeichen-Symbole
+            int stzPlanet = static_cast<int>(m_radix.planet[i] / 30.0) % 12;
+            int stzHaus = static_cast<int>(m_radix.haus[h] / 30.0) % 12;
+            QString stzSymbol1 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stzPlanet]);
+            QString stzSymbol2 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stzHaus]);
+            
+            // Aspekt-Symbol
+            int aspSymIdx = getAspektSymbolIndex(asp);
+            QString aspSymbol = QString::fromUtf8(ASPEKT_SYMBOLS[aspSymIdx]);
+            
+            // Farben - Sternzeichen in Element-Farbe
+            QString planetColor = colorToHtml(sColor[COL_PLAN]);
+            QString hausColor = colorToHtml(sColor[COL_HAUSER]);
+            int element1 = stzPlanet % 4;
+            int element2 = stzHaus % 4;
+            QString stzColor1 = colorToHtml(sColor[COL_FEUER + element1]);
+            QString stzColor2 = colorToHtml(sColor[COL_FEUER + element2]);
+            QString aspColor = colorToHtml(sColor[getAspektColorIndex(asp)]);
+            
+            // HTML-formatierter Text
+            QString html = QString("<span style='color:%1'>%2</span> in <span style='color:%3'>%4</span> "
+                                   "<span style='color:%5'>%6</span> "
+                                   "<span style='color:%7'>H%8</span> in <span style='color:%9'>%10</span>")
+                .arg(planetColor).arg(symbol)
+                .arg(stzColor1).arg(stzSymbol1)
+                .arg(aspColor).arg(aspSymbol)
+                .arg(hausColor).arg(h + 1, 2, 10, QChar('0'))
+                .arg(stzColor2).arg(stzSymbol2);
+            
+            QListWidgetItem* item = new QListWidgetItem(html);
+            
+            m_listWidget->addItem(item);
         }
     }
 }
@@ -316,8 +466,44 @@ void RadixWindow::onAspekteClicked() {
     fillAspekteList();
 }
 
-void RadixWindow::onListItemClicked(QListWidgetItem* /*item*/) {
-    // TODO: Aspekt-Linie im Chart hervorheben
+void RadixWindow::onListItemClicked(QListWidgetItem* item) {
+    if (!item) return;
+    
+    int row = m_listWidget->row(item);
+    
+    if (m_listMode == Positionen) {
+        // Erste Zeile ist Header "-Planeten-"
+        if (row == 0) {
+            m_chartWidget->highlightPlanet(-1);  // Keine Hervorhebung
+            return;
+        }
+        
+        // Planeten: Zeile 1 bis anzahlPlanet
+        int planetIndex = row - 1;
+        if (planetIndex < m_radix.anzahlPlanet) {
+            m_chartWidget->highlightPlanet(planetIndex);
+        } else {
+            // Häuser-Header oder Haus
+            m_chartWidget->highlightPlanet(-1);
+        }
+    } else if (m_listMode == Aspekte) {
+        // Erste Zeile ist Header "-Aspekte-"
+        if (row == 0) {
+            m_chartWidget->highlightAspect(-1, -1);
+            return;
+        }
+        
+        // Aspekt-Index aus Zeile berechnen
+        // Wir müssen die Planeten-Indizes aus dem Item-Data holen
+        QVariant data = item->data(Qt::UserRole);
+        if (data.isValid()) {
+            QPoint planets = data.toPoint();
+            m_chartWidget->highlightAspect(planets.x(), planets.y());
+        }
+    } else {
+        // Daten-Modus: keine Hervorhebung
+        m_chartWidget->highlightPlanet(-1);
+    }
 }
 
 } // namespace astro

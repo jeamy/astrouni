@@ -23,34 +23,8 @@
 
 namespace astro {
 
-// Planeten-Symbole (Unicode) - wie im Legacy
-static const char* PLANET_SYMBOLS[] = {
-    "☉",  // Sonne
-    "☽",  // Mond
-    "☿",  // Merkur
-    "♀",  // Venus
-    "♂",  // Mars
-    "♃",  // Jupiter
-    "♄",  // Saturn
-    "♅",  // Uranus
-    "♆",  // Neptun
-    "♇",  // Pluto
-    "☊",  // Mondknoten
-    "⚸",  // Lilith
-    "⚷"   // Chiron
-};
+// Anzahl der Planeten für Orben-Dialog
 static const int NUM_PLANETS = 13;
-
-// Aspekt-Symbole (Unicode)
-static const char* ASPEKT_SYMBOLS[] = {
-    "☌",  // Konjunktion (0°)
-    "⚺",  // Halbsextil (30°)
-    "⚹",  // Sextil (60°)
-    "□",  // Quadrat (90°)
-    "△",  // Trigon (120°)
-    "⚻",  // Quincunx (150°)
-    "☍"   // Opposition (180°)
-};
 
 // Planeten-Farben (wie im Legacy)
 static const QColor PLANET_COLORS[] = {
@@ -265,13 +239,40 @@ void OrbenDialog::loadSettings() {
     // Für ausgewählten Planet1 (Y-Planet via Dropdown)
     for (int pl2 = 0; pl2 < NUM_PLANETS; ++pl2) {
         for (int asp = 0; asp < ASPEKTE; ++asp) {
-            QDoubleSpinBox* spinBox = qobject_cast<QDoubleSpinBox*>(
-                m_orbenTable->cellWidget(pl2, asp));
-            if (spinBox) {
+            // Diagonale: Planet1 == Planet2 -> kein Aspekt möglich
+            if (m_currentPlanet1 == pl2) {
+                // SpinBox entfernen und Label setzen
+                m_orbenTable->removeCellWidget(pl2, asp);
+                QTableWidgetItem* item = new QTableWidgetItem("—");
+                item->setTextAlignment(Qt::AlignCenter);
+                item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+                m_orbenTable->setItem(pl2, asp, item);
+            } else {
+                // Normaler Fall: SpinBox anzeigen
+                m_orbenTable->takeItem(pl2, asp);  // Entferne eventuelles "—" Item
+                QDoubleSpinBox* spinBox = qobject_cast<QDoubleSpinBox*>(
+                    m_orbenTable->cellWidget(pl2, asp));
+                if (!spinBox) {
+                    spinBox = new QDoubleSpinBox(m_orbenTable);
+                    spinBox->setRange(0.0, 15.0);
+                    spinBox->setDecimals(1);
+                    spinBox->setSingleStep(0.5);
+                    // Bei Änderung speichern
+                    connect(spinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                            this, &OrbenDialog::saveSettings);
+                    m_orbenTable->setCellWidget(pl2, asp, spinBox);
+                }
                 // Index: [Planet1 * MAX_PLANET + Planet2] * ASPEKTE + Aspekt
                 int idx = (m_currentPlanet1 * MAX_PLANET + pl2) * ASPEKTE + asp;
                 if (idx < orbenArray->size()) {
-                    spinBox->setValue((*orbenArray)[idx]);
+                    float value = (*orbenArray)[idx];
+                    // Wenn Wert 0 ist, Default-Wert verwenden
+                    if (value <= 0.0f) {
+                        value = getDefaultOrb(asp, m_currentPlanet1, pl2);
+                        // Auch im Array speichern
+                        (*orbenArray)[idx] = value;
+                    }
+                    spinBox->setValue(value);
                 }
             }
         }
@@ -305,6 +306,9 @@ void OrbenDialog::saveSettings() {
     
     // Speichere Matrix: Zeilen = Planeten, Spalten = Aspekte
     for (int pl2 = 0; pl2 < NUM_PLANETS; ++pl2) {
+        // Diagonale überspringen
+        if (m_currentPlanet1 == pl2) continue;
+        
         for (int asp = 0; asp < ASPEKTE; ++asp) {
             QDoubleSpinBox* spinBox = qobject_cast<QDoubleSpinBox*>(
                 m_orbenTable->cellWidget(pl2, asp));
@@ -319,34 +323,20 @@ void OrbenDialog::saveSettings() {
 }
 
 void OrbenDialog::setDefaultOrben() {
-    // Standard-Orben (wie im Legacy)
-    float defaultOrben[ASPEKTE] = {
-        10.0f,  // Konjunktion
-        2.0f,   // Halbsextil
-        6.0f,   // Sextil
-        8.0f,   // Quadratur
-        8.0f,   // Trigon
-        3.0f,   // Quincunx
-        10.0f   // Opposition
-    };
+    // Standard-Orben aus Legacy (sOrben in auhelper.c)
+    // Basis-Werte: Radix=2.5, Transit=0.8, Synastrie=2.0
+    float defaultOrb = getDefaultOrb(0, 0, 0);
     
     // Setze Standardwerte für alle Zellen in der Matrix
     for (int pl2 = 0; pl2 < NUM_PLANETS; ++pl2) {
+        // Diagonale überspringen
+        if (m_currentPlanet1 == pl2) continue;
+        
         for (int asp = 0; asp < ASPEKTE; ++asp) {
             QDoubleSpinBox* spinBox = qobject_cast<QDoubleSpinBox*>(
                 m_orbenTable->cellWidget(pl2, asp));
             if (spinBox) {
-                float adjustedOrb = defaultOrben[asp];
-                // Sonne/Mond haben größere Orben
-                if (m_currentPlanet1 <= 1 || pl2 <= 1) {
-                    adjustedOrb += 2.0f;
-                }
-                // Asteroiden haben kleinere Orben
-                if (m_currentPlanet1 >= 10 || pl2 >= 10) {
-                    adjustedOrb -= 2.0f;
-                    if (adjustedOrb < 1.0f) adjustedOrb = 1.0f;
-                }
-                spinBox->setValue(adjustedOrb);
+                spinBox->setValue(defaultOrb);
             }
         }
     }
@@ -359,6 +349,23 @@ void OrbenDialog::onDefault() {
 void OrbenDialog::onAccept() {
     saveSettings();
     accept();
+}
+
+float OrbenDialog::getDefaultOrb(int aspekt, int planet1, int planet2) {
+    // Standard-Orben aus Legacy (sOrben in auhelper.c)
+    // Basis-Wert für Radix Planet-zu-Planet: 2.5
+    Q_UNUSED(aspekt);
+    Q_UNUSED(planet1);
+    Q_UNUSED(planet2);
+    
+    switch (m_currentTyp) {
+        case ORBEN_TRANSIT:
+            return 0.8f;
+        case ORBEN_SYNASTRIE:
+            return 2.0f;
+        default:  // ORBEN_RADIX
+            return 2.5f;
+    }
 }
 
 } // namespace astro

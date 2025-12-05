@@ -130,7 +130,6 @@ RadixFix RadixFix::fromLegacy(const RadixFixLegacy& legacy) {
     rf.indexRadix = legacy.lIndexRadix;
     rf.indexName = legacy.lIndexName;
     rf.indexNotiz = legacy.lIndexNotiz;
-    rf.land = QString::fromLatin1(legacy.szLand, 3).trimmed();
     rf.sommerzeit = legacy.fSommer;
     rf.zone = legacy.fZone;
     rf.laenge = legacy.dLange;
@@ -139,6 +138,7 @@ RadixFix RadixFix::fromLegacy(const RadixFixLegacy& legacy) {
     rf.tag = legacy.sTag;
     rf.monat = legacy.sMonat;
     rf.jahr = legacy.sJahr;
+    rf.land = QString::fromLatin1(legacy.szLand, 4).trimmed();
     return rf;
 }
 
@@ -148,18 +148,19 @@ RadixFixLegacy RadixFix::toLegacy() const {
     
     legacy.cGultig = gultig ? 1 : 0;
     legacy.lIndexRadix = indexRadix;
+    legacy.slRadix = 0;
     legacy.lIndexName = indexName;
+    legacy.slName = 0;
     legacy.lIndexNotiz = indexNotiz;
+    legacy.slNotiz = 0;
     legacy.clVorName = static_cast<int16_t>(vorname.toLatin1().size());
     legacy.clName = static_cast<int16_t>(name.toLatin1().size());
     legacy.clBeruf = static_cast<int16_t>(beruf.toLatin1().size());
     legacy.clOrt = static_cast<int16_t>(ort.toLatin1().size());
     legacy.fSommer = sommerzeit;
-    legacy.fZone = zone;
-    
+    legacy.fZone = static_cast<float>(zone);
     QByteArray landBytes = land.toLatin1();
-    std::strncpy(legacy.szLand, landBytes.constData(), 3);
-    
+    std::memcpy(legacy.szLand, landBytes.constData(), qMin(4, landBytes.size()));
     legacy.dLange = laenge;
     legacy.dBreite = breite;
     legacy.dTime = zeit;
@@ -299,64 +300,26 @@ void AuInit::initOrben() {
     orbenSPlanet.resize(size);
     orbenSHaus.resize(MAX_PLANET * MAX_HAUS * ASPEKTE);
     
-    // Standard-Orben (aus Legacy-Code)
-    // Konjunktion: 10°, Sextil: 6°, Quadrat: 8°, Trigon: 8°, Opposition: 10°
-    // Halbsextil: 2°, Quincunx: 3°
+    // Standard-Orben aus Legacy (sOrben in auhelper.c)
+    // Diese Werte werden verwendet, wenn keine default.dat geladen wird
+    // Die Werte in default.dat werden durch 2 geteilt!
     
-    float defaultOrben[ASPEKTE] = {
-        10.0f,  // Konjunktion
-        2.0f,   // Halbsextil
-        6.0f,   // Sextil
-        8.0f,   // Quadratur
-        8.0f,   // Trigon
-        3.0f,   // Quincunx
-        10.0f   // Opposition
-    };
+    // Basis-Werte wie im Legacy:
+    // pfOrbenPlanet: 2.5, pfOrbenHaus: 0.2
+    // pfOrbenTPlanet: 0.8, pfOrbenTHaus: 0.15
+    // pfOrbenSPlanet: 2.0, pfOrbenSHaus: 0.15
     
-    // Planet-zu-Planet Orben
-    for (int pl1 = 0; pl1 < MAX_PLANET; ++pl1) {
-        for (int pl2 = 0; pl2 < MAX_PLANET; ++pl2) {
-            for (int asp = 0; asp < ASPEKTE; ++asp) {
-                int idx = (pl1 * MAX_PLANET + pl2) * ASPEKTE + asp;
-                float orb = defaultOrben[asp];
-                
-                // Sonne und Mond haben größere Orben
-                if (pl1 == P_SONNE || pl1 == P_MOND || pl2 == P_SONNE || pl2 == P_MOND) {
-                    orb += 2.0f;
-                }
-                // Asteroiden haben kleinere Orben
-                if (pl1 >= P_CHIRON || pl2 >= P_CHIRON) {
-                    orb -= 2.0f;
-                    if (orb < 1.0f) orb = 1.0f;
-                }
-                
-                orbenPlanet[idx] = orb;
-                orbenTPlanet[idx] = orb - 1.0f;  // Transit etwas enger
-                orbenSPlanet[idx] = orb;
-            }
-        }
+    for (int i = 0; i < size; ++i) {
+        orbenPlanet[i] = 2.5f;
+        orbenTPlanet[i] = 0.8f;
+        orbenSPlanet[i] = 2.0f;
     }
     
-    // Planet-zu-Haus Orben
-    for (int pl = 0; pl < MAX_PLANET; ++pl) {
-        for (int haus = 0; haus < MAX_HAUS; ++haus) {
-            for (int asp = 0; asp < ASPEKTE; ++asp) {
-                int idx = (pl * MAX_HAUS + haus) * ASPEKTE + asp;
-                float orb = defaultOrben[asp];
-                
-                if (pl == P_SONNE || pl == P_MOND) {
-                    orb += 2.0f;
-                }
-                if (pl >= P_CHIRON) {
-                    orb -= 2.0f;
-                    if (orb < 1.0f) orb = 1.0f;
-                }
-                
-                orbenHaus[idx] = orb;
-                orbenTHaus[idx] = orb - 1.0f;
-                orbenSHaus[idx] = orb;
-            }
-        }
+    int hausSize = MAX_PLANET * MAX_HAUS * ASPEKTE;
+    for (int i = 0; i < hausSize; ++i) {
+        orbenHaus[i] = 0.2f;
+        orbenTHaus[i] = 0.15f;
+        orbenSHaus[i] = 0.15f;
     }
 }
 

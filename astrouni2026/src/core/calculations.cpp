@@ -186,6 +186,31 @@ QString Calculations::degToString(double grad, bool mitSekunden, bool mitZeichen
     return result;
 }
 
+QString Calculations::degToZeichenString(double grad, bool mitSekunden) {
+    // STRICT LEGACY: Position im Sternzeichen (0-30°)
+    grad = mod360(grad);
+    
+    // Grad innerhalb des Zeichens (0-30)
+    double gradImZeichen = std::fmod(grad, 30.0);
+    
+    int16_t g = static_cast<int16_t>(gradImZeichen);
+    double rest = (gradImZeichen - g) * 60.0;
+    int16_t m = static_cast<int16_t>(rest);
+    int16_t s = static_cast<int16_t>((rest - m) * 60.0);
+    
+    // Legacy-Format: "14°20'32""
+    if (mitSekunden) {
+        return QString("%1°%2'%3\"")
+            .arg(g, 2, 10, QChar('0'))
+            .arg(m, 2, 10, QChar('0'))
+            .arg(s, 2, 10, QChar('0'));
+    } else {
+        return QString("%1°%2'")
+            .arg(g, 2, 10, QChar('0'))
+            .arg(m, 2, 10, QChar('0'));
+    }
+}
+
 //==============================================================================
 // Dezimal-Konvertierung
 // Port von: dDez2Deg(double), dDeg2Dez(double)

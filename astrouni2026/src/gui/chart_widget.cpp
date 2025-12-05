@@ -24,7 +24,10 @@ ChartWidget::ChartWidget(QWidget* parent)
     , m_rotation(0)
     , m_showAspects(true)
     , m_show3Degree(true)
-    , m_show9Degree(true) {
+    , m_show9Degree(true)
+    , m_highlightPlanet(-1)
+    , m_highlightAspect1(-1)
+    , m_highlightAspect2(-1) {
     
     // Hintergrundfarbe
     setAutoFillBackground(true);
@@ -50,14 +53,10 @@ ChartWidget::~ChartWidget() {
 void ChartWidget::setRadix(const Radix& radix) {
     m_radix = radix;
     
-    // Rotation berechnen (ASC links = 180° - ASC)
-    if (m_auinit.sRotRadix == ROT_ASC) {
-        m_rotation = 180.0 - m_radix.asc;
-    } else if (m_auinit.sRotRadix == ROT_SONNE) {
-        m_rotation = 180.0 - m_radix.planet[P_SONNE];
-    } else {
-        m_rotation = 0.0;  // 0° Widder links
-    }
+    // STRICT LEGACY: ASC immer links/waagrecht!
+    // m_rotation = -ASC, damit in degreeToPoint der ASC bei 0° relativ liegt
+    // und dann auf 180° (links) im Bildschirm-Koordinatensystem gemappt wird
+    m_rotation = -m_radix.asc;
     
     update();
 }
@@ -71,14 +70,29 @@ void ChartWidget::setSettings(const AuInit& auinit) {
     m_auinit = auinit;
     
     // Teilung (3er/9er Grad-Markierungen)
-    m_show3Degree = !(m_auinit.sTeilung & S_3er);
-    m_show9Degree = !(m_auinit.sTeilung & S_9er);
+    // Wenn Flag gesetzt ist, wird die Teilung angezeigt
+    m_show3Degree = (m_auinit.sTeilung & S_3er) != 0;
+    m_show9Degree = (m_auinit.sTeilung & S_9er) != 0;
     
     update();
 }
 
 void ChartWidget::updateChart() {
     calculateRadii();
+    update();
+}
+
+void ChartWidget::highlightPlanet(int planetIndex) {
+    m_highlightPlanet = planetIndex;
+    m_highlightAspect1 = -1;
+    m_highlightAspect2 = -1;
+    update();
+}
+
+void ChartWidget::highlightAspect(int planet1, int planet2) {
+    m_highlightPlanet = -1;
+    m_highlightAspect1 = planet1;
+    m_highlightAspect2 = planet2;
     update();
 }
 
@@ -170,11 +184,13 @@ void ChartWidget::calculateRadii() {
 //==============================================================================
 
 QPointF ChartWidget::degreeToPoint(double degree, double radius) const {
-    // Rotation anwenden
+    // STRICT LEGACY: ASC links, im Uhrzeigersinn
+    // Rotation anwenden: degree + m_rotation gibt den Winkel relativ zum ASC
+    // m_rotation = -ASC, damit ASC bei 0° relativ liegt
     double rotatedDegree = degree + m_rotation;
     
-    // In Radiant umrechnen (0° = rechts, gegen Uhrzeigersinn)
-    // Astrologie: 0° Widder = links, im Uhrzeigersinn
+    // Umrechnung: 0° relativ = links (180° im Bildschirm-Koordinatensystem)
+    // Uhrzeigersinn: Winkel im Bildschirm nimmt mit zunehmendem rotatedDegree ab
     double rad = (180.0 - rotatedDegree) * PI / 180.0;
     
     return QPointF(
@@ -228,10 +244,11 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
         painter.drawLine(outer, inner);
     }
     
-    // Sternzeichen-Symbole
+    // Sternzeichen-Symbole mit Unicode
     painter.setFont(m_astroFont);
     
-    // Element-Farben für Sternzeichen
+    // Element-Farben für Sternzeichen (wie in Legacy)
+    // Feuer=0,4,8; Erde=1,5,9; Luft=2,6,10; Wasser=3,7,11
     QColor elementColors[4] = {
         sColor[COL_FEUER],   // Feuer: Widder, Löwe, Schütze
         sColor[COL_ERDE],    // Erde: Stier, Jungfrau, Steinbock
@@ -239,24 +256,19 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
         sColor[COL_WASSER]   // Wasser: Krebs, Skorpion, Fische
     };
     
-    // Sternzeichen-Symbole (Unicode oder Font-Zeichen)
-    QString symbols[12] = {
-        "a", "b", "c", "d", "e", "f",  // Widder bis Jungfrau
-        "g", "h", "i", "j", "k", "l"   // Waage bis Fische
-    };
-    
     for (int i = 0; i < 12; ++i) {
         double degree = i * 30.0 + 15.0;  // Mitte des Zeichens
         double symbolRadius = (m_radius + m_radiusStz) / 2.0;
         QPointF pos = degreeToPoint(degree, symbolRadius);
         
-        // Element-Farbe (Feuer=0,4,8; Erde=1,5,9; Luft=2,6,10; Wasser=3,7,11)
+        // Element-Farbe
         int element = i % 4;
         painter.setPen(elementColors[element]);
         
-        // Symbol zentriert zeichnen
-        QRectF rect(pos.x() - 10, pos.y() - 10, 20, 20);
-        painter.drawText(rect, Qt::AlignCenter, symbols[i]);
+        // Unicode-Symbol zentriert zeichnen
+        QString symbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[i]);
+        QRectF rect(pos.x() - 12, pos.y() - 12, 24, 24);
+        painter.drawText(rect, Qt::AlignCenter, symbol);
     }
 }
 
@@ -383,31 +395,57 @@ void ChartWidget::drawPlanetTic(QPainter& painter, double angle, bool isTransit)
 }
 
 void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, bool isTransit) {
-    // Planeten-Symbole (für Astrologie-Font)
-    QString symbols[MAX_PLANET] = {
-        "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",  // Sonne bis Pluto
-        "K", "L", "M", "N", "O", "P", "Q"  // Mondknoten bis Vesta
-    };
+    // Planeten-Farbe aus Einstellungen oder Standard
+    QColor color;
+    if (isTransit) {
+        color = sColor[COL_PLAN_T];
+    } else if (planet < m_auinit.planetColor.size() && m_auinit.planetColor[planet].isValid()) {
+        color = m_auinit.planetColor[planet];
+    } else {
+        color = sColor[COL_PLAN];
+    }
     
-    QColor color = isTransit ? sColor[COL_PLAN_T] : sColor[COL_PLAN];
+    // Hervorhebung: Größerer Font und hellere Farbe
+    bool isHighlighted = (planet == m_highlightPlanet) || 
+                         (planet == m_highlightAspect1) || 
+                         (planet == m_highlightAspect2);
+    
+    int fontSize = isHighlighted ? 22 : 18;  // Größere Symbole
+    QFont symbolFont("Noto Sans Symbols2", fontSize);
+    if (!symbolFont.exactMatch()) {
+        symbolFont = QFont("Segoe UI Symbol", fontSize);
+    }
+    painter.setFont(symbolFont);
+    
+    if (isHighlighted) {
+        // Heller und mit Hintergrund-Kreis
+        color = color.lighter(150);
+        painter.setBrush(QColor(255, 255, 0, 80));  // Gelber Hintergrund
+        painter.setPen(Qt::NoPen);
+        QPointF highlightPos = degreeToPoint(angle, m_radiusPlanet + 20);
+        painter.drawEllipse(highlightPos, 16, 16);
+    }
+    
     painter.setPen(color);
-    painter.setFont(m_astroFont);
     
     // Position außerhalb des Planeten-Kreises
-    double symbolRadius = m_radiusPlanet + 15;
+    double symbolRadius = m_radiusPlanet + 20;
     QPointF pos = degreeToPoint(angle, symbolRadius);
     
-    // Symbol zeichnen
-    QRectF rect(pos.x() - 10, pos.y() - 10, 20, 20);
+    // Unicode-Symbol zeichnen - größerer Bereich
+    int rectSize = isHighlighted ? 32 : 28;
+    QRectF rect(pos.x() - rectSize/2, pos.y() - rectSize/2, rectSize, rectSize);
     
     if (planet < MAX_PLANET) {
-        painter.drawText(rect, Qt::AlignCenter, symbols[planet]);
+        QString symbol = QString::fromUtf8(PLANET_SYMBOLS[planet]);
+        painter.drawText(rect, Qt::AlignCenter, symbol);
     }
     
     // Rückläufigkeits-Symbol
     if (m_radix.planetTyp[planet] & P_TYP_RUCK) {
-        painter.setFont(QFont("Arial", 8));
-        QRectF retroRect(pos.x() + 8, pos.y() - 5, 10, 10);
+        painter.setFont(QFont("Arial", 9));
+        painter.setPen(color);
+        QRectF retroRect(pos.x() + 12, pos.y() - 6, 12, 12);
         painter.drawText(retroRect, Qt::AlignCenter, "R");
     }
 }
@@ -422,8 +460,15 @@ void ChartWidget::drawAspects(QPainter& painter) {
     
     int numPlanets = m_radix.anzahlPlanet;
     
+    // Zuerst normale Aspekte zeichnen
     for (int i = 0; i < numPlanets; ++i) {
         for (int j = i + 1; j < numPlanets; ++j) {
+            // Hervorgehobenen Aspekt überspringen (wird später gezeichnet)
+            if ((i == m_highlightAspect1 && j == m_highlightAspect2) ||
+                (i == m_highlightAspect2 && j == m_highlightAspect1)) {
+                continue;
+            }
+            
             int idx = i * numPlanets + j;
             int8_t asp = m_radix.aspPlanet[idx];
             
@@ -435,6 +480,34 @@ void ChartWidget::drawAspects(QPainter& painter) {
             // Linien-Endpunkte
             QPointF p1 = degreeToPoint(m_radix.planet[i], m_radiusAsp);
             QPointF p2 = degreeToPoint(m_radix.planet[j], m_radiusAsp);
+            
+            painter.drawLine(p1, p2);
+        }
+    }
+    
+    // Hervorgehobenen Aspekt zuletzt zeichnen (oben drauf)
+    if (m_highlightAspect1 >= 0 && m_highlightAspect2 >= 0) {
+        int i = qMin(m_highlightAspect1, m_highlightAspect2);
+        int j = qMax(m_highlightAspect1, m_highlightAspect2);
+        int idx = i * numPlanets + j;
+        int8_t asp = m_radix.aspPlanet[idx];
+        
+        if (asp != KEIN_ASP) {
+            // Dickere, hellere Linie für Hervorhebung
+            QColor color;
+            switch (asp) {
+                case KONJUNKTION: color = sColor[CKONJUNKTION]; break;
+                case SEXTIL:      color = sColor[CSEXTIL]; break;
+                case QUADRATUR:   color = sColor[CQUADRATUR]; break;
+                case TRIGON:      color = sColor[CTRIGON]; break;
+                case OPOSITION:   color = sColor[COPOSITION]; break;
+                default:          color = sColor[COL_TXT]; break;
+            }
+            color = color.lighter(150);
+            painter.setPen(QPen(color, 4, Qt::SolidLine));
+            
+            QPointF p1 = degreeToPoint(m_radix.planet[m_highlightAspect1], m_radiusAsp);
+            QPointF p2 = degreeToPoint(m_radix.planet[m_highlightAspect2], m_radiusAsp);
             
             painter.drawLine(p1, p2);
         }

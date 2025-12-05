@@ -117,6 +117,16 @@ public:
      */
     static QString degToString(double grad, bool mitSekunden = true, bool mitZeichen = false);
     
+    /**
+     * @brief Konvertiert Dezimalgrad in Legacy-Format (Grad im Sternzeichen)
+     * @param grad Winkel in Dezimalgrad (0-360)
+     * @param mitSekunden true für Sekunden-Anzeige
+     * @return Formatierter String im Legacy-Format: "14°20'32""
+     * 
+     * STRICT LEGACY: Format wie im Original
+     */
+    static QString degToZeichenString(double grad, bool mitSekunden = true);
+    
     //==========================================================================
     // Dezimal-Konvertierung (Port von dDez2Deg, dDeg2Dez)
     //==========================================================================

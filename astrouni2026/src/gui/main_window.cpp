@@ -17,6 +17,7 @@
 #include "../data/orte_db.h"
 #include "../data/person_db.h"
 #include "../core/swiss_eph.h"
+#include "../core/chart_calc.h"
 
 #include <QMenuBar>
 #include <QMessageBox>
@@ -61,8 +62,26 @@ MainWindow::MainWindow(QWidget* parent)
     loadSettings();
     
     // Swiss Ephemeris initialisieren
-    QString ephePath = QApplication::applicationDirPath() + "/swisseph/ephe";
-    swissEph().setEphePath(ephePath);
+    // Versuche verschiedene Pfade für die Ephemeriden-Dateien
+    QStringList ephePaths = {
+        QApplication::applicationDirPath() + "/swisseph/ephe",
+        QApplication::applicationDirPath() + "/../swisseph/ephe",
+        QApplication::applicationDirPath() + "/../swisseph/src/ephe"
+    };
+    
+    QString ephePath;
+    for (const QString& path : ephePaths) {
+        if (QDir(path).exists()) {
+            ephePath = path;
+            break;
+        }
+    }
+    
+    if (ephePath.isEmpty()) {
+        qWarning("Keine Ephemeriden-Dateien gefunden!");
+    } else {
+        swissEph().setEphePath(ephePath);
+    }
     
     // Datenbanken laden
     QString dataPath = QApplication::applicationDirPath() + "/data";
@@ -189,15 +208,18 @@ void MainWindow::onPersonErfassen() {
     PersonDialog dialog(this, m_auinit, m_currentRadix);
     
     if (dialog.exec() == QDialog::Accepted) {
-        // Radix berechnen und Fenster öffnen
-        if (m_radixWindow == nullptr) {
-            m_radixWindow = new RadixWindow(this, m_auinit, m_currentRadix);
-            connect(m_radixWindow, &RadixWindow::destroyed, 
-                    this, &MainWindow::onRadixWindowClosed);
+        // Nur Radix-Fenster öffnen wenn berechnet wurde
+        if (dialog.wasCalculated()) {
+            if (m_radixWindow == nullptr) {
+                m_radixWindow = new RadixWindow(this, m_auinit, m_currentRadix);
+                connect(m_radixWindow, &RadixWindow::destroyed, 
+                        this, &MainWindow::onRadixWindowClosed);
+            }
+            m_radixWindow->setRadix(m_currentRadix);
+            m_radixWindow->show();
+            m_radixWindow->raise();
         }
-        m_radixWindow->setRadix(m_currentRadix);
-        m_radixWindow->show();
-        m_radixWindow->raise();
+        // Bei OK ohne Berechnung: nur gespeichert, kein Radix-Fenster
     }
 }
 
@@ -216,6 +238,33 @@ void MainWindow::onHoroTyp() {
     Horo_typDialog dialog(m_auinit, this);
     
     if (dialog.exec() == QDialog::Accepted) {
+        // Prüfen ob eine Person aktiv ist (Name oder Vorname vorhanden)
+        if (m_currentRadix.rFix.name.isEmpty() && m_currentRadix.rFix.vorname.isEmpty()) {
+            // Keine Person aktiv - PersonDialog öffnen
+            onPersonErfassen();
+        } else {
+            // Person aktiv - Radix berechnen mit neuem Horoskop-Typ
+            int result = ChartCalc::calculate(m_currentRadix, nullptr, m_auinit.sSelHoro);
+            
+            if (result == ERR_OK) {
+                ChartCalc::calcAspects(m_currentRadix, m_auinit.orbenPlanet);
+                ChartCalc::calcAngles(m_currentRadix, nullptr, m_auinit.sSelHoro);
+                
+                // Radix-Fenster öffnen/aktualisieren
+                if (!m_radixWindow) {
+                    m_radixWindow = new RadixWindow(nullptr, m_auinit, m_currentRadix);
+                    connect(m_radixWindow, &QObject::destroyed, 
+                            this, &MainWindow::onRadixWindowClosed);
+                }
+                m_radixWindow->setRadix(m_currentRadix);
+                m_radixWindow->show();
+                m_radixWindow->raise();
+            } else {
+                QMessageBox::warning(this, tr("Fehler"), 
+                    tr("Fehler bei der Berechnung (Code: %1)").arg(result));
+            }
+        }
+        
         emit settingsChanged();
     }
 }
@@ -225,6 +274,8 @@ void MainWindow::onOrben() {
     OrbenDialog dialog(m_auinit, this);
     
     if (dialog.exec() == QDialog::Accepted) {
+        // Einstellungen sofort speichern
+        saveSettings();
         emit settingsChanged();
     }
 }

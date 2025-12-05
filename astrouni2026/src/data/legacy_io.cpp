@@ -7,6 +7,8 @@
 #include <QFile>
 #include <QDataStream>
 #include <QDir>
+#include <QTextStream>
+#include <QRegularExpression>
 
 namespace astro {
 
@@ -79,35 +81,57 @@ int LegacyIO::readIni(AuInit& auinit) {
     QFile file(filepath);
     
     if (!file.open(QIODevice::ReadOnly)) {
-        setError(QString("Kann Datei nicht öffnen: %1").arg(filepath));
-        return ERR_FILE;
+        // astroini.dat existiert nicht - Defaults aus default.dat laden
+        return readDefaultOrben(auinit);
     }
     
-    QDataStream stream(&file);
-    stream.setByteOrder(QDataStream::LittleEndian);
-    
-    // Header lesen
+    // Header lesen (20 Bytes)
     int16_t version;
-    stream >> version;
+    file.read(reinterpret_cast<char*>(&version), sizeof(version));
+    file.read(reinterpret_cast<char*>(&auinit.sSelHaus), sizeof(auinit.sSelHaus));
+    file.read(reinterpret_cast<char*>(&auinit.sSelHoro), sizeof(auinit.sSelHoro));
+    file.read(reinterpret_cast<char*>(&auinit.sRotRadix), sizeof(auinit.sRotRadix));
+    file.read(reinterpret_cast<char*>(&auinit.sAspekte), sizeof(auinit.sAspekte));
+    file.read(reinterpret_cast<char*>(&auinit.sTeilung), sizeof(auinit.sTeilung));
     
-    if (version != MAIN_VERSION) {
-        // Alte Version - mit Defaults initialisieren
-        auinit = AuInit();
-        file.close();
-        return ERR_OK;
-    }
+    // Padding überspringen
+    file.seek(20);
     
-    // Einstellungen lesen
-    stream >> auinit.sSelHaus;
-    stream >> auinit.sSelHoro;
-    stream >> auinit.sRotRadix;
-    stream >> auinit.sAspekte;
-    stream >> auinit.sTeilung;
+    // Orben lesen
+    int sizePlanet = MAX_PLANET * MAX_PLANET * ASPEKTE;
+    int sizeHaus = MAX_PLANET * MAX_HAUS * ASPEKTE;
+    
+    auinit.orbenPlanet.resize(sizePlanet);
+    auinit.orbenHaus.resize(sizeHaus);
+    auinit.orbenTPlanet.resize(sizePlanet);
+    auinit.orbenTHaus.resize(sizeHaus);
+    auinit.orbenSPlanet.resize(sizePlanet);
+    auinit.orbenSHaus.resize(sizeHaus);
+    
+    qint64 bytesRead = 0;
+    bytesRead += file.read(reinterpret_cast<char*>(auinit.orbenPlanet.data()), sizePlanet * sizeof(float));
+    bytesRead += file.read(reinterpret_cast<char*>(auinit.orbenHaus.data()), sizeHaus * sizeof(float));
+    bytesRead += file.read(reinterpret_cast<char*>(auinit.orbenTPlanet.data()), sizePlanet * sizeof(float));
+    bytesRead += file.read(reinterpret_cast<char*>(auinit.orbenTHaus.data()), sizeHaus * sizeof(float));
+    bytesRead += file.read(reinterpret_cast<char*>(auinit.orbenSPlanet.data()), sizePlanet * sizeof(float));
+    bytesRead += file.read(reinterpret_cast<char*>(auinit.orbenSHaus.data()), sizeHaus * sizeof(float));
     
     file.close();
     
-    // Orben separat lesen
-    readOrben(auinit);
+    // Prüfen ob Orben gültig sind (nicht alle 0)
+    // Wenn alle Werte 0 sind, wurden keine gültigen Orben gespeichert
+    bool hasValidOrbs = false;
+    for (int i = 0; i < qMin(100, sizePlanet); ++i) {
+        if (auinit.orbenPlanet[i] > 0.0f) {
+            hasValidOrbs = true;
+            break;
+        }
+    }
+    
+    if (!hasValidOrbs || bytesRead == 0) {
+        // Keine gültigen Orben in astroini.dat - aus default.dat laden
+        return readDefaultOrben(auinit);
+    }
     
     return ERR_OK;
 }
@@ -121,25 +145,43 @@ int LegacyIO::writeIni(const AuInit& auinit) {
         return ERR_FILE;
     }
     
-    QDataStream stream(&file);
-    stream.setByteOrder(QDataStream::LittleEndian);
-    
-    // Header schreiben
+    // Header schreiben (20 Bytes wie im Legacy)
     int16_t version = MAIN_VERSION;
-    stream << version;
+    file.write(reinterpret_cast<const char*>(&version), sizeof(version));
+    file.write(reinterpret_cast<const char*>(&auinit.sSelHaus), sizeof(auinit.sSelHaus));
+    file.write(reinterpret_cast<const char*>(&auinit.sSelHoro), sizeof(auinit.sSelHoro));
+    file.write(reinterpret_cast<const char*>(&auinit.sRotRadix), sizeof(auinit.sRotRadix));
+    file.write(reinterpret_cast<const char*>(&auinit.sAspekte), sizeof(auinit.sAspekte));
+    file.write(reinterpret_cast<const char*>(&auinit.sTeilung), sizeof(auinit.sTeilung));
     
-    // Einstellungen schreiben
-    stream << auinit.sSelHaus;
-    stream << auinit.sSelHoro;
-    stream << auinit.sRotRadix;
-    stream << auinit.sAspekte;
-    stream << auinit.sTeilung;
+    // Padding auf 20 Bytes
+    QByteArray padding(20 - 12, '\0');
+    file.write(padding);
+    
+    // Orben direkt in die gleiche Datei schreiben
+    int sizePlanet = MAX_PLANET * MAX_PLANET * ASPEKTE;
+    int sizeHaus = MAX_PLANET * MAX_HAUS * ASPEKTE;
+    
+    if (auinit.orbenPlanet.size() >= sizePlanet) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenPlanet.constData()), sizePlanet * sizeof(float));
+    }
+    if (auinit.orbenHaus.size() >= sizeHaus) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenHaus.constData()), sizeHaus * sizeof(float));
+    }
+    if (auinit.orbenTPlanet.size() >= sizePlanet) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenTPlanet.constData()), sizePlanet * sizeof(float));
+    }
+    if (auinit.orbenTHaus.size() >= sizeHaus) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenTHaus.constData()), sizeHaus * sizeof(float));
+    }
+    if (auinit.orbenSPlanet.size() >= sizePlanet) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenSPlanet.constData()), sizePlanet * sizeof(float));
+    }
+    if (auinit.orbenSHaus.size() >= sizeHaus) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenSHaus.constData()), sizeHaus * sizeof(float));
+    }
     
     file.close();
-    
-    // Orben separat schreiben
-    writeOrben(auinit);
-    
     return ERR_OK;
 }
 
@@ -148,7 +190,7 @@ int LegacyIO::writeIni(const AuInit& auinit) {
 //==============================================================================
 
 int LegacyIO::readOrben(AuInit& auinit) {
-    QString filepath = getFilePath(ORBDAT);
+    QString filepath = getFilePath(INIDAT);
     QFile file(filepath);
     
     if (!file.open(QIODevice::ReadOnly)) {
@@ -157,78 +199,232 @@ int LegacyIO::readOrben(AuInit& auinit) {
         return ERR_OK;
     }
     
-    QDataStream stream(&file);
-    stream.setByteOrder(QDataStream::LittleEndian);
-    stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
+    // Orben-Größen wie im Legacy: MAX_PLANET * MAX_PLANET * ASPEKTE
+    int sizePlanet = MAX_PLANET * MAX_PLANET * ASPEKTE;
+    int sizeHaus = MAX_PLANET * MAX_HAUS * ASPEKTE;
     
-    // Orben lesen
-    int size = ASPEKTE * MAX_PLANET;
+    auinit.orbenPlanet.resize(sizePlanet);
+    auinit.orbenHaus.resize(sizeHaus);
+    auinit.orbenTPlanet.resize(sizePlanet);
+    auinit.orbenTHaus.resize(sizeHaus);
+    auinit.orbenSPlanet.resize(sizePlanet);
+    auinit.orbenSHaus.resize(sizeHaus);
     
-    auinit.orbenPlanet.resize(size);
-    auinit.orbenHaus.resize(size);
-    auinit.orbenTPlanet.resize(size);
-    auinit.orbenTHaus.resize(size);
-    auinit.orbenSPlanet.resize(size);
-    auinit.orbenSHaus.resize(size);
+    // Suche nach Orben-Offset im Header
+    // Legacy-Format: seek.lOrben zeigt auf Orben-Daten
+    // Vereinfacht: Wir lesen direkt nach dem Header (Offset 20)
+    file.seek(20);  // Nach Header + 5 shorts
     
-    for (int i = 0; i < size; ++i) {
-        stream >> auinit.orbenPlanet[i];
+    // Direkt binär lesen
+    file.read(reinterpret_cast<char*>(auinit.orbenPlanet.data()), sizePlanet * sizeof(float));
+    file.read(reinterpret_cast<char*>(auinit.orbenHaus.data()), sizeHaus * sizeof(float));
+    file.read(reinterpret_cast<char*>(auinit.orbenTPlanet.data()), sizePlanet * sizeof(float));
+    file.read(reinterpret_cast<char*>(auinit.orbenTHaus.data()), sizeHaus * sizeof(float));
+    file.read(reinterpret_cast<char*>(auinit.orbenSPlanet.data()), sizePlanet * sizeof(float));
+    file.read(reinterpret_cast<char*>(auinit.orbenSHaus.data()), sizeHaus * sizeof(float));
+    
+    file.close();
+    
+    // Prüfen ob Daten gültig sind (nicht alle 0)
+    bool allZero = true;
+    for (int i = 0; i < qMin(100, sizePlanet); ++i) {
+        if (auinit.orbenPlanet[i] != 0.0f) {
+            allZero = false;
+            break;
+        }
     }
-    for (int i = 0; i < size; ++i) {
-        stream >> auinit.orbenHaus[i];
+    if (allZero) {
+        auinit.initOrben();
     }
-    for (int i = 0; i < size; ++i) {
-        stream >> auinit.orbenTPlanet[i];
+    
+    return ERR_OK;
+}
+
+int LegacyIO::writeOrben(const AuInit& auinit) {
+    QString filepath = getFilePath(INIDAT);
+    QFile file(filepath);
+    
+    if (!file.open(QIODevice::ReadWrite)) {
+        // Datei existiert nicht - neu erstellen
+        if (!file.open(QIODevice::WriteOnly)) {
+            setError(QString("Kann Datei nicht schreiben: %1").arg(filepath));
+            return ERR_FILE;
+        }
+        // Header schreiben
+        QByteArray header(20, '\0');
+        file.write(header);
+    } else {
+        // Zur Orben-Position springen
+        file.seek(20);
     }
-    for (int i = 0; i < size; ++i) {
-        stream >> auinit.orbenTHaus[i];
+    
+    // Orben-Größen wie im Legacy
+    int sizePlanet = MAX_PLANET * MAX_PLANET * ASPEKTE;
+    int sizeHaus = MAX_PLANET * MAX_HAUS * ASPEKTE;
+    
+    // Direkt binär schreiben
+    if (auinit.orbenPlanet.size() >= sizePlanet) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenPlanet.constData()), sizePlanet * sizeof(float));
     }
-    for (int i = 0; i < size; ++i) {
-        stream >> auinit.orbenSPlanet[i];
+    if (auinit.orbenHaus.size() >= sizeHaus) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenHaus.constData()), sizeHaus * sizeof(float));
     }
-    for (int i = 0; i < size; ++i) {
-        stream >> auinit.orbenSHaus[i];
+    if (auinit.orbenTPlanet.size() >= sizePlanet) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenTPlanet.constData()), sizePlanet * sizeof(float));
+    }
+    if (auinit.orbenTHaus.size() >= sizeHaus) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenTHaus.constData()), sizeHaus * sizeof(float));
+    }
+    if (auinit.orbenSPlanet.size() >= sizePlanet) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenSPlanet.constData()), sizePlanet * sizeof(float));
+    }
+    if (auinit.orbenSHaus.size() >= sizeHaus) {
+        file.write(reinterpret_cast<const char*>(auinit.orbenSHaus.constData()), sizeHaus * sizeof(float));
     }
     
     file.close();
     return ERR_OK;
 }
 
-int LegacyIO::writeOrben(const AuInit& auinit) {
+//==============================================================================
+// Default-Orben aus Textdatei (Port von sOrben in auhelper.c)
+//==============================================================================
+
+int LegacyIO::readDefaultOrben(AuInit& auinit) {
     QString filepath = getFilePath(ORBDAT);
     QFile file(filepath);
     
-    if (!file.open(QIODevice::WriteOnly)) {
-        setError(QString("Kann Datei nicht schreiben: %1").arg(filepath));
-        return ERR_FILE;
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        // Datei nicht vorhanden - Basis-Defaults verwenden
+        auinit.initOrben();
+        return ERR_OK;
     }
     
-    QDataStream stream(&file);
-    stream.setByteOrder(QDataStream::LittleEndian);
-    stream.setFloatingPointPrecision(QDataStream::SinglePrecision);
+    // Arrays initialisieren mit Basis-Werten wie im Legacy
+    int sizePlanet = MAX_PLANET * MAX_PLANET * ASPEKTE;
+    int sizeHaus = MAX_PLANET * MAX_HAUS * ASPEKTE;
     
-    int size = ASPEKTE * MAX_PLANET;
+    auinit.orbenPlanet.resize(sizePlanet);
+    auinit.orbenHaus.resize(sizeHaus);
+    auinit.orbenTPlanet.resize(sizePlanet);
+    auinit.orbenTHaus.resize(sizeHaus);
+    auinit.orbenSPlanet.resize(sizePlanet);
+    auinit.orbenSHaus.resize(sizeHaus);
     
-    for (int i = 0; i < size; ++i) {
-        stream << auinit.orbenPlanet[i];
+    // Basis-Werte setzen (wie im Legacy sOrben)
+    for (int i = 0; i < sizePlanet; ++i) {
+        auinit.orbenPlanet[i] = 2.5f;
+        auinit.orbenTPlanet[i] = 0.8f;
+        auinit.orbenSPlanet[i] = 2.0f;
     }
-    for (int i = 0; i < size; ++i) {
-        stream << auinit.orbenHaus[i];
-    }
-    for (int i = 0; i < size; ++i) {
-        stream << auinit.orbenTPlanet[i];
-    }
-    for (int i = 0; i < size; ++i) {
-        stream << auinit.orbenTHaus[i];
-    }
-    for (int i = 0; i < size; ++i) {
-        stream << auinit.orbenSPlanet[i];
-    }
-    for (int i = 0; i < size; ++i) {
-        stream << auinit.orbenSHaus[i];
+    for (int i = 0; i < sizeHaus; ++i) {
+        auinit.orbenHaus[i] = 0.2f;
+        auinit.orbenTHaus[i] = 0.15f;
+        auinit.orbenSHaus[i] = 0.15f;
     }
     
+    // Aspekt-Namen für die Suche (wie szAspNamen im Legacy)
+    static const char* aspNames[3 * ASPEKTE] = {
+        // Radix
+        "KONJUNKTION", "HALBSEXTIL", "SEXTIL", "QUADRAT", "TRIGON", "QUINCUNX", "OPPOSITION",
+        // Transit
+        "T_KONJUNKTION", "T_HALBSEXTIL", "T_SEXTIL", "T_QUADRAT", "T_TRIGON", "T_QUINCUNX", "T_OPPOSITION",
+        // Synastrie
+        "S_KONJUNKTION", "S_HALBSEXTIL", "S_SEXTIL", "S_QUADRAT", "S_TRIGON", "S_QUINCUNX", "S_OPPOSITION"
+    };
+    
+    QTextStream stream(&file);
+    QString content = stream.readAll();
     file.close();
+    
+    // Für jeden Aspekt-Typ (Radix, Transit, Synastrie) und jeden Aspekt
+    for (int sA = 0; sA < 3 * ASPEKTE; ++sA) {
+        QVector<float>* pfOP = nullptr;
+        QVector<float>* pfOH = nullptr;
+        
+        if (sA < ASPEKTE) {
+            pfOP = &auinit.orbenPlanet;
+            pfOH = &auinit.orbenHaus;
+        } else if (sA < 2 * ASPEKTE) {
+            pfOP = &auinit.orbenTPlanet;
+            pfOH = &auinit.orbenTHaus;
+        } else {
+            pfOP = &auinit.orbenSPlanet;
+            pfOH = &auinit.orbenSHaus;
+        }
+        
+        // Suche nach [ASPEKTNAME] Sektion
+        QString sectionName = QString("[%1]").arg(aspNames[sA]);
+        int sectionPos = content.indexOf(sectionName, 0, Qt::CaseInsensitive);
+        if (sectionPos < 0) continue;
+        
+        // Lese die Zeilen nach der Sektion
+        int lineStart = content.indexOf('\n', sectionPos) + 1;
+        int sPlanetA = 0;
+        
+        while (sPlanetA < MAX_PLANET && lineStart < content.length()) {
+            int lineEnd = content.indexOf('\n', lineStart);
+            if (lineEnd < 0) lineEnd = content.length();
+            
+            QString line = content.mid(lineStart, lineEnd - lineStart).trimmed();
+            lineStart = lineEnd + 1;
+            
+            // Kommentare und leere Zeilen überspringen
+            if (line.isEmpty() || line.startsWith(';') || line.startsWith('[')) {
+                if (line.startsWith('[')) break;  // Nächste Sektion
+                continue;
+            }
+            
+            // Zeile parsen: "SON  10  10  10 ..."
+            QStringList parts = line.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
+            if (parts.size() < 2) continue;
+            
+            // Erstes Element ist der Planet-Name, Rest sind Orben
+            int sPlanetB = (sA < ASPEKTE) ? 1 : 0;  // Radix startet bei 1
+            
+            for (int i = 1; i < parts.size() && sPlanetB < MAX_PLANET + 5; ++i) {
+                float fOrb = parts[i].toFloat();
+                
+                if (fOrb != -1.0f) {
+                    if (sPlanetB < MAX_PLANET) {
+                        // Planet-zu-Planet Orb
+                        int idx = (sPlanetA * MAX_PLANET + sPlanetB) + (sA % ASPEKTE) * MAX_PLANET * MAX_PLANET;
+                        if (idx < pfOP->size()) {
+                            (*pfOP)[idx] = fOrb / 2.0f;  // Legacy teilt durch 2!
+                        }
+                    } else {
+                        // Planet-zu-Haus Orb (ASC, IC, DSC, MC, HAU)
+                        int hausIdx = -1;
+                        switch (sPlanetB) {
+                            case MAX_PLANET:     hausIdx = 0; break;  // ASC
+                            case MAX_PLANET + 1: hausIdx = 3; break;  // IC
+                            case MAX_PLANET + 2: hausIdx = 6; break;  // DSC
+                            case MAX_PLANET + 3: hausIdx = 9; break;  // MC
+                            case MAX_PLANET + 4:  // HAU - alle anderen Häuser
+                                for (int h = 1; h < MAX_HAUS; ++h) {
+                                    if (h != 3 && h != 6 && h != 9) {
+                                        int hIdx = (sPlanetA * MAX_HAUS + h) + (sA % ASPEKTE) * MAX_PLANET * MAX_HAUS;
+                                        if (hIdx < pfOH->size()) {
+                                            (*pfOH)[hIdx] = fOrb / 2.0f;
+                                        }
+                                    }
+                                }
+                                break;
+                        }
+                        if (hausIdx >= 0) {
+                            int hIdx = (sPlanetA * MAX_HAUS + hausIdx) + (sA % ASPEKTE) * MAX_PLANET * MAX_HAUS;
+                            if (hIdx < pfOH->size()) {
+                                (*pfOH)[hIdx] = fOrb / 2.0f;
+                            }
+                        }
+                    }
+                }
+                sPlanetB++;
+            }
+            sPlanetA++;
+        }
+    }
+    
     return ERR_OK;
 }
 

@@ -46,6 +46,19 @@ public:
     void updateChart();
     
     /**
+     * @brief Hebt einen Planeten hervor
+     * @param planetIndex Index des Planeten (-1 für keine Hervorhebung)
+     */
+    void highlightPlanet(int planetIndex);
+    
+    /**
+     * @brief Hebt einen Aspekt hervor
+     * @param planet1 Erster Planet
+     * @param planet2 Zweiter Planet
+     */
+    void highlightAspect(int planet1, int planet2);
+    
+    /**
      * @brief Gibt die minimale Größe zurück
      */
     QSize minimumSizeHint() const override;
@@ -164,6 +177,11 @@ private:
     bool m_showAspects;
     bool m_show3Degree;
     bool m_show9Degree;
+    
+    // Hervorhebung
+    int m_highlightPlanet;      // -1 = keine Hervorhebung
+    int m_highlightAspect1;     // Erster Planet des Aspekts
+    int m_highlightAspect2;     // Zweiter Planet des Aspekts
 };
 
 } // namespace astro

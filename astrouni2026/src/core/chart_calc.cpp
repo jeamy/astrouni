@@ -148,6 +148,15 @@ void ChartCalc::calcPlanets(Radix& radix) {
             
             // In welchem Haus steht der Planet?
             radix.inHaus[i] = getHouseOfPlanet(lon, radix.haus);
+        } else {
+            // Berechnung fehlgeschlagen - Position auf 0 setzen
+            radix.planet[i] = 0.0;
+            radix.planetRad[i] = 0.0;
+            radix.stzPlanet[i] = 0;
+            radix.inHaus[i] = 0;
+            // Debug: Fehler ausgeben
+            qWarning("Planet %d konnte nicht berechnet werden: %s", 
+                     i, qPrintable(swissEph().getLastError()));
         }
     }
 }

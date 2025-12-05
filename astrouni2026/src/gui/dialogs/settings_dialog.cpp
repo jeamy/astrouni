@@ -51,32 +51,32 @@ void SettingsDialog::setupUI() {
     
     mainLayout->addWidget(aspektGroup);
     
-    // Teilung-Gruppe
-    QGroupBox* teilungGroup = new QGroupBox(tr("Teilung"), this);
+    // Aspekt-Anzeige-Gruppe (welche Aspekte werden gezeichnet)
+    QGroupBox* anzeigeGroup = new QGroupBox(tr("Aspekte anzeigen für"), this);
+    QHBoxLayout* anzeigeLayout = new QHBoxLayout(anzeigeGroup);
+    
+    m_planCheck = new QCheckBox(tr("Planeten"), this);
+    m_asterCheck = new QCheckBox(tr("Asteroiden"), this);
+    m_hausCheck = new QCheckBox(tr("Häuser"), this);
+    
+    anzeigeLayout->addWidget(m_planCheck);
+    anzeigeLayout->addWidget(m_asterCheck);
+    anzeigeLayout->addWidget(m_hausCheck);
+    
+    mainLayout->addWidget(anzeigeGroup);
+    
+    // Grad-Einteilung-Gruppe (welche Kreise werden gezeichnet)
+    QGroupBox* teilungGroup = new QGroupBox(tr("Grad-Einteilung im Radix"), this);
     QHBoxLayout* teilungLayout = new QHBoxLayout(teilungGroup);
     
-    m_3erCheck = new QCheckBox(tr("3er Teilung"), this);
-    m_9erCheck = new QCheckBox(tr("9er Teilung"), this);
+    m_3erCheck = new QCheckBox(tr("10°/20° Teilung (3er)"), this);
+    m_9erCheck = new QCheckBox(tr("3°/6° Teilung (9er)"), this);
     
     teilungLayout->addWidget(m_3erCheck);
     teilungLayout->addWidget(m_9erCheck);
     teilungLayout->addStretch();
     
     mainLayout->addWidget(teilungGroup);
-    
-    // Objekte-Gruppe
-    QGroupBox* objektGroup = new QGroupBox(tr("Objekte"), this);
-    QHBoxLayout* objektLayout = new QHBoxLayout(objektGroup);
-    
-    m_planCheck = new QCheckBox(tr("Planeten"), this);
-    m_asterCheck = new QCheckBox(tr("Asteroiden"), this);
-    m_hausCheck = new QCheckBox(tr("Häuser"), this);
-    
-    objektLayout->addWidget(m_planCheck);
-    objektLayout->addWidget(m_asterCheck);
-    objektLayout->addWidget(m_hausCheck);
-    
-    mainLayout->addWidget(objektGroup);
     
     // Buttons
     QHBoxLayout* buttonLayout = new QHBoxLayout();
