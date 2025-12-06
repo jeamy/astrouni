@@ -33,9 +33,9 @@ ChartWidget::ChartWidget(QWidget* parent)
     // Der eigentliche Radix-Kreis wird in drawRadix() grau hinterlegt
     setAutoFillBackground(false);
     
-    // Fonts
-    m_mainFont = QFont("Arial", 10);
-    m_astroFont = QFont("AstroUniverse", 14);  // Astrologie-Font
+    // Fonts - serifenlose Systemfonts für Plattformunabhängigkeit
+    m_mainFont = QFont(QFont().defaultFamily(), 10);  // System-Standardfont
+    // Symbol-Fonts werden direkt in den Zeichenfunktionen mit Fallback-Kette gesetzt
     
     // Minimum-Größe
     setMinimumSize(400, 400);
@@ -248,7 +248,16 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
     }
     
     // Sternzeichen-Symbole mit Unicode
-    painter.setFont(m_astroFont);
+    // Plattformübergreifende Symbol-Font Fallback-Kette
+    QFont zodiacFont;
+    QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+    for (const QString& fontName : symbolFonts) {
+        zodiacFont = QFont(fontName, 14);
+        if (QFontInfo(zodiacFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
+            break;
+        }
+    }
+    painter.setFont(zodiacFont);
     
     // Element-Farben für Sternzeichen (wie in Legacy)
     // Feuer=0,4,8; Erde=1,5,9; Luft=2,6,10; Wasser=3,7,11
@@ -343,7 +352,8 @@ void ChartWidget::drawHouses(QPainter& painter) {
         }
     }
     
-    // Haus-Nummern
+    // STRICT LEGACY: Haus-Nummern am inneren Kreis (Aspekt-Kreis)
+    // Bei ASC(1), IC(4), DSC(7), MC(10) keine Nummer, sondern Beschriftung
     painter.setFont(m_mainFont);
     painter.setPen(sColor[COL_TXT]);
     
@@ -354,12 +364,35 @@ void ChartWidget::drawHouses(QPainter& painter) {
         double mid = start + Calculations::minDist(start, end) / 2.0;
         mid = Calculations::mod360(mid);
         
-        double numberRadius = (m_radiusPlanet + m_radiusAsp) / 2.0;
+        // STRICT LEGACY: Nummern am inneren Kreis (knapp außerhalb des Aspekt-Kreises)
+        double numberRadius = m_radiusAsp + 15;
         QPointF pos = degreeToPoint(mid, numberRadius);
         
-        QString number = QString::number(i + 1);
-        QRectF rect(pos.x() - 8, pos.y() - 8, 16, 16);
-        painter.drawText(rect, Qt::AlignCenter, number);
+        // STRICT LEGACY: Bei Hauptachsen ASC/IC/DSC/MC statt Nummer
+        QString label;
+        QRectF rect;
+        if (i == 0) {
+            label = "ASC";
+            painter.setPen(sColor[COL_ASZ]);
+            rect = QRectF(pos.x() - 12, pos.y() - 8, 24, 16);
+        } else if (i == 3) {
+            label = "IC";
+            painter.setPen(sColor[COL_ASZ]);
+            rect = QRectF(pos.x() - 8, pos.y() - 8, 16, 16);
+        } else if (i == 6) {
+            label = "DSC";
+            painter.setPen(sColor[COL_ASZ]);
+            rect = QRectF(pos.x() - 12, pos.y() - 8, 24, 16);
+        } else if (i == 9) {
+            label = "MC";
+            painter.setPen(sColor[COL_ASZ]);
+            rect = QRectF(pos.x() - 10, pos.y() - 8, 20, 16);
+        } else {
+            label = QString::number(i + 1);
+            painter.setPen(sColor[COL_TXT]);
+            rect = QRectF(pos.x() - 8, pos.y() - 8, 16, 16);
+        }
+        painter.drawText(rect, Qt::AlignCenter, label);
     }
 }
 
@@ -371,37 +404,87 @@ void ChartWidget::drawHouses(QPainter& painter) {
 void ChartWidget::drawPlanets(QPainter& painter) {
     if (m_radix.planet.isEmpty()) return;
     
+    // STRICT LEGACY: Berechne Versatz-Level für jeden Planeten (Kollisionsvermeidung)
+    // Planeten innerhalb von 6° werden nach innen versetzt
+    QVector<int> offsetLevel(m_radix.anzahlPlanet, 0);
+    
+    for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
+        for (int j = 0; j < i; ++j) {
+            double diff = std::fabs(m_radix.planet[i] - m_radix.planet[j]);
+            if (diff > 180.0) diff = 360.0 - diff;
+            
+            if (diff < 6.0) {
+                // Kollision gefunden - höheren Level zuweisen
+                offsetLevel[i] = qMax(offsetLevel[i], offsetLevel[j] + 1);
+            }
+        }
+    }
+    
+    // STRICT LEGACY: Erst ALLE Linien zeichnen, dann ALLE Symbole
+    // Damit Symbole immer über den Linien liegen
+    
+    // 1. Alle Linien (Tics) zeichnen
     for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
         double degree = m_radix.planet[i];
         bool isTransit = (m_radix.planetTyp[i] & P_TYP_TRANSIT) != 0;
-        
-        // Markierung (Tic)
-        drawPlanetTic(painter, degree, isTransit);
-        
-        // Symbol
-        drawPlanetSymbol(painter, i, degree, isTransit);
+        drawPlanetTic(painter, degree, isTransit, offsetLevel[i]);
     }
     
-    // Transit-Planeten (falls vorhanden)
+    // Transit-Planeten Linien (falls vorhanden)
+    QVector<int> transitOffsetLevel;
+    if (m_transit != nullptr) {
+        transitOffsetLevel.resize(m_transit->anzahlPlanet, 0);
+        
+        for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
+            for (int j = 0; j < i; ++j) {
+                double diff = std::fabs(m_transit->planet[i] - m_transit->planet[j]);
+                if (diff > 180.0) diff = 360.0 - diff;
+                
+                if (diff < 6.0) {
+                    transitOffsetLevel[i] = qMax(transitOffsetLevel[i], transitOffsetLevel[j] + 1);
+                }
+            }
+        }
+        
+        for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
+            double degree = m_transit->planet[i];
+            drawPlanetTic(painter, degree, true, transitOffsetLevel[i]);
+        }
+    }
+    
+    // 2. Alle Symbole zeichnen (über den Linien)
+    for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
+        double degree = m_radix.planet[i];
+        bool isTransit = (m_radix.planetTyp[i] & P_TYP_TRANSIT) != 0;
+        drawPlanetSymbol(painter, i, degree, isTransit, offsetLevel[i]);
+    }
+    
+    // Transit-Planeten Symbole
     if (m_transit != nullptr) {
         for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
             double degree = m_transit->planet[i];
-            drawPlanetTic(painter, degree, true);
-            drawPlanetSymbol(painter, i, degree, true);
+            drawPlanetSymbol(painter, i, degree, true, transitOffsetLevel[i]);
         }
     }
 }
 
-void ChartWidget::drawPlanetTic(QPainter& painter, double angle, bool isTransit) {
+void ChartWidget::drawPlanetTic(QPainter& painter, double angle, bool isTransit, int offsetLevel) {
     QColor color = isTransit ? sColor[COL_PLANET_TICT] : sColor[COL_PLANET_TIC];
-    painter.setPen(QPen(color, 2));
+    
+    // STRICT LEGACY: Alle Linien gleichdick
+    painter.setPen(QPen(color, 1));
+    
+    // STRICT LEGACY: Linie vom Planeten-Kreis bis zum Planeten-Symbol durchziehen
+    // Versatz nach innen für jeden Level
+    double offset = offsetLevel * 25.0;
+    double symbolRadius = m_radiusPlanet - 30 - offset;
     
     QPointF outer = degreeToPoint(angle, m_radiusPlanet);
-    QPointF inner = degreeToPoint(angle, m_radiusPlanet - 12);
+    QPointF inner = degreeToPoint(angle, symbolRadius + 12);  // Bis kurz vor das Symbol
     painter.drawLine(outer, inner);
 }
 
-void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, bool isTransit) {
+void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, bool isTransit, int offsetLevel) {
     // Planeten-Farbe aus Einstellungen oder Standard
     QColor color;
     if (isTransit) {
@@ -417,30 +500,42 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
                          (planet == m_highlightAspect1) || 
                          (planet == m_highlightAspect2);
     
-    int fontSize = isHighlighted ? 22 : 18;  // Größere Symbole
-    QFont symbolFont("Noto Sans Symbols2", fontSize);
-    if (!symbolFont.exactMatch()) {
-        symbolFont = QFont("Segoe UI Symbol", fontSize);
+    // STRICT LEGACY: Kleinerer Font wenn versetzt
+    int fontSize = isHighlighted ? 22 : (offsetLevel > 0 ? 14 : 18);
+    
+    // Plattformübergreifende Symbol-Font Fallback-Kette:
+    // Windows: Segoe UI Symbol
+    // macOS: Apple Symbols
+    // Linux: Noto Sans Symbols2, DejaVu Sans
+    QFont symbolFont;
+    QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+    for (const QString& fontName : symbolFonts) {
+        symbolFont = QFont(fontName, fontSize);
+        if (QFontInfo(symbolFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
+            break;  // Font gefunden
+        }
     }
+    symbolFont.setPointSize(fontSize);
     painter.setFont(symbolFont);
     
+    // Position im Inneren des Planeten-Kreises, mit Versatz für Kollisionsvermeidung
+    // STRICT LEGACY: Größerer Abstand zwischen versetzten Planeten
+    double offset = offsetLevel * 25.0;
+    double symbolRadius = m_radiusPlanet - 30 - offset;
+    QPointF pos = degreeToPoint(angle, symbolRadius);
+    
     if (isHighlighted) {
-        // Heller und mit Hintergrund-Kreis
+        // Heller und mit Hintergrund-Kreis an der gleichen Position wie das Symbol
         color = color.lighter(150);
         painter.setBrush(QColor(255, 255, 0, 80));  // Gelber Hintergrund
         painter.setPen(Qt::NoPen);
-        QPointF highlightPos = degreeToPoint(angle, m_radiusPlanet + 20);
-        painter.drawEllipse(highlightPos, 16, 16);
+        painter.drawEllipse(pos, 16, 16);
     }
     
     painter.setPen(color);
     
-    // Position im Inneren des Planeten-Kreises, etwas weiter weg von den Positionsstrichen
-    double symbolRadius = m_radiusPlanet - 35;
-    QPointF pos = degreeToPoint(angle, symbolRadius);
-    
     // Unicode-Symbol zeichnen - größerer Bereich
-    int rectSize = isHighlighted ? 32 : 28;
+    int rectSize = isHighlighted ? 32 : (offsetLevel > 0 ? 22 : 28);
     QRectF rect(pos.x() - rectSize/2, pos.y() - rectSize/2, rectSize, rectSize);
     
     if (planet < MAX_PLANET) {
@@ -450,7 +545,10 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
     
     // Rückläufigkeits-Symbol
     if (m_radix.planetTyp[planet] & P_TYP_RUCK) {
-        painter.setFont(QFont("Arial", 9));
+        // Systemabhängiger Standard-Font statt fester Arial-Angabe
+        QFont retroFont = m_mainFont;
+        retroFont.setPointSize(offsetLevel > 0 ? 7 : 9);
+        painter.setFont(retroFont);
         painter.setPen(color);
         QRectF retroRect(pos.x() + 12, pos.y() - 6, 12, 12);
         painter.drawText(retroRect, Qt::AlignCenter, "R");

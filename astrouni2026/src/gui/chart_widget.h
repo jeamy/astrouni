@@ -108,14 +108,16 @@ private:
     /**
      * @brief Zeichnet ein Planeten-Symbol
      * Port von: vPlanetDraw(HDC, RADIX*, char*, char, short)
+     * @param offsetLevel Versatz-Level für Kollisionsvermeidung (0 = kein Versatz)
      */
-    void drawPlanetSymbol(QPainter& painter, int planet, double angle, bool isTransit);
+    void drawPlanetSymbol(QPainter& painter, int planet, double angle, bool isTransit, int offsetLevel = 0);
     
     /**
      * @brief Zeichnet die Planeten-Markierung (Tic)
      * Port von: vPlanetTicDraw(HDC, RADIX*, char*, char, short)
+     * @param offsetLevel Versatz-Level für Kollisionsvermeidung (0 = kein Versatz)
      */
-    void drawPlanetTic(QPainter& painter, double angle, bool isTransit);
+    void drawPlanetTic(QPainter& painter, double angle, bool isTransit, int offsetLevel = 0);
     
     /**
      * @brief Zeichnet die Aspekte
@@ -171,7 +173,7 @@ private:
     
     // Fonts
     QFont m_mainFont;
-    QFont m_astroFont;          // Astrologie-Symbole
+    // Symbol-Fonts werden direkt in den Zeichenfunktionen mit plattformübergreifender Fallback-Kette gesetzt
     
     // Flags
     bool m_showAspects;
