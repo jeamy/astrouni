@@ -169,6 +169,16 @@ public:
     static void calcAspects(Radix& radix, const QVector<float>& orben);
     
     /**
+     * @brief Berechnet Aspekte zwischen Planeten und Häusern
+     * @param radix Radix-Daten (aspHaus wird gefüllt)
+     * @param orben Orben-Array für Häuser
+     * @param aspektFlags Aspekt-Flags (S_KON, S_SEX, ..., S_HAUS)
+     *
+     * Port von: vCalcAsp (Haus-Aspekte Teil)
+     */
+    static void calcHouseAspects(Radix& radix, const QVector<float>& orben, int16_t aspektFlags);
+    
+    /**
      * @brief Berechnet Winkel zwischen allen Planeten
      * @param radix Haupt-Radix
      * @param transit Optional: Transit-Radix

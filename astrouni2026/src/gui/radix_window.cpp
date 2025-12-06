@@ -53,10 +53,20 @@ QString RadixWindow::getTabTitle() const {
     }
     if (name.isEmpty()) name = tr("Radix");
     
-    // Häusersystem anhängen
-    int hausIdx = m_radix.hausSys;
-    if (hausIdx >= 0 && hausIdx < 14) {
-        name += QString(" (%1)").arg(hausTypen[hausIdx]);
+    // STRICT LEGACY: Bei Synastrie beide Namen anzeigen
+    if (m_radix.horoTyp == TYP_SYNASTRIE && m_radix.synastrie) {
+        QString name2 = m_radix.synastrie->rFix.vorname;
+        if (!m_radix.synastrie->rFix.name.isEmpty()) {
+            if (!name2.isEmpty()) name2 += " ";
+            name2 += m_radix.synastrie->rFix.name;
+        }
+        name = tr("Synastrie: %1 / %2").arg(name).arg(name2);
+    } else {
+        // Häusersystem anhängen
+        int hausIdx = m_radix.hausSys;
+        if (hausIdx >= 0 && hausIdx < 14) {
+            name += QString(" (%1)").arg(hausTypen[hausIdx]);
+        }
     }
     
     return name;
@@ -87,6 +97,8 @@ void RadixWindow::setupUI() {
     m_listWidget = new QListWidget(rightWidget);
     m_listWidget->setMinimumWidth(200);
     m_listWidget->setItemDelegate(new HtmlItemDelegate(m_listWidget));
+    // STRICT LEGACY: Listen-Hintergrund weiß, nur Einträge grau (per Item)
+    // Der Hintergrund der Liste bleibt weiß, jedes Item bekommt grauen Hintergrund
     connect(m_listWidget, &QListWidget::itemClicked, 
             this, &RadixWindow::onListItemClicked);
     rightLayout->addWidget(m_listWidget);
@@ -128,6 +140,13 @@ void RadixWindow::updateDisplay() {
     // Chart aktualisieren
     m_chartWidget->setRadix(m_radix);
     
+    // Synastrie: Zweiten Radix setzen
+    if (m_radix.synastrie) {
+        m_chartWidget->setTransitRadix(m_radix.synastrie.get());
+    } else {
+        m_chartWidget->setTransitRadix(nullptr);
+    }
+    
     // Liste aktualisieren
     switch (m_listMode) {
         case Daten:
@@ -158,26 +177,33 @@ void RadixWindow::updateDisplay() {
 void RadixWindow::fillDatenList() {
     m_listWidget->clear();
     
+    // Hilfsfunktion für grauen Hintergrund
+    auto addGrayItem = [this](const QString& text) {
+        QListWidgetItem* item = new QListWidgetItem(text);
+        item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund
+        m_listWidget->addItem(item);
+    };
+    
     // Personen-Daten
-    m_listWidget->addItem(tr("*Radix*"));
-    m_listWidget->addItem(QString("Name: %1 %2")
+    addGrayItem(tr("*Radix*"));
+    addGrayItem(QString("Name: %1 %2")
         .arg(m_radix.rFix.vorname, m_radix.rFix.name));
-    m_listWidget->addItem(QString("Geburtsdatum: %1.%2.%3")
+    addGrayItem(QString("Geburtsdatum: %1.%2.%3")
         .arg(m_radix.rFix.tag, 2, 10, QChar('0'))
         .arg(m_radix.rFix.monat, 2, 10, QChar('0'))
         .arg(m_radix.rFix.jahr));
     
     int16_t stunden, minuten;
     Calculations::decimalToTime(m_radix.rFix.zeit, stunden, minuten);
-    m_listWidget->addItem(QString("Geburtszeit: %1:%2")
+    addGrayItem(QString("Geburtszeit: %1:%2")
         .arg(stunden, 2, 10, QChar('0'))
         .arg(minuten, 2, 10, QChar('0')));
     
-    m_listWidget->addItem(QString("Geburtsort: %1").arg(m_radix.rFix.ort));
-    m_listWidget->addItem(QString("Land: %1").arg(m_radix.rFix.land));
-    m_listWidget->addItem(QString("Länge: %1").arg(m_radix.rFix.laenge, 0, 'f', 4));
-    m_listWidget->addItem(QString("Breite: %1").arg(m_radix.rFix.breite, 0, 'f', 4));
-    m_listWidget->addItem(QString("Zeitzone: %1").arg(m_radix.rFix.zone, 0, 'f', 1));
+    addGrayItem(QString("Geburtsort: %1").arg(m_radix.rFix.ort));
+    addGrayItem(QString("Land: %1").arg(m_radix.rFix.land));
+    addGrayItem(QString("Länge: %1").arg(m_radix.rFix.laenge, 0, 'f', 4));
+    addGrayItem(QString("Breite: %1").arg(m_radix.rFix.breite, 0, 'f', 4));
+    addGrayItem(QString("Zeitzone: %1").arg(m_radix.rFix.zone, 0, 'f', 1));
     
     // Häusersystem
     static const char* hausTypen[] = {
@@ -185,7 +211,7 @@ void RadixWindow::fillDatenList() {
         "Topocentric", "Campanus", "Meridian", "Regiomontanus",
         "Porphyry", "Neo-Porphyry", "Morinus", "Alcabitius", "Null"
     };
-    m_listWidget->addItem(QString("Häusersystem: %1")
+    addGrayItem(QString("Häusersystem: %1")
         .arg(hausTypen[m_radix.hausSys]));
 }
 
@@ -200,10 +226,9 @@ static QString colorToHtml(const QColor& color) {
 void RadixWindow::fillPositionenList() {
     m_listWidget->clear();
     
-    // STRICT LEGACY: Planeten-Header wie im Original
-    QListWidgetItem* headerItem = new QListWidgetItem(tr("-Planeten-"));
+    // STRICT LEGACY: Planeten-Header wie im Original (weiße Schrift auf dunkelblau)
+    QListWidgetItem* headerItem = new QListWidgetItem("<span style='color:#FFFFFF'>" + tr("-Planeten-") + "</span>");
     headerItem->setBackground(QColor(0, 0, 128));  // Dunkelblau wie Legacy
-    headerItem->setForeground(Qt::white);
     m_listWidget->addItem(headerItem);
     
     // STRICT LEGACY: Format mit verschiedenen Farben für Symbol, Position, Zeichen
@@ -238,16 +263,16 @@ void RadixWindow::fillPositionenList() {
         
         QListWidgetItem* item = new QListWidgetItem(html);
         item->setData(Qt::UserRole, i);
+        item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund pro Eintrag
         m_listWidget->addItem(item);
     }
     
-    // STRICT LEGACY: Häuser-Header wie im Original
-    QListWidgetItem* hausHeader = new QListWidgetItem(tr("-Häuser-"));
+    // STRICT LEGACY: Häuser-Header wie im Original (weiße Schrift auf dunkelblau)
+    QListWidgetItem* hausHeader = new QListWidgetItem("<span style='color:#FFFFFF'>" + tr("-Häuser-") + "</span>");
     hausHeader->setBackground(QColor(0, 0, 128));  // Dunkelblau wie Legacy
-    hausHeader->setForeground(Qt::white);
     m_listWidget->addItem(hausHeader);
     
-    // STRICT LEGACY: Format "◇01 18°06'39" ♏"
+    // STRICT LEGACY: Format mit ASC, IC, DSC, MC Beschriftung wie im Original
     for (int i = 0; i < MAX_HAUS; ++i) {
         // Position im Sternzeichen (0-30°)
         QString pos = Calculations::degToZeichenString(m_radix.haus[i], true);
@@ -261,15 +286,26 @@ void RadixWindow::fillPositionenList() {
         int element = stz % 4;  // 0=Feuer, 1=Erde, 2=Luft, 3=Wasser
         QString stzColor = colorToHtml(sColor[COL_FEUER + element]);
         
+        // STRICT LEGACY: Haus-Bezeichnung (ASC, IC, DSC, MC oder Nummer)
+        QString hausLabel;
+        switch (i) {
+            case 0:  hausLabel = "ASC"; break;
+            case 3:  hausLabel = "IC"; break;
+            case 6:  hausLabel = "DSC"; break;
+            case 9:  hausLabel = "MC"; break;
+            default: hausLabel = QString("◇%1").arg(i + 1, 2, 10, QChar('0')); break;
+        }
+        
         // HTML-formatierter Text
-        QString html = QString("<span style='color:%1'>◇%2</span> %3 <span style='color:%4'>%5</span>")
+        QString html = QString("<span style='color:%1'>%2</span> %3 <span style='color:%4'>%5</span>")
             .arg(hausColor)
-            .arg(i + 1, 2, 10, QChar('0'))
+            .arg(hausLabel)
             .arg(pos)
             .arg(stzColor)
             .arg(stzSymbol);
         
         QListWidgetItem* item = new QListWidgetItem(html);
+        item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund pro Eintrag
         m_listWidget->addItem(item);
     }
 }
@@ -305,10 +341,9 @@ void RadixWindow::fillAspekteList() {
         }
     };
     
-    // STRICT LEGACY: Planeten-Aspekte Header
-    QListWidgetItem* headerItem = new QListWidgetItem(tr("-Planeten-"));
+    // STRICT LEGACY: Planeten-Aspekte Header (weiße Schrift auf dunkelblau)
+    QListWidgetItem* headerItem = new QListWidgetItem("<span style='color:#FFFFFF'>" + tr("-Planeten-") + "</span>");
     headerItem->setBackground(QColor(0, 0, 128));  // Dunkelblau wie Legacy
-    headerItem->setForeground(Qt::white);
     m_listWidget->addItem(headerItem);
     
     int numPlanets = m_radix.anzahlPlanet;
@@ -355,14 +390,14 @@ void RadixWindow::fillAspekteList() {
             
             QListWidgetItem* item = new QListWidgetItem(html);
             item->setData(Qt::UserRole, QPoint(i, j));
+            item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund pro Eintrag
             m_listWidget->addItem(item);
         }
     }
     
-    // STRICT LEGACY: Häuser-Aspekte Header
-    QListWidgetItem* hausHeader = new QListWidgetItem(tr("-Häuser-"));
+    // STRICT LEGACY: Häuser-Aspekte Header (weiße Schrift auf dunkelblau)
+    QListWidgetItem* hausHeader = new QListWidgetItem("<span style='color:#FFFFFF'>" + tr("-Häuser-") + "</span>");
     hausHeader->setBackground(QColor(0, 0, 128));  // Dunkelblau wie Legacy
-    hausHeader->setForeground(Qt::white);
     m_listWidget->addItem(hausHeader);
     
     // Häuser-Aspekte (Planeten zu Häusern)
@@ -407,7 +442,7 @@ void RadixWindow::fillAspekteList() {
                 .arg(stzColor2).arg(stzSymbol2);
             
             QListWidgetItem* item = new QListWidgetItem(html);
-            
+            item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund pro Eintrag
             m_listWidget->addItem(item);
         }
     }

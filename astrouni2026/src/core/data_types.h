@@ -9,6 +9,7 @@
  */
 
 #include <cstdint>
+#include <memory>
 #include <QString>
 #include <QVector>
 #include <QColor>
@@ -169,6 +170,9 @@ struct Radix {
     int16_t  rotate = 0;
     double   stzGrad = 0.0;
     int8_t   stzIndex = 0;
+    
+    // Synastrie/Transit: Zweiter Radix (STRICT LEGACY: plRadix[0])
+    std::shared_ptr<Radix> synastrie;  // Zweiter Radix für Synastrie/Transit
     
     // Konstruktor - initialisiert Arrays
     Radix();

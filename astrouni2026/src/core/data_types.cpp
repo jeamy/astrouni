@@ -259,7 +259,7 @@ void AuInit::initColors() {
     // Planeten-Farben initialisieren
     planetColor.resize(MAX_PLANET);
     planetColor[P_SONNE]   = QColor(255, 200, 0);    // Gold
-    planetColor[P_MOND]    = QColor(192, 192, 192);  // Silber
+    planetColor[P_MOND]    = QColor(255, 255, 255);  // Weiß (sichtbar auf grauem Hintergrund)
     planetColor[P_MERKUR]  = QColor(255, 255, 0);    // Gelb
     planetColor[P_VENUS]   = QColor(0, 255, 0);      // Grün
     planetColor[P_MARS]    = QColor(255, 0, 0);      // Rot

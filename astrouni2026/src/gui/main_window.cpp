@@ -8,6 +8,7 @@
 #include "main_window.h"
 #include "radix_window.h"
 #include "dialogs/person_dialog.h"
+#include "dialogs/person_search_dialog.h"
 #include "dialogs/ort_dialog.h"
 #include "dialogs/horo_typ_dialog.h"
 #include "dialogs/orben_dialog.h"
@@ -218,6 +219,36 @@ void MainWindow::onPersonErfassen() {
     if (dialog.exec() == QDialog::Accepted) {
         // Nur Radix-Tab öffnen wenn berechnet wurde
         if (dialog.wasCalculated()) {
+            // Bei Synastrie: Zweite Person auswählen
+            if (m_auinit.sSelHoro == TYP_SYNASTRIE) {
+                PersonSearchDialog searchDialog2(this);
+                searchDialog2.setWindowTitle(tr("Person 2 auswählen"));
+                if (searchDialog2.exec() != QDialog::Accepted || !searchDialog2.hasSelection()) {
+                    return;  // Abgebrochen
+                }
+                
+                // Zweiten Radix erstellen
+                m_currentRadix.synastrie = std::make_shared<Radix>();
+                m_currentRadix.synastrie->rFix = searchDialog2.getSelectedPerson();
+                m_currentRadix.synastrie->hausSys = m_auinit.sSelHaus;
+                m_currentRadix.synastrie->horoTyp = TYP_SYNASTRIE;
+                
+                // Zweiten Radix berechnen
+                int result2 = ChartCalc::calculate(*m_currentRadix.synastrie, nullptr, TYP_SYNASTRIE);
+                if (result2 != ERR_OK) {
+                    QMessageBox::warning(this, tr("Fehler"), 
+                        tr("Fehler bei der Berechnung der zweiten Person (Code: %1)").arg(result2));
+                    m_currentRadix.synastrie.reset();
+                    return;
+                }
+                ChartCalc::calcAspects(*m_currentRadix.synastrie, m_auinit.orbenSPlanet);
+                
+                // Aspekte für Synastrie neu berechnen
+                ChartCalc::calcAspects(m_currentRadix, m_auinit.orbenSPlanet);
+                ChartCalc::calcAngles(m_currentRadix, m_currentRadix.synastrie.get(), TYP_SYNASTRIE);
+                ChartCalc::calcHouseAspects(m_currentRadix, m_auinit.orbenHaus, m_auinit.sAspekte);
+            }
+            
             // Neues Radix-Widget als Tab erstellen
             RadixWindow* radixWidget = new RadixWindow(m_tabWidget, m_auinit, m_currentRadix);
             int tabIndex = m_tabWidget->addTab(radixWidget, radixWidget->getTabTitle());
@@ -241,34 +272,76 @@ void MainWindow::onHoroTyp() {
     // Port von: DlgHoroAuswahl
     Horo_typDialog dialog(m_auinit, this);
     
-    if (dialog.exec() == QDialog::Accepted) {
-        // Prüfen ob eine Person aktiv ist (Name oder Vorname vorhanden)
-        if (m_currentRadix.rFix.name.isEmpty() && m_currentRadix.rFix.vorname.isEmpty()) {
-            // Keine Person aktiv - PersonDialog öffnen
-            onPersonErfassen();
-        } else {
-            // Häusersystem aus Einstellungen übernehmen!
-            m_currentRadix.hausSys = m_auinit.sSelHaus;
-            
-            // Person aktiv - Radix berechnen mit neuem Horoskop-Typ und Häusersystem
-            int result = ChartCalc::calculate(m_currentRadix, nullptr, m_auinit.sSelHoro);
-            
-            if (result == ERR_OK) {
-                ChartCalc::calcAspects(m_currentRadix, m_auinit.orbenPlanet);
-                ChartCalc::calcAngles(m_currentRadix, nullptr, m_auinit.sSelHoro);
-                
-                // Neues Radix-Widget als Tab erstellen
-                RadixWindow* radixWidget = new RadixWindow(m_tabWidget, m_auinit, m_currentRadix);
-                int tabIndex = m_tabWidget->addTab(radixWidget, radixWidget->getTabTitle());
-                m_tabWidget->setCurrentIndex(tabIndex);
-            } else {
-                QMessageBox::warning(this, tr("Fehler"), 
-                    tr("Fehler bei der Berechnung (Code: %1)").arg(result));
-            }
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+    
+    // STRICT LEGACY: Person(en) IMMER neu auswählen
+    // Person 1 auswählen
+    PersonSearchDialog searchDialog1(this);
+    searchDialog1.setWindowTitle(m_auinit.sSelHoro == TYP_SYNASTRIE 
+        ? tr("Person 1 auswählen") : tr("Person auswählen"));
+    if (searchDialog1.exec() != QDialog::Accepted || !searchDialog1.hasSelection()) {
+        return;  // Abgebrochen
+    }
+    
+    // Radix für Person 1 erstellen
+    m_currentRadix.clear();
+    m_currentRadix.rFix = searchDialog1.getSelectedPerson();
+    m_currentRadix.hausSys = m_auinit.sSelHaus;
+    m_currentRadix.horoTyp = m_auinit.sSelHoro;
+    m_currentRadix.synastrie.reset();
+    
+    // Bei Synastrie: Person 2 auswählen
+    if (m_auinit.sSelHoro == TYP_SYNASTRIE) {
+        PersonSearchDialog searchDialog2(this);
+        searchDialog2.setWindowTitle(tr("Person 2 auswählen"));
+        if (searchDialog2.exec() != QDialog::Accepted || !searchDialog2.hasSelection()) {
+            return;  // Abgebrochen
         }
         
-        emit settingsChanged();
+        // Zweiten Radix erstellen
+        m_currentRadix.synastrie = std::make_shared<Radix>();
+        m_currentRadix.synastrie->rFix = searchDialog2.getSelectedPerson();
+        m_currentRadix.synastrie->hausSys = m_auinit.sSelHaus;
+        m_currentRadix.synastrie->horoTyp = TYP_SYNASTRIE;
+        
+        // Zweiten Radix berechnen
+        int result2 = ChartCalc::calculate(*m_currentRadix.synastrie, nullptr, TYP_SYNASTRIE);
+        if (result2 != ERR_OK) {
+            QMessageBox::warning(this, tr("Fehler"), 
+                tr("Fehler bei der Berechnung der zweiten Person (Code: %1)").arg(result2));
+            m_currentRadix.synastrie.reset();
+            return;
+        }
+        ChartCalc::calcAspects(*m_currentRadix.synastrie, m_auinit.orbenSPlanet);
     }
+    
+    // Ersten Radix berechnen
+    int result = ChartCalc::calculate(m_currentRadix, 
+        m_currentRadix.synastrie.get(), m_auinit.sSelHoro);
+    
+    if (result == ERR_OK) {
+        // Aspekte mit passenden Orben berechnen
+        if (m_auinit.sSelHoro == TYP_SYNASTRIE) {
+            ChartCalc::calcAspects(m_currentRadix, m_auinit.orbenSPlanet);
+        } else {
+            ChartCalc::calcAspects(m_currentRadix, m_auinit.orbenPlanet);
+        }
+        ChartCalc::calcAngles(m_currentRadix, m_currentRadix.synastrie.get(), m_auinit.sSelHoro);
+        // Häuser-Aspekte (nur wenn in den Einstellungen aktiviert)
+        ChartCalc::calcHouseAspects(m_currentRadix, m_auinit.orbenHaus, m_auinit.sAspekte);
+        
+        // Neues Radix-Widget als Tab erstellen
+        RadixWindow* radixWidget = new RadixWindow(m_tabWidget, m_auinit, m_currentRadix);
+        int tabIndex = m_tabWidget->addTab(radixWidget, radixWidget->getTabTitle());
+        m_tabWidget->setCurrentIndex(tabIndex);
+    } else {
+        QMessageBox::warning(this, tr("Fehler"), 
+            tr("Fehler bei der Berechnung (Code: %1)").arg(result));
+    }
+    
+    emit settingsChanged();
 }
 
 void MainWindow::onOrben() {

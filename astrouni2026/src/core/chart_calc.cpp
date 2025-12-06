@@ -161,6 +161,63 @@ void ChartCalc::calcPlanets(Radix& radix) {
     }
 }
 
+void ChartCalc::calcHouseAspects(Radix& radix, const QVector<float>& orben, int16_t aspektFlags) {
+    // Nur berechnen, wenn Häuseraspekte aktiviert sind
+    if ((aspektFlags & S_HAUS) == 0) {
+        // aspHaus auf KEIN_ASP zurücksetzen
+        for (int i = 0; i < radix.anzahlPlanet * MAX_HAUS; ++i) {
+            if (i < radix.aspHaus.size()) {
+                radix.aspHaus[i] = KEIN_ASP;
+            }
+        }
+        return;
+    }
+
+    static const int aspekte[] = {
+        KONJUNKTION, HALBSEX, SEXTIL, QUADRATUR, TRIGON, QUINCUNX, OPOSITION
+    };
+    
+    int numPlanets = radix.anzahlPlanet;
+    
+    for (int i = 0; i < numPlanets; ++i) {
+        for (int h = 0; h < MAX_HAUS; ++h) {
+            int idx = i * MAX_HAUS + h;
+            if (idx >= radix.aspHaus.size()) {
+                continue;
+            }
+            radix.aspHaus[idx] = KEIN_ASP;
+            radix.winkelHaus[idx] = 0.0;
+            
+            double posPlanet = radix.planet[i];
+            double posHaus   = radix.haus[h];
+            
+            for (int a = 0; a < ASPEKTE; ++a) {
+                int aspekt = aspekte[a];
+                
+                // Aspekt nach Flags filtern (wie im Legacy)
+                if (aspekt == KONJUNKTION  && !(aspektFlags & S_KON)) continue;
+                if (aspekt == SEXTIL       && !(aspektFlags & S_SEX)) continue;
+                if (aspekt == QUADRATUR    && !(aspektFlags & S_QUA)) continue;
+                if (aspekt == TRIGON       && !(aspektFlags & S_TRI)) continue;
+                if (aspekt == OPOSITION    && !(aspektFlags & S_OPO)) continue;
+                if (aspekt == HALBSEX      && !(aspektFlags & S_HAL)) continue;
+                if (aspekt == QUINCUNX     && !(aspektFlags & S_QUI)) continue;
+                
+                float orb = (orben.size() > a * MAX_PLANET + i)
+                    ? orben[a * MAX_PLANET + i]
+                    : 8.0f;
+                
+                double exakterWinkel;
+                if (Calculations::checkAspekt(posPlanet, posHaus, aspekt, orb, exakterWinkel)) {
+                    radix.aspHaus[idx] = static_cast<int8_t>(aspekt);
+                    radix.winkelHaus[idx] = exakterWinkel;
+                    break;  // Engsten Aspekt speichern
+                }
+            }
+        }
+    }
+}
+
 void ChartCalc::calcMissing(Radix& radix, Radix* transit, int typ) {
     // STRICT LEGACY: Nur Radix, Synastrie, Transit - kein Composit
     // Synastrie: Beide Radixe bleiben unverändert

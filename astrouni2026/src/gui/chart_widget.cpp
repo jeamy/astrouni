@@ -29,11 +29,9 @@ ChartWidget::ChartWidget(QWidget* parent)
     , m_highlightAspect1(-1)
     , m_highlightAspect2(-1) {
     
-    // Hintergrundfarbe
-    setAutoFillBackground(true);
-    QPalette pal = palette();
-    pal.setColor(QPalette::Window, sColor[COL_HINTER]);
-    setPalette(pal);
+    // Hintergrund nicht automatisch füllen
+    // Der eigentliche Radix-Kreis wird in drawRadix() grau hinterlegt
+    setAutoFillBackground(false);
     
     // Fonts
     m_mainFont = QFont("Arial", 10);
@@ -184,14 +182,14 @@ void ChartWidget::calculateRadii() {
 //==============================================================================
 
 QPointF ChartWidget::degreeToPoint(double degree, double radius) const {
-    // STRICT LEGACY: ASC links, im Uhrzeigersinn
+    // STRICT LEGACY: ASC links, GEGEN den Uhrzeigersinn (mathematisch positiv)
     // Rotation anwenden: degree + m_rotation gibt den Winkel relativ zum ASC
     // m_rotation = -ASC, damit ASC bei 0° relativ liegt
     double rotatedDegree = degree + m_rotation;
     
     // Umrechnung: 0° relativ = links (180° im Bildschirm-Koordinatensystem)
-    // Uhrzeigersinn: Winkel im Bildschirm nimmt mit zunehmendem rotatedDegree ab
-    double rad = (180.0 - rotatedDegree) * PI / 180.0;
+    // GEGEN den Uhrzeigersinn: Winkel im Bildschirm nimmt mit zunehmendem rotatedDegree ZU
+    double rad = (180.0 + rotatedDegree) * PI / 180.0;
     
     return QPointF(
         m_center.x() + radius * std::cos(rad),
@@ -205,6 +203,11 @@ QPointF ChartWidget::degreeToPoint(double degree, double radius) const {
 //==============================================================================
 
 void ChartWidget::drawRadix(QPainter& painter) {
+    // Hintergrund-Kreis des Radix (grau hinterlegt wie im Legacy)
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(sColor[COL_HINTER]);
+    painter.drawEllipse(m_center, m_radius, m_radius);
+    
     // Äußerer Kreis
     painter.setPen(QPen(sColor[COL_RADIX], 2));
     painter.setBrush(Qt::NoBrush);
@@ -321,19 +324,23 @@ void ChartWidget::drawHouses(QPainter& painter) {
     for (int i = 0; i < MAX_HAUS; ++i) {
         double degree = m_radix.haus[i];
         
-        // ASC und MC dicker zeichnen
-        if (i == 0 || i == 9) {
-            painter.setPen(QPen(sColor[COL_ASZ], 2));
-        } else if (i == 3 || i == 6) {
-            // IC und DC
-            painter.setPen(QPen(sColor[COL_ASZ], 1.5));
-        } else {
-            painter.setPen(QPen(sColor[COL_HAUSER], 1));
-        }
+        // STRICT LEGACY: ASC(1), IC(4), DSC(7), MC(10) bis zum äußersten Kreis
+        // Andere Häuser nur bis zum Planeten-Kreis
+        bool isMainAxis = (i == 0 || i == 3 || i == 6 || i == 9);
         
-        QPointF outer = degreeToPoint(degree, m_radiusPlanet);
-        QPointF inner = degreeToPoint(degree, m_radiusAsp);
-        painter.drawLine(outer, inner);
+        if (isMainAxis) {
+            // Hauptachsen: dick, bis zum äußersten Kreis
+            painter.setPen(QPen(sColor[COL_ASZ], 2));
+            QPointF outer = degreeToPoint(degree, m_radius);  // Bis zum äußersten Kreis!
+            QPointF inner = degreeToPoint(degree, m_radiusAsp);
+            painter.drawLine(outer, inner);
+        } else {
+            // Normale Häuser: dünn, nur bis Planeten-Kreis
+            painter.setPen(QPen(sColor[COL_HAUSER], 1));
+            QPointF outer = degreeToPoint(degree, m_radiusPlanet);
+            QPointF inner = degreeToPoint(degree, m_radiusAsp);
+            painter.drawLine(outer, inner);
+        }
     }
     
     // Haus-Nummern
@@ -390,7 +397,7 @@ void ChartWidget::drawPlanetTic(QPainter& painter, double angle, bool isTransit)
     painter.setPen(QPen(color, 2));
     
     QPointF outer = degreeToPoint(angle, m_radiusPlanet);
-    QPointF inner = degreeToPoint(angle, m_radiusPlanet - 10);
+    QPointF inner = degreeToPoint(angle, m_radiusPlanet - 12);
     painter.drawLine(outer, inner);
 }
 
@@ -428,8 +435,8 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
     
     painter.setPen(color);
     
-    // Position außerhalb des Planeten-Kreises
-    double symbolRadius = m_radiusPlanet + 20;
+    // Position im Inneren des Planeten-Kreises, etwas weiter weg von den Positionsstrichen
+    double symbolRadius = m_radiusPlanet - 35;
     QPointF pos = degreeToPoint(angle, symbolRadius);
     
     // Unicode-Symbol zeichnen - größerer Bereich
@@ -490,7 +497,7 @@ void ChartWidget::drawAspects(QPainter& painter) {
         int i = qMin(m_highlightAspect1, m_highlightAspect2);
         int j = qMax(m_highlightAspect1, m_highlightAspect2);
         int idx = i * numPlanets + j;
-        int8_t asp = m_radix.aspPlanet[idx];
+        int asp = static_cast<int>(m_radix.aspPlanet[idx]);
         
         if (asp != KEIN_ASP) {
             // Dickere, hellere Linie für Hervorhebung
@@ -519,32 +526,50 @@ void ChartWidget::setAspectPen(QPainter& painter, int aspect) {
     Qt::PenStyle style = Qt::SolidLine;
     int width = 1;
     
+    // STRICT LEGACY: Aspekt-Linienstile wie im Original
+    // Konjunktion: durchgezogen
+    // Sextil: lang gestrichelt (DashLine)
+    // Quadrat: durchgezogen
+    // Trigon: kurz gestrichelt (DashDotLine)
+    // Opposition: durchgezogen
+    // Halbsextil: punktiert
+    // Quincunx: Strich-Punkt
+    
     switch (aspect) {
         case KONJUNKTION:
             color = sColor[CKONJUNKTION];
-            width = 2;
+            style = Qt::SolidLine;
+            width = 1;
             break;
         case HALBSEX:
             color = sColor[CHALBSEX];
-            style = Qt::DotLine;
+            style = Qt::DotLine;  // Punktiert
+            width = 1;
             break;
         case SEXTIL:
             color = sColor[CSEXTIL];
+            style = Qt::DashLine;  // Lang gestrichelt
+            width = 1;
             break;
         case QUADRATUR:
             color = sColor[CQUADRATUR];
-            width = 2;
+            style = Qt::SolidLine;  // Durchgezogen
+            width = 1;
             break;
         case TRIGON:
             color = sColor[CTRIGON];
+            style = Qt::DashDotLine;  // Kurz gestrichelt (Strich-Punkt)
+            width = 1;
             break;
         case QUINCUNX:
             color = sColor[CQUINCUNX];
-            style = Qt::DashLine;
+            style = Qt::DashDotDotLine;  // Strich-Punkt-Punkt
+            width = 1;
             break;
         case OPOSITION:
             color = sColor[COPOSITION];
-            width = 2;
+            style = Qt::SolidLine;  // Durchgezogen
+            width = 1;
             break;
         default:
             color = sColor[COL_TXT];
