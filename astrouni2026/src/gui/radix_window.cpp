@@ -6,6 +6,7 @@
 #include "radix_window.h"
 #include "chart_widget.h"
 #include "html_item_delegate.h"
+#include "dialogs/person_dialog.h"
 #include "../core/calculations.h"
 #include "../core/chart_calc.h"
 
@@ -23,12 +24,14 @@ RadixWindow::RadixWindow(QWidget* parent, const AuInit& auinit, const Radix& rad
     : QWidget(parent)
     , m_auinit(auinit)   // Kopie erstellen
     , m_radix(radix)     // Kopie erstellen
-    , m_listMode(Daten) {
+    , m_listMode(Daten)
+    , m_updatingSpinBoxes(false) {
     
     setupUI();
     
     // Initiale Anzeige
     updateDisplay();
+    updateTimeSpinBoxes();
 }
 
 RadixWindow::~RadixWindow() {
@@ -119,6 +122,66 @@ void RadixWindow::setupUI() {
     buttonLayout->addWidget(m_aspekteButton);
     
     rightLayout->addLayout(buttonLayout);
+    
+    // STRICT LEGACY: Zeit-Scroll Bereich (Port von SC_MIN, SC_STU, SC_TAG, SC_MON, SC_JAH)
+    QWidget* timeScrollWidget = new QWidget(rightWidget);
+    QVBoxLayout* timeScrollLayout = new QVBoxLayout(timeScrollWidget);
+    timeScrollLayout->setContentsMargins(0, 5, 0, 0);
+    timeScrollLayout->setSpacing(2);
+    
+    // Header-Zeile mit Labels
+    QHBoxLayout* headerLayout = new QHBoxLayout();
+    headerLayout->addWidget(new QLabel(tr("Min"), timeScrollWidget));
+    headerLayout->addWidget(new QLabel(tr("Stunde"), timeScrollWidget));
+    headerLayout->addWidget(new QLabel(tr("Tag"), timeScrollWidget));
+    headerLayout->addWidget(new QLabel(tr("Monat"), timeScrollWidget));
+    headerLayout->addWidget(new QLabel(tr("Jahr"), timeScrollWidget));
+    timeScrollLayout->addLayout(headerLayout);
+    
+    // SpinBox-Zeile mit "Neu" Button
+    QHBoxLayout* spinBoxLayout = new QHBoxLayout();
+    
+    m_neuButton = new QPushButton(tr("Neu"), timeScrollWidget);
+    m_neuButton->setMaximumWidth(40);
+    connect(m_neuButton, &QPushButton::clicked, this, &RadixWindow::onNeuClicked);
+    spinBoxLayout->addWidget(m_neuButton);
+    
+    m_minuteSpinBox = new QSpinBox(timeScrollWidget);
+    m_minuteSpinBox->setRange(0, 59);
+    m_minuteSpinBox->setWrapping(true);
+    connect(m_minuteSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
+            this, &RadixWindow::onMinuteChanged);
+    spinBoxLayout->addWidget(m_minuteSpinBox);
+    
+    m_hourSpinBox = new QSpinBox(timeScrollWidget);
+    m_hourSpinBox->setRange(0, 23);
+    m_hourSpinBox->setWrapping(true);
+    connect(m_hourSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
+            this, &RadixWindow::onHourChanged);
+    spinBoxLayout->addWidget(m_hourSpinBox);
+    
+    m_daySpinBox = new QSpinBox(timeScrollWidget);
+    m_daySpinBox->setRange(1, 31);
+    m_daySpinBox->setWrapping(true);
+    connect(m_daySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
+            this, &RadixWindow::onDayChanged);
+    spinBoxLayout->addWidget(m_daySpinBox);
+    
+    m_monthSpinBox = new QSpinBox(timeScrollWidget);
+    m_monthSpinBox->setRange(1, 12);
+    m_monthSpinBox->setWrapping(true);
+    connect(m_monthSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
+            this, &RadixWindow::onMonthChanged);
+    spinBoxLayout->addWidget(m_monthSpinBox);
+    
+    m_yearSpinBox = new QSpinBox(timeScrollWidget);
+    m_yearSpinBox->setRange(1600, 2400);
+    connect(m_yearSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
+            this, &RadixWindow::onYearChanged);
+    spinBoxLayout->addWidget(m_yearSpinBox);
+    
+    timeScrollLayout->addLayout(spinBoxLayout);
+    rightLayout->addWidget(timeScrollWidget);
     
     splitter->addWidget(rightWidget);
     
@@ -504,6 +567,87 @@ void RadixWindow::onListItemClicked(QListWidgetItem* item) {
     } else {
         // Daten-Modus: keine Hervorhebung
         m_chartWidget->highlightPlanet(-1);
+    }
+}
+
+//==============================================================================
+// STRICT LEGACY: Zeit-Scroll Funktionen (Port von sSetRadixScroll, vSetRadixScrollIni)
+//==============================================================================
+
+void RadixWindow::onNeuClicked() {
+    // STRICT LEGACY: "Neu" öffnet den Personen-Erfassungs-Dialog (CM_U_PERSON -> DlgPErfassen)
+    PersonDialog dialog(this, m_auinit, m_radix);
+    if (dialog.exec() == QDialog::Accepted && dialog.wasCalculated()) {
+        updateTimeSpinBoxes();
+        updateDisplay();
+    }
+}
+
+void RadixWindow::onMinuteChanged(int value) {
+    if (m_updatingSpinBoxes) return;
+    // Zeit als Dezimalzahl aktualisieren (Stunde bleibt, Minute ändert sich)
+    int hour = static_cast<int>(m_radix.rFix.zeit);
+    m_radix.rFix.zeit = hour + value / 60.0;
+    m_radix.zeit = QString("%1:%2").arg(hour, 2, 10, QChar('0')).arg(value, 2, 10, QChar('0'));
+    recalculateChart();
+}
+
+void RadixWindow::onHourChanged(int value) {
+    if (m_updatingSpinBoxes) return;
+    // Zeit als Dezimalzahl aktualisieren (Minute bleibt, Stunde ändert sich)
+    double minute = (m_radix.rFix.zeit - static_cast<int>(m_radix.rFix.zeit)) * 60.0;
+    m_radix.rFix.zeit = value + minute / 60.0;
+    m_radix.zeit = QString("%1:%2").arg(value, 2, 10, QChar('0')).arg(static_cast<int>(minute), 2, 10, QChar('0'));
+    recalculateChart();
+}
+
+void RadixWindow::onDayChanged(int value) {
+    if (m_updatingSpinBoxes) return;
+    m_radix.rFix.tag = value;
+    m_radix.datum = QString("%1.%2.%3").arg(value, 2, 10, QChar('0'))
+                                        .arg(m_radix.rFix.monat, 2, 10, QChar('0'))
+                                        .arg(m_radix.rFix.jahr);
+    recalculateChart();
+}
+
+void RadixWindow::onMonthChanged(int value) {
+    if (m_updatingSpinBoxes) return;
+    m_radix.rFix.monat = value;
+    m_radix.datum = QString("%1.%2.%3").arg(m_radix.rFix.tag, 2, 10, QChar('0'))
+                                        .arg(value, 2, 10, QChar('0'))
+                                        .arg(m_radix.rFix.jahr);
+    recalculateChart();
+}
+
+void RadixWindow::onYearChanged(int value) {
+    if (m_updatingSpinBoxes) return;
+    m_radix.rFix.jahr = value;
+    m_radix.datum = QString("%1.%2.%3").arg(m_radix.rFix.tag, 2, 10, QChar('0'))
+                                        .arg(m_radix.rFix.monat, 2, 10, QChar('0'))
+                                        .arg(value);
+    recalculateChart();
+}
+
+void RadixWindow::updateTimeSpinBoxes() {
+    m_updatingSpinBoxes = true;
+    
+    // Zeit aus Dezimalzahl extrahieren
+    int hour = static_cast<int>(m_radix.rFix.zeit);
+    int minute = static_cast<int>((m_radix.rFix.zeit - hour) * 60.0 + 0.5);
+    
+    m_minuteSpinBox->setValue(minute);
+    m_hourSpinBox->setValue(hour);
+    m_daySpinBox->setValue(m_radix.rFix.tag);
+    m_monthSpinBox->setValue(m_radix.rFix.monat);
+    m_yearSpinBox->setValue(m_radix.rFix.jahr);
+    
+    m_updatingSpinBoxes = false;
+}
+
+void RadixWindow::recalculateChart() {
+    // Chart neu berechnen mit geänderten Zeitdaten
+    if (ChartCalc::calculate(m_radix, nullptr, TYP_RADIX) >= 0) {
+        updateDisplay();
     }
 }
 

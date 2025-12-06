@@ -9,6 +9,8 @@
 #include <QWidget>
 #include <QListWidget>
 #include <QPushButton>
+#include <QSpinBox>
+#include <QLabel>
 #include "../core/data_types.h"
 
 namespace astro {
@@ -47,6 +49,14 @@ private slots:
     void onDatenClicked();
     void onPositionenClicked();
     void onAspekteClicked();
+    void onNeuClicked();
+    
+    // Zeit-Scroll
+    void onMinuteChanged(int value);
+    void onHourChanged(int value);
+    void onDayChanged(int value);
+    void onMonthChanged(int value);
+    void onYearChanged(int value);
     
     // Listbox
     void onListItemClicked(QListWidgetItem* item);
@@ -68,9 +78,24 @@ private:
     QPushButton* m_positionenButton;
     QPushButton* m_aspekteButton;
     
+    // STRICT LEGACY: Zeit-Scroll Widgets (Port von SC_MIN, SC_STU, SC_TAG, SC_MON, SC_JAH)
+    QPushButton* m_neuButton;
+    QSpinBox* m_minuteSpinBox;
+    QSpinBox* m_hourSpinBox;
+    QSpinBox* m_daySpinBox;
+    QSpinBox* m_monthSpinBox;
+    QSpinBox* m_yearSpinBox;
+    
     // Aktuelle Ansicht
     enum ListMode { Daten, Positionen, Aspekte };
     ListMode m_listMode;
+    
+    // Flag um rekursive Updates zu verhindern
+    bool m_updatingSpinBoxes;
+    
+    // Hilfsfunktion
+    void updateTimeSpinBoxes();
+    void recalculateChart();
 };
 
 } // namespace astro
