@@ -252,7 +252,7 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
     QFont zodiacFont;
     QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
     for (const QString& fontName : symbolFonts) {
-        zodiacFont = QFont(fontName, 14);
+        zodiacFont = QFont(fontName, 18);
         if (QFontInfo(zodiacFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
             break;
         }
@@ -358,15 +358,16 @@ void ChartWidget::drawHouses(QPainter& painter) {
     painter.setPen(sColor[COL_TXT]);
     
     for (int i = 0; i < MAX_HAUS; ++i) {
-        // Mitte des Hauses
+        // STRICT LEGACY: Beschriftung näher an der Häuserlinie (nicht in der Mitte)
+        // Nur 1/4 des Weges zur nächsten Häuserlinie
         double start = m_radix.haus[i];
         double end = m_radix.haus[(i + 1) % MAX_HAUS];
-        double mid = start + Calculations::minDist(start, end) / 2.0;
-        mid = Calculations::mod360(mid);
+        double offset = Calculations::minDist(start, end) * 0.25;  // 25% statt 50%
+        double labelPos = Calculations::mod360(start + offset);
         
-        // STRICT LEGACY: Nummern am inneren Kreis (knapp außerhalb des Aspekt-Kreises)
-        double numberRadius = m_radiusAsp + 15;
-        QPointF pos = degreeToPoint(mid, numberRadius);
+        // Radius etwas weiter vom Aspekt-Kreis entfernt
+        double numberRadius = m_radiusAsp + 22;
+        QPointF pos = degreeToPoint(labelPos, numberRadius);
         
         // STRICT LEGACY: Bei Hauptachsen ASC/IC/DSC/MC statt Nummer
         QString label;
@@ -501,7 +502,7 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
                          (planet == m_highlightAspect2);
     
     // STRICT LEGACY: Kleinerer Font wenn versetzt
-    int fontSize = isHighlighted ? 22 : (offsetLevel > 0 ? 14 : 18);
+    int fontSize = isHighlighted ? 24 : (offsetLevel > 0 ? 16 : 20);
     
     // Plattformübergreifende Symbol-Font Fallback-Kette:
     // Windows: Segoe UI Symbol
