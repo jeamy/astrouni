@@ -93,8 +93,24 @@ rem ===========================================================================
 rem [1] CMake konfigurieren
 rem ===========================================================================
 echo [1/3] CMake konfigurieren...
-rem Hinweis: Generator ggf. anpassen (Ninja, NMake Makefiles, Visual Studio ...)
-cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+
+rem Generator automatisch erkennen: MinGW oder MSVC
+set CMAKE_GENERATOR=
+where g++ >NUL 2>&1
+if not errorlevel 1 (
+    echo Erkannt: MinGW ^(g++^) - verwende "MinGW Makefiles"
+    set CMAKE_GENERATOR=-G "MinGW Makefiles"
+) else (
+    where cl >NUL 2>&1
+    if not errorlevel 1 (
+        echo Erkannt: MSVC ^(cl^) - verwende Visual Studio Generator
+        rem Kein expliziter Generator noetig, CMake waehlt automatisch
+    ) else (
+        echo WARNUNG: Kein Compiler gefunden!
+    )
+)
+
+cmake -S "%PROJECT_DIR%" -B "%BUILD_DIR%" %CMAKE_GENERATOR% -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
 
 if errorlevel 1 goto :error
 
