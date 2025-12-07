@@ -255,7 +255,7 @@ AstroUniverse ist freie Software unter der GPL v2 Lizenz.
 - [x] Personen-Dialog
 - [x] Ort-Suche Dialog
 - [ ] Weitere Dialoge vervollständigen
-- [ ] Drucken implementieren
+- [x] Drucken implementieren
 - [ ] Speichern/Laden
 
 ### Phase 3: Erweiterte Features (In Arbeit)

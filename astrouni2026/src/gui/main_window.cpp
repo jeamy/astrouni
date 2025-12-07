@@ -7,6 +7,7 @@
 
 #include "main_window.h"
 #include "radix_window.h"
+#include "print_manager.h"
 #include "dialogs/person_dialog.h"
 #include "dialogs/person_search_dialog.h"
 #include "dialogs/ort_dialog.h"
@@ -42,7 +43,8 @@ namespace astro {
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , m_tabWidget(nullptr) {
+    , m_tabWidget(nullptr)
+    , m_printManager(nullptr) {
     
     // Fenster-Titel (wie im Legacy: MainMenuText)
     setWindowTitle(tr("AstroUniverse 2026"));
@@ -131,6 +133,13 @@ Radix& MainWindow::getCurrentRadix() {
 
 void MainWindow::setupActions() {
     // Datei-Menü Aktionen
+    m_printAction = new QAction(tr("&Drucken..."), this);
+    m_printAction->setShortcut(QKeySequence::Print);
+    connect(m_printAction, &QAction::triggered, this, &MainWindow::onFilePrint);
+    
+    m_printerSetupAction = new QAction(tr("Drucker &einrichten..."), this);
+    connect(m_printerSetupAction, &QAction::triggered, this, &MainWindow::onFilePrinterSetup);
+    
     m_exitAction = new QAction(tr("&Beenden"), this);
     m_exitAction->setShortcut(QKeySequence::Quit);
     connect(m_exitAction, &QAction::triggered, this, &MainWindow::onFileExit);
@@ -167,6 +176,9 @@ void MainWindow::setupActions() {
 void MainWindow::setupMenus() {
     // Datei-Menü (Port von MAINMENU -> "&Datei")
     m_fileMenu = menuBar()->addMenu(tr("&Datei"));
+    m_fileMenu->addAction(m_printAction);
+    m_fileMenu->addAction(m_printerSetupAction);
+    m_fileMenu->addSeparator();
     m_fileMenu->addAction(m_exitAction);
     m_fileMenu->setMinimumWidth(200);  // Mindestbreite für vollständige Texte
 
@@ -210,6 +222,37 @@ void MainWindow::saveSettings() {
 //==============================================================================
 // Datei-Menü Slots
 //==============================================================================
+
+void MainWindow::onFilePrint() {
+    // Port von: sDlgPrint(Radix, PRN_NORMAL)
+    
+    // Prüfen ob ein Radix-Tab aktiv ist
+    RadixWindow* radixWindow = qobject_cast<RadixWindow*>(m_tabWidget->currentWidget());
+    if (!radixWindow) {
+        QMessageBox::information(this, tr("Drucken"), 
+            tr("Kein Horoskop zum Drucken vorhanden.\nBitte erstellen Sie zuerst ein Horoskop."));
+        return;
+    }
+    
+    // PrintManager erstellen falls noch nicht vorhanden
+    if (!m_printManager) {
+        m_printManager = new PrintManager(this);
+    }
+    
+    // Radix drucken
+    const Radix& radix = radixWindow->getRadix();
+    m_printManager->printRadix(radix, m_auinit, this);
+}
+
+void MainWindow::onFilePrinterSetup() {
+    // Port von: hdcPrinterIni(PRN_SETUP, ...)
+    
+    if (!m_printManager) {
+        m_printManager = new PrintManager(this);
+    }
+    
+    m_printManager->showPrinterSetup(this);
+}
 
 void MainWindow::onFileExit() {
     close();

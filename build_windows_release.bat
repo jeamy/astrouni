@@ -60,16 +60,23 @@ if defined MISSING_DEPS (
   )
   
   echo !MISSING_DEPS! | findstr /C:"compiler" >NUL && (
-    echo   - C++ Compiler:
-    echo     Visual Studio: https://visualstudio.microsoft.com/
-    echo       ^(Workload "Desktopentwicklung mit C++"^)
-    echo     oder MinGW-w64: https://www.mingw-w64.org/
+    echo   - C++ Compiler ^(EINE der folgenden Optionen^):
+    echo.
+    echo     Option A: Visual Studio ^(MSVC^)
+    echo       https://visualstudio.microsoft.com/
+    echo       Workload "Desktopentwicklung mit C++" waehlen
+    echo       Qt6 fuer MSVC installieren
+    echo.
+    echo     Option B: MinGW ^(empfohlen mit Qt^)
+    echo       Qt6 Installer installiert MinGW automatisch mit!
+    echo       Nur PATH setzen:
+    echo         set PATH=G:\Qt\Tools\mingw1120_64\bin;%%PATH%%
   )
   
   echo !MISSING_DEPS! | findstr /C:"qt6" >NUL && (
     echo   - Qt6: https://www.qt.io/download-qt-installer
-    echo     Nach Installation: Qt6_DIR oder CMAKE_PREFIX_PATH setzen
-    echo     Beispiel MinGW unter G:\Qt:
+    echo     Bei Installation "MinGW" Komponente auswaehlen ^(inkl. Compiler^)
+    echo     Nach Installation Qt6_DIR setzen:
     echo       set Qt6_DIR=G:\Qt\6.7.0\mingw_64
     echo       set PATH=G:\Qt\Tools\mingw1120_64\bin;%%PATH%%
   )
