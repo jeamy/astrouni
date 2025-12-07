@@ -57,7 +57,7 @@ private slots:
     void onHoroTyp();
     void onOrben();
     void onFarben();
-    void onEinstellungen();
+    void onAspekte();
     
     // Hilfe-Menü
     void onHelpIndex();
@@ -85,7 +85,7 @@ private:
     QAction* m_horoTypAction;
     QAction* m_orbenAction;
     QAction* m_farbenAction;
-    QAction* m_einstAction;
+    QAction* m_aspekteAction;
     QAction* m_helpIndexAction;
     QAction* m_helpAboutAction;
     

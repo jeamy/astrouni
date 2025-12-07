@@ -53,25 +53,13 @@ public:
     const QVector<Radix>& getTransits() const { return m_transits; }
     
     /**
-     * @brief Gibt die Multi-Transit-Metadaten zurück (Beginn/Ende/Planet/Aspekt)
+     * @brief Multi-Transit Metadaten und Auswahl
      */
-    const QVector<QString>& getTransitTexts() const { return m_transitTexts; }
     const QVector<TransitAspekt>& getTransitAspekte() const { return m_aspekte; }
-    
-    /**
-     * @brief Gibt zurück ob Transit berechnet wurde
-     */
-    bool wasCalculated() const { return m_calculated; }
-    
-    /**
-     * @brief Gibt das Von-Datum zurück
-     */
+    QVector<QVector<bool>> getTransSel() const { return m_transSel; }
     QString getVonDatum() const;
-    
-    /**
-     * @brief Gibt das Bis-Datum zurück
-     */
     QString getBisDatum() const;
+    bool wasCalculated() const { return m_calculated; }
     
 private slots:
     void onOrtSuchen();
@@ -82,6 +70,7 @@ private:
     void loadFromRadix();
     bool validateInput();
     void calculateTransit();
+    void ensureDefaultTransSel();
     
     // Referenzen
     AuInit& m_auinit;
@@ -90,6 +79,7 @@ private:
     QVector<Radix> m_transits;
     QVector<QString> m_transitTexts;
     QVector<TransitAspekt> m_aspekte;
+    QVector<QVector<bool>> m_transSel; // Auswahlmatrix (TransitPlanet x Radix/Haus)
     bool m_abortFlag = false;
     
     // Eingabefelder (Port von TRANSIT Dialog)

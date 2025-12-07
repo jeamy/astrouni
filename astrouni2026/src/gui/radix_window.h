@@ -38,6 +38,7 @@ public:
      * @brief Setzt die Radix-Daten
      */
     void setRadix(const Radix& radix);
+    void setTransitSelection(const QVector<QVector<bool>>& sel);
     
     /**
      * @brief Aktualisiert die Anzeige
@@ -60,6 +61,11 @@ private slots:
     
     // Listbox
     void onListItemClicked(QListWidgetItem* item);
+    
+    // Maus aus ChartWidget
+    void onPlanetClicked(int planetIndex, bool isTransit);
+    void onHouseClicked(int houseIndex);
+    void onAspectClicked(int idx1, int idx2, bool isTransit);
     
 private:
     void setupUI();
@@ -95,6 +101,7 @@ private:
     
     // STRICT LEGACY: LB_A Flag für Aspekte-Toggle (Radix / Synastrie-Transit)
     bool m_showSynastrieAspects;  // false = Radix-Aspekte, true = Synastrie/Transit-Aspekte
+    QVector<QVector<bool>> m_transitSelection; // Auswahlmatrix aus TransSelDialog
     
     // Flag um rekursive Updates zu verhindern
     bool m_updatingSpinBoxes;

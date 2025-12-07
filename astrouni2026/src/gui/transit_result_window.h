@@ -34,7 +34,9 @@ public:
      */
     void setTransits(const QVector<Radix>& transits, 
                      const QVector<TransitAspekt>& aspekte,
-                     const QString& vonDatum, const QString& bisDatum);
+                     const QString& vonDatum, const QString& bisDatum,
+                     const QVector<QVector<bool>>& transSel = {});
+    void setTransitSelection(const QVector<QVector<bool>>& transSel) { m_transSel = transSel; }
     
     /**
      * @brief Gibt den Tab-Titel zurück
@@ -58,6 +60,7 @@ private:
     const Radix& m_basisRadix;
     QVector<Radix> m_transits;
     QVector<TransitAspekt> m_aspekte;
+    QVector<QVector<bool>> m_transSel; // Auswahlmatrix Transit x Radix/Haus
     
     // UI-Elemente (Port von WndTransit)
     QListWidget* m_listBox;        // hWndLBG
