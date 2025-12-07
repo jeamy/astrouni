@@ -532,6 +532,23 @@ void MainWindow::onHelpIndex() {
                "einen neuen Ort erfassen. Bei Namens-Duplikaten zeigt der Ort-Duplikat-Dialog "
                "vorhandene Einträge an; einer davon kann übernommen werden.</p>");
 
+    // Mausaktionen in der Grafik
+    text += tr("<h3>Mausaktionen in der Grafik</h3>");
+    text += tr("<p><b>Linksklick auf Planet</b><br>" 
+               "Wählt den Planet aus, hebt ihn in der Grafik hervor und markiert den Eintrag in der Positionsliste.</p>");
+    text += tr("<p><b>Linksklick auf Hauslinie</b><br>" 
+               "Wählt das Haus aus und hebt die entsprechende Häuserlinie hervor.</p>");
+    text += tr("<p><b>Linksklick auf Aspektlinie</b><br>" 
+               "Wählt den Aspekt zwischen zwei Planeten, hebt die Aspektlinie hervor und synchronisiert die Aspekteliste.</p>");
+    text += tr("<p><b>Linksklick in freien Bereich</b><br>" 
+               "Schaltet den Aspekt-Kreis ein bzw. aus (Messhilfe für Winkel).</p>");
+    text += tr("<p><b>Rechtsklick auf Planet/Haus/Aspekt</b><br>" 
+               "Verhält sich wie der Linksklick: das angeklickte Objekt wird ausgewählt und hervorgehoben.</p>");
+    text += tr("<p><b>Rechtsklick in freien Bereich</b><br>" 
+               "Schaltet den Zoom ein bzw. aus. Der Zoom zentriert sich auf die angeklickte Position.</p>");
+    text += tr("<p><b>Doppelklick</b><br>" 
+               "Schaltet ebenfalls den Aspekt-Kreis ein bzw. aus.</p>");
+
     // Scrollbare Hilfe über eigenen Dialog
     QDialog dlg(this);
     dlg.setWindowTitle(tr("Hilfe – Index"));
