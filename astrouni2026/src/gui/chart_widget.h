@@ -66,6 +66,12 @@ public:
     void highlightTransitAspect(int transitPlanet, int radixPlanet);
     
     /**
+     * @brief STRICT LEGACY: Setzt den Aspekt-Anzeige-Modus (LB_A Flag)
+     * @param showSynastrieAspects true = Synastrie/Transit-Aspekte, false = Radix-Aspekte
+     */
+    void setShowSynastrieAspects(bool showSynastrieAspects);
+    
+    /**
      * @brief Gibt die minimale Größe zurück
      */
     QSize minimumSizeHint() const override;
@@ -186,6 +192,9 @@ private:
     bool m_showAspects;
     bool m_show3Degree;
     bool m_show9Degree;
+    
+    // STRICT LEGACY: LB_A Flag - Aspekt-Anzeige-Modus
+    bool m_showSynastrieAspects;  // false = Radix-Aspekte, true = Synastrie/Transit-Aspekte
     
     // Hervorhebung
     int m_highlightPlanet;      // -1 = keine Hervorhebung

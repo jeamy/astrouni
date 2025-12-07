@@ -90,6 +90,12 @@ private:
     enum ListMode { Daten, Positionen, Aspekte };
     ListMode m_listMode;
     
+    // STRICT LEGACY: LB_G Flag für Synastrie-Toggle (Person 1 / Person 2)
+    bool m_showPerson2;  // false = Person 1, true = Person 2
+    
+    // STRICT LEGACY: LB_A Flag für Aspekte-Toggle (Radix / Synastrie-Transit)
+    bool m_showSynastrieAspects;  // false = Radix-Aspekte, true = Synastrie/Transit-Aspekte
+    
     // Flag um rekursive Updates zu verhindern
     bool m_updatingSpinBoxes;
     

@@ -28,6 +28,7 @@ ChartWidget::ChartWidget(QWidget* parent)
     , m_highlightPlanet(-1)
     , m_highlightAspect1(-1)
     , m_highlightAspect2(-1)
+    , m_showSynastrieAspects(false)
     , m_highlightTransitPlanet(-1)
     , m_highlightRadixPlanet(-1) {
     
@@ -105,6 +106,13 @@ void ChartWidget::highlightTransitAspect(int transitPlanet, int radixPlanet) {
     m_highlightTransitPlanet = transitPlanet;
     m_highlightRadixPlanet = radixPlanet;
     update();
+}
+
+void ChartWidget::setShowSynastrieAspects(bool showSynastrieAspects) {
+    if (m_showSynastrieAspects != showSynastrieAspects) {
+        m_showSynastrieAspects = showSynastrieAspects;
+        update();
+    }
 }
 
 //==============================================================================
@@ -579,33 +587,78 @@ void ChartWidget::drawAspects(QPainter& painter) {
     
     int numPlanets = m_radix.anzahlPlanet;
     
-    // Zuerst normale Aspekte zeichnen
-    for (int i = 0; i < numPlanets; ++i) {
-        for (int j = i + 1; j < numPlanets; ++j) {
-            // Hervorgehobenen Aspekt überspringen (wird später gezeichnet)
-            if ((i == m_highlightAspect1 && j == m_highlightAspect2) ||
-                (i == m_highlightAspect2 && j == m_highlightAspect1)) {
-                continue;
+    // STRICT LEGACY: LB_A Flag bestimmt welche Aspekte angezeigt werden
+    // m_showSynastrieAspects = false: Radix-Aspekte (Radix -> Radix)
+    // m_showSynastrieAspects = true: Synastrie/Transit-Aspekte (Transit -> Radix)
+    
+    if (!m_showSynastrieAspects || m_transit == nullptr) {
+        // Normale Radix-Aspekte zeichnen (Radix -> Radix)
+        for (int i = 0; i < numPlanets; ++i) {
+            for (int j = i + 1; j < numPlanets; ++j) {
+                // Hervorgehobenen Aspekt überspringen (wird später gezeichnet)
+                if ((i == m_highlightAspect1 && j == m_highlightAspect2) ||
+                    (i == m_highlightAspect2 && j == m_highlightAspect1)) {
+                    continue;
+                }
+                
+                int idx = i * numPlanets + j;
+                int8_t asp = m_radix.aspPlanet[idx];
+                
+                if (asp == KEIN_ASP) continue;
+                
+                // Aspekt-Linie setzen
+                setAspectPen(painter, asp);
+                
+                // Linien-Endpunkte
+                QPointF p1 = degreeToPoint(m_radix.planet[i], m_radiusAsp);
+                QPointF p2 = degreeToPoint(m_radix.planet[j], m_radiusAsp);
+                
+                painter.drawLine(p1, p2);
             }
-            
-            int idx = i * numPlanets + j;
-            int8_t asp = m_radix.aspPlanet[idx];
-            
-            if (asp == KEIN_ASP) continue;
-            
-            // Aspekt-Linie setzen
-            setAspectPen(painter, asp);
-            
-            // Linien-Endpunkte
-            QPointF p1 = degreeToPoint(m_radix.planet[i], m_radiusAsp);
-            QPointF p2 = degreeToPoint(m_radix.planet[j], m_radiusAsp);
-            
-            painter.drawLine(p1, p2);
+        }
+    } else {
+        // STRICT LEGACY: Synastrie/Transit-Aspekte zeichnen (Transit-Planet zu Radix-Planet)
+        int numTransit = m_transit->anzahlPlanet;
+        
+        for (int i = 0; i < numTransit; ++i) {
+            for (int j = 0; j < numPlanets; ++j) {
+                // Aspekt zwischen Transit-Planet i und Radix-Planet j berechnen
+                double transitPos = m_transit->planet[i];
+                double radixPos = m_radix.planet[j];
+                double diff = std::abs(transitPos - radixPos);
+                if (diff > 180.0) diff = 360.0 - diff;
+                
+                // Aspekt prüfen (mit Standard-Orben)
+                int8_t asp = KEIN_ASP;
+                if (diff <= 10.0) asp = KONJUNKTION;
+                else if (std::abs(diff - 30.0) <= 3.0) asp = HALBSEX;
+                else if (std::abs(diff - 60.0) <= 6.0) asp = SEXTIL;
+                else if (std::abs(diff - 90.0) <= 8.0) asp = QUADRATUR;
+                else if (std::abs(diff - 120.0) <= 8.0) asp = TRIGON;
+                else if (std::abs(diff - 150.0) <= 3.0) asp = QUINCUNX;
+                else if (std::abs(diff - 180.0) <= 10.0) asp = OPOSITION;
+                
+                if (asp == KEIN_ASP) continue;
+                
+                // Hervorgehobenen Aspekt überspringen (wird später gezeichnet)
+                if (i == m_highlightTransitPlanet && j == m_highlightRadixPlanet) {
+                    continue;
+                }
+                
+                // Aspekt-Linie setzen
+                setAspectPen(painter, asp);
+                
+                // Linien-Endpunkte
+                QPointF p1 = degreeToPoint(transitPos, m_radiusAsp);
+                QPointF p2 = degreeToPoint(radixPos, m_radiusAsp);
+                
+                painter.drawLine(p1, p2);
+            }
         }
     }
     
     // Hervorgehobenen Aspekt zuletzt zeichnen (oben drauf)
-    if (m_highlightAspect1 >= 0 && m_highlightAspect2 >= 0) {
+    if (m_highlightAspect1 >= 0 && m_highlightAspect2 >= 0 && !m_showSynastrieAspects) {
         int i = qMin(m_highlightAspect1, m_highlightAspect2);
         int j = qMax(m_highlightAspect1, m_highlightAspect2);
         int idx = i * numPlanets + j;
