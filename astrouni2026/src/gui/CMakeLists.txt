@@ -34,6 +34,8 @@ add_library(astrouni_gui STATIC
     dialogs/transit_dialog.cpp
     dialogs/trans_sel_dialog.h
     dialogs/trans_sel_dialog.cpp
+    dialogs/ort_duplikat_dialog.h
+    dialogs/ort_duplikat_dialog.cpp
     dialogs/retrograde_dialog.h
     dialogs/retrograde_dialog.cpp
     transit_result_window.h

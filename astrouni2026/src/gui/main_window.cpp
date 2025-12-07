@@ -148,8 +148,8 @@ void MainWindow::setupActions() {
     m_farbenAction = new QAction(tr("&Farben"), this);
     connect(m_farbenAction, &QAction::triggered, this, &MainWindow::onFarben);
     
-    m_einstAction = new QAction(tr("&Einstellungen"), this);
-    connect(m_einstAction, &QAction::triggered, this, &MainWindow::onEinstellungen);
+    m_aspekteAction = new QAction(tr("&Aspekte..."), this);
+    connect(m_aspekteAction, &QAction::triggered, this, &MainWindow::onAspekte);
     
     // Hilfe-Menü Aktionen
     m_helpIndexAction = new QAction(tr("Inde&x"), this);
@@ -177,7 +177,7 @@ void MainWindow::setupMenus() {
     m_horoskopMenu->addAction(m_horoTypAction);
     m_horoskopMenu->addAction(m_orbenAction);
     m_horoskopMenu->addAction(m_farbenAction);
-    m_horoskopMenu->addAction(m_einstAction);
+    m_horoskopMenu->addAction(m_aspekteAction);
     m_horoskopMenu->setMinimumWidth(200);  // Mindestbreite für vollständige Texte
     
     // Hilfe-Menü (Port von MAINMENU -> "&Hilfe")
@@ -437,8 +437,8 @@ void MainWindow::onFarben() {
     }
 }
 
-void MainWindow::onEinstellungen() {
-    // Port von: EINSTELL Dialog
+void MainWindow::onAspekte() {
+    // Port von: DlgAspekte - ruft SettingsDialog auf (gleiche Funktion)
     SettingsDialog dialog(m_auinit, this);
     
     if (dialog.exec() == QDialog::Accepted) {
