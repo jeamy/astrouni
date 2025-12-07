@@ -22,22 +22,17 @@ namespace astro {
 ChartWidget::ChartWidget(QWidget* parent)
     : QWidget(parent)
     , m_transit(nullptr)
-    , m_radius(0)
-    , m_rotation(0)
     , m_showAspects(true)
-    , m_show3Degree(true)
-    , m_show9Degree(true)
+    , m_show3Degree(false)
+    , m_show9Degree(false)
+    , m_rotation(0.0)
+    , m_showSynastrieAspects(false)
     , m_highlightPlanet(-1)
+    , m_highlightIsTransit(false)
     , m_highlightAspect1(-1)
     , m_highlightAspect2(-1)
-    , m_showSynastrieAspects(false)
     , m_highlightTransitPlanet(-1)
     , m_highlightRadixPlanet(-1) {
-    
-    // Hintergrund nicht automatisch füllen
-    // Der eigentliche Radix-Kreis wird in drawRadix() grau hinterlegt
-    setAutoFillBackground(false);
-    
     // Fonts - serifenlose Systemfonts für Plattformunabhängigkeit
     m_mainFont = QFont(QFont().defaultFamily(), 10);  // System-Standardfont
     // Symbol-Fonts werden direkt in den Zeichenfunktionen mit Fallback-Kette gesetzt
@@ -85,10 +80,13 @@ void ChartWidget::updateChart() {
     update();
 }
 
-void ChartWidget::highlightPlanet(int planetIndex) {
+void ChartWidget::highlightPlanet(int planetIndex, bool isTransit) {
     m_highlightPlanet = planetIndex;
+    m_highlightIsTransit = isTransit;
     m_highlightAspect1 = -1;
     m_highlightAspect2 = -1;
+    m_highlightTransitPlanet = -1;
+    m_highlightRadixPlanet = -1;
     update();
 }
 
@@ -794,9 +792,18 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
     }
     
     // Hervorhebung: Größerer Font und hellere Farbe
-    bool isHighlighted = (planet == m_highlightPlanet) || 
-                         (planet == m_highlightAspect1) || 
-                         (planet == m_highlightAspect2);
+    bool isHighlighted = false;
+    if (isTransit) {
+        // Transit-Planet: Nur hervorheben wenn m_highlightIsTransit gesetzt
+        isHighlighted = (planet == m_highlightPlanet && m_highlightIsTransit) ||
+                        (planet == m_highlightTransitPlanet);
+    } else {
+        // Radix-Planet
+        isHighlighted = (planet == m_highlightPlanet && !m_highlightIsTransit) || 
+                        (planet == m_highlightAspect1) || 
+                        (planet == m_highlightAspect2) ||
+                        (planet == m_highlightRadixPlanet);
+    }
     
     // STRICT LEGACY: Kleinerer Font wenn versetzt
     int fontSize = isHighlighted ? 24 : (offsetLevel > 0 ? 16 : 20);
@@ -898,21 +905,44 @@ void ChartWidget::drawAspects(QPainter& painter) {
         
         for (int i = 0; i < numTransit; ++i) {
             for (int j = 0; j < numPlanets; ++j) {
+                // Filter anhand TransitSelection (TransSelDialog)
+                if (!m_transitSelection.isEmpty()) {
+                    int radixPlanets = m_radix.planet.size();
+                    int rIdx = (j < radixPlanets) ? j : (radixPlanets + (j - radixPlanets));
+                    int tIdx = i;
+                    if (tIdx >= 0 && tIdx < m_transitSelection.size()) {
+                        if (rIdx >= m_transitSelection[tIdx].size() || !m_transitSelection[tIdx][rIdx]) {
+                            continue;
+                        }
+                    }
+                }
+                
                 // Aspekt zwischen Transit-Planet i und Radix-Planet j berechnen
                 double transitPos = m_transit->planet[i];
                 double radixPos = m_radix.planet[j];
                 double diff = std::abs(transitPos - radixPos);
                 if (diff > 180.0) diff = 360.0 - diff;
                 
-                // Aspekt prüfen (mit Standard-Orben)
+                // Aspekt prüfen mit konfigurierten Orben aus m_auinit
+                const QVector<float>& orben = (m_radix.horoTyp == TYP_SYNASTRIE) ? 
+                    m_auinit.orbenSPlanet : m_auinit.orbenTPlanet;
+                
                 int8_t asp = KEIN_ASP;
-                if (diff <= 10.0) asp = KONJUNKTION;
-                else if (std::abs(diff - 30.0) <= 3.0) asp = HALBSEX;
-                else if (std::abs(diff - 60.0) <= 6.0) asp = SEXTIL;
-                else if (std::abs(diff - 90.0) <= 8.0) asp = QUADRATUR;
-                else if (std::abs(diff - 120.0) <= 8.0) asp = TRIGON;
-                else if (std::abs(diff - 150.0) <= 3.0) asp = QUINCUNX;
-                else if (std::abs(diff - 180.0) <= 10.0) asp = OPOSITION;
+                float orb0 = orben.size() > 0 ? orben[0] : 8.0f;
+                float orb1 = orben.size() > 1 ? orben[1] : 2.0f;
+                float orb2 = orben.size() > 2 ? orben[2] : 4.0f;
+                float orb3 = orben.size() > 3 ? orben[3] : 6.0f;
+                float orb4 = orben.size() > 4 ? orben[4] : 6.0f;
+                float orb5 = orben.size() > 5 ? orben[5] : 2.0f;
+                float orb6 = orben.size() > 6 ? orben[6] : 8.0f;
+                
+                if (diff <= orb0) asp = KONJUNKTION;
+                else if (std::abs(diff - 30.0) <= orb1) asp = HALBSEX;
+                else if (std::abs(diff - 60.0) <= orb2) asp = SEXTIL;
+                else if (std::abs(diff - 90.0) <= orb3) asp = QUADRATUR;
+                else if (std::abs(diff - 120.0) <= orb4) asp = TRIGON;
+                else if (std::abs(diff - 150.0) <= orb5) asp = QUINCUNX;
+                else if (std::abs(diff - 180.0) <= orb6) asp = OPOSITION;
                 
                 if (asp == KEIN_ASP) continue;
                 

@@ -71,9 +71,27 @@ void TransitResultWindow::setupUI() {
 
 void TransitResultWindow::setTransits(const QVector<Radix>& transits,
                                       const QVector<TransitAspekt>& aspekte,
-                                      const QString& vonDatum, const QString& bisDatum) {
+                                      const QString& vonDatum, const QString& bisDatum,
+                                      const QVector<QVector<bool>>& transSel) {
     m_transits = transits;
-    m_aspekte = aspekte;
+    m_transSel = transSel;
+    m_aspekte.clear();
+    
+    if (m_transSel.isEmpty()) {
+        m_aspekte = aspekte;
+    } else {
+        int radixPlanets = m_basisRadix.planet.size();
+        int radixCount = radixPlanets + MAX_HAUS;
+        for (const auto& ta : aspekte) {
+            int tIdx = ta.transitPlanet;
+            int rIdx = ta.isHaus ? radixPlanets + ta.radixPlanet : ta.radixPlanet;
+            if (tIdx >= 0 && tIdx < m_transSel.size() &&
+                rIdx >= 0 && rIdx < m_transSel[tIdx].size() &&
+                m_transSel[tIdx][rIdx]) {
+                m_aspekte.push_back(ta);
+            }
+        }
+    }
     
     m_vonDatumLabel->setText(vonDatum);
     m_bisDatumLabel->setText(bisDatum);

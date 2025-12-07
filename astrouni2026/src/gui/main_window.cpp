@@ -12,6 +12,7 @@
 #include "dialogs/ort_dialog.h"
 #include "dialogs/horo_typ_dialog.h"
 #include "dialogs/transit_dialog.h"
+#include "dialogs/trans_sel_dialog.h"
 #include "transit_result_window.h"
 #include "dialogs/orben_dialog.h"
 #include "dialogs/farben_dialog.h"
@@ -345,30 +346,43 @@ void MainWindow::onHoroTyp() {
         ChartCalc::calcAngles(m_currentRadix, m_currentRadix.synastrie.get(), TYP_TRANSIT);
         ChartCalc::calcHouseAspects(m_currentRadix, m_auinit.orbenHaus, m_auinit.sAspekte);
         
+        // Transit-Auswahl-Dialog (Port von DlgTransEin)
+        TransSelDialog transSelDialog(this);
+        transSelDialog.setSelection(transitDialog.getTransSel());
+        if (transSelDialog.exec() != QDialog::Accepted) {
+            return;
+        }
+        QVector<QVector<bool>> transSel = transSelDialog.selection();
+        
         // STRICT LEGACY: Transit-Ergebnis-Fenster öffnen (Port von WndTransit)
         TransitResultWindow* transitResult = new TransitResultWindow(m_tabWidget, m_auinit, m_currentRadix);
         transitResult->setTransits(transitDialog.getTransits(), 
                                    transitDialog.getTransitAspekte(),
                                    transitDialog.getVonDatum(),
-                                   transitDialog.getBisDatum());
+                                   transitDialog.getBisDatum(),
+                                   transSel);
+        transitResult->setTransitSelection(transSel);
         
         // Transits kopieren für Lambda (Dialog wird nach Scope zerstört)
         QVector<Radix> transits = transitDialog.getTransits();
         Radix basisRadix = m_currentRadix;
         
         // Signal für Grafik-Anzeige verbinden
-        connect(transitResult, &TransitResultWindow::requestGraphic, this, [this, transits, basisRadix](int transitIndex) {
+        connect(transitResult, &TransitResultWindow::requestGraphic, this, [this, transits, basisRadix, transSel](int transitIndex) {
             if (transitIndex >= 0 && transitIndex < transits.size()) {
                 Radix transitRadix = basisRadix;
                 transitRadix.synastrie = std::make_shared<Radix>(transits.at(transitIndex));
                 transitRadix.horoTyp = TYP_TRANSIT;
                 
                 RadixWindow* radixWidget = new RadixWindow(m_tabWidget, m_auinit, transitRadix);
+                radixWidget->setTransitSelection(transSel);
                 int tabIndex = m_tabWidget->addTab(radixWidget, radixWidget->getTabTitle());
                 m_tabWidget->setCurrentIndex(tabIndex);
             }
         });
         
+        // Nur Transit-Ergebnis-Tab öffnen, kein automatisches Chart
+        // Chart wird erst bei Auswahl aus der Liste geöffnet (Grafik-Button oder Doppelklick)
         int tabIndex = m_tabWidget->addTab(transitResult, transitResult->getTabTitle());
         m_tabWidget->setCurrentIndex(tabIndex);
         

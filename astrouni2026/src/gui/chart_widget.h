@@ -48,8 +48,9 @@ public:
     /**
      * @brief Hebt einen Planeten hervor
      * @param planetIndex Index des Planeten (-1 für keine Hervorhebung)
+     * @param isTransit true = Transit-Planet, false = Radix-Planet
      */
-    void highlightPlanet(int planetIndex);
+    void highlightPlanet(int planetIndex, bool isTransit = false);
     
     /**
      * @brief Hebt einen Aspekt hervor
@@ -70,6 +71,7 @@ public:
      * @param showSynastrieAspects true = Synastrie/Transit-Aspekte, false = Radix-Aspekte
      */
     void setShowSynastrieAspects(bool showSynastrieAspects);
+    void setTransitSelection(const QVector<QVector<bool>>& sel) { m_transitSelection = sel; update(); }
     
     /**
      * @brief Gibt die minimale Größe zurück
@@ -210,14 +212,16 @@ private:
     bool m_show9Degree;
     bool m_zoomActive {false};
     bool m_aspectCircleActive {false};
-    QPointF m_zoomCenter;
-    double m_zoomFactor {1.0};
+    QPoint m_zoomCenter;
+    double m_zoomFactor = 1.0;
+    QVector<QVector<bool>> m_transitSelection;
     
     // STRICT LEGACY: LB_A Flag - Aspekt-Anzeige-Modus
     bool m_showSynastrieAspects;  // false = Radix-Aspekte, true = Synastrie/Transit-Aspekte
     
     // Hervorhebung
     int m_highlightPlanet;      // -1 = keine Hervorhebung
+    bool m_highlightIsTransit;  // true = Transit-Planet hervorgehoben
     int m_highlightAspect1;     // Erster Planet des Aspekts
     int m_highlightAspect2;     // Zweiter Planet des Aspekts
     

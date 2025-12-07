@@ -212,15 +212,30 @@ void RadixWindow::setRadix(const Radix& radix) {
     updateDisplay();
 }
 
+void RadixWindow::setTransitSelection(const QVector<QVector<bool>>& sel) {
+    m_transitSelection = sel;
+    if (m_chartWidget) {
+        m_chartWidget->setTransitSelection(sel);
+        m_chartWidget->update();
+    }
+}
 void RadixWindow::updateDisplay() {
     // Chart aktualisieren
     m_chartWidget->setRadix(m_radix);
     
-    // Synastrie: Zweiten Radix setzen
+    // Synastrie/Transit: Zweiten Radix setzen
     if (m_radix.synastrie) {
         m_chartWidget->setTransitRadix(m_radix.synastrie.get());
+        // STRICT LEGACY: Bei Transit/Synastrie standardmäßig Transit-Aspekte anzeigen
+        m_showSynastrieAspects = true;
+        m_chartWidget->setShowSynastrieAspects(true);
+        if (!m_transitSelection.isEmpty()) {
+            m_chartWidget->setTransitSelection(m_transitSelection);
+        }
     } else {
         m_chartWidget->setTransitRadix(nullptr);
+        m_showSynastrieAspects = false;
+        m_chartWidget->setShowSynastrieAspects(false);
     }
     
     // Liste aktualisieren
@@ -409,6 +424,7 @@ void RadixWindow::fillPositionenList() {
     const Radix* displayRadix = &m_radix;
     QString personHeader;
     bool isSynastrie = (m_radix.horoTyp == TYP_SYNASTRIE && m_radix.synastrie);
+    bool isTransit = (m_radix.horoTyp == TYP_TRANSIT && m_radix.synastrie);
     
     if (isSynastrie) {
         if (m_showPerson2) {
@@ -434,6 +450,42 @@ void RadixWindow::fillPositionenList() {
         synHeader->setBackground(m_showPerson2 ? QColor(0, 128, 0) : QColor(0, 0, 128));
         synHeader->setData(Qt::UserRole, -999);  // Marker für Toggle
         m_listWidget->addItem(synHeader);
+    }
+    
+    // Bei Transit: Transit-Planeten ZUERST anzeigen
+    if (isTransit) {
+        const Radix& transit = *m_radix.synastrie;
+        
+        // Transit-Header
+        QString transitDatum = QString("%1.%2.%3")
+            .arg(transit.rFix.tag, 2, 10, QChar('0'))
+            .arg(transit.rFix.monat, 2, 10, QChar('0'))
+            .arg(transit.rFix.jahr, 4, 10, QChar('0'));
+        QListWidgetItem* transitHeader = new QListWidgetItem(
+            QString("<span style='color:#FFFFFF'>") + tr("-Transit %1-").arg(transitDatum) + "</span>");
+        transitHeader->setBackground(QColor(128, 0, 0));  // Dunkelrot für Transit
+        m_listWidget->addItem(transitHeader);
+        
+        // Transit-Planeten
+        for (int i = 0; i < transit.anzahlPlanet && i < transit.planet.size(); ++i) {
+            QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
+            QString pos = Calculations::degToZeichenString(transit.planet[i], true);
+            int stz = static_cast<int>(transit.planet[i] / 30.0) % 12;
+            QString stzSymbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+            QString retro = (transit.planetTyp.size() > i && (transit.planetTyp[i] & P_TYP_RUCK)) ? " R" : "";
+            
+            QString planetColor = colorToHtml(sColor[COL_PLAN_T]);
+            int element = stz % 4;
+            QString stzColor = colorToHtml(sColor[COL_FEUER + element]);
+            
+            QString html = QString("<span style='color:%1'>%2</span> %3 <span style='color:%4'>%5</span>%6")
+                .arg(planetColor).arg(symbol).arg(pos).arg(stzColor).arg(stzSymbol).arg(retro);
+            
+            QListWidgetItem* item = new QListWidgetItem(html);
+            item->setData(Qt::UserRole, i + 100);  // Transit-Planeten ab 100
+            item->setBackground(sColor[COL_LBREC_NORM]);
+            m_listWidget->addItem(item);
+        }
     }
     
     // STRICT LEGACY: Planeten-Header wie im Original (weiße Schrift auf dunkelblau)
@@ -520,42 +572,7 @@ void RadixWindow::fillPositionenList() {
             m_listWidget->addItem(item);
         }
     }
-    
-    // STRICT LEGACY: Bei Transit auch Transit-Planeten anzeigen
-    if (m_radix.horoTyp == TYP_TRANSIT && m_radix.synastrie) {
-        const Radix& transit = *m_radix.synastrie;
-        
-        // Transit-Header
-        QString transitDatum = QString("%1.%2.%3")
-            .arg(transit.rFix.tag, 2, 10, QChar('0'))
-            .arg(transit.rFix.monat, 2, 10, QChar('0'))
-            .arg(transit.rFix.jahr, 4, 10, QChar('0'));
-        QListWidgetItem* transitHeader = new QListWidgetItem(
-            QString("<span style='color:#FFFFFF'>") + tr("-Transit %1-").arg(transitDatum) + "</span>");
-        transitHeader->setBackground(QColor(128, 0, 0));  // Dunkelrot für Transit
-        m_listWidget->addItem(transitHeader);
-        
-        // Transit-Planeten
-        for (int i = 0; i < transit.anzahlPlanet && i < transit.planet.size(); ++i) {
-            QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
-            QString pos = Calculations::degToZeichenString(transit.planet[i], true);
-            int stz = static_cast<int>(transit.planet[i] / 30.0) % 12;
-            QString stzSymbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
-            QString retro = (transit.planetTyp.size() > i && (transit.planetTyp[i] & P_TYP_RUCK)) ? " R" : "";
-            
-            QString planetColor = colorToHtml(sColor[COL_PLAN_T]);
-            int element = stz % 4;
-            QString stzColor = colorToHtml(sColor[COL_FEUER + element]);
-            
-            QString html = QString("<span style='color:%1'>%2</span> %3 <span style='color:%4'>%5</span>%6")
-                .arg(planetColor).arg(symbol).arg(pos).arg(stzColor).arg(stzSymbol).arg(retro);
-            
-            QListWidgetItem* item = new QListWidgetItem(html);
-            item->setData(Qt::UserRole, i + 100);  // Transit-Planeten ab 100
-            item->setBackground(sColor[COL_LBREC_NORM]);
-            m_listWidget->addItem(item);
-        }
-    }
+    // Transit-Planeten werden jetzt am Anfang der Liste angezeigt (siehe oben)
 }
 
 void RadixWindow::fillAspekteList() {
@@ -732,6 +749,14 @@ void RadixWindow::fillAspekteList() {
         // Synastrie/Transit-Aspekte: Alle Kombinationen (Person1/Radix zu Person2/Transit)
         for (int i = 0; i < numSyn; ++i) {
             for (int j = 0; j < numPlanets; ++j) {
+                // Filter anhand TransitSelection (TransSelDialog)
+                if (!m_transitSelection.isEmpty()) {
+                    if (i >= 0 && i < m_transitSelection.size()) {
+                        if (j >= m_transitSelection[i].size() || !m_transitSelection[i][j]) {
+                            continue;
+                        }
+                    }
+                }
                 double pos1 = syn.planet[i];
                 double pos2 = m_radix.planet[j];
                 double diff = std::abs(pos1 - pos2);
@@ -813,7 +838,12 @@ void RadixWindow::onPositionenClicked() {
 
 void RadixWindow::onAspekteClicked() {
     m_listMode = Aspekte;
-    m_showSynastrieAspects = false;  // Reset auf Radix-Aspekte
+    // STRICT LEGACY: Bei Transit/Synastrie standardmäßig Transit-Aspekte anzeigen
+    if (m_radix.synastrie) {
+        m_showSynastrieAspects = true;
+    } else {
+        m_showSynastrieAspects = false;
+    }
     fillAspekteList();
 }
 
@@ -840,11 +870,15 @@ void RadixWindow::onListItemClicked(QListWidgetItem* item) {
         
         // Planeten: Zeile nach Header
         int planetIndex = data.isValid() ? data.toInt() : -1;
-        if (planetIndex >= 0 && planetIndex < 200) {
-            m_chartWidget->highlightPlanet(planetIndex);
+        if (planetIndex >= 0 && planetIndex < 100) {
+            // Radix-Planet
+            m_chartWidget->highlightPlanet(planetIndex, false);
+        } else if (planetIndex >= 100 && planetIndex < 200) {
+            // Transit-Planet (Index 100-199)
+            m_chartWidget->highlightPlanet(planetIndex - 100, true);
         } else if (planetIndex >= 200) {
-            // Person 2 Planet - keine Hervorhebung im Radix-Kreis (nur in Synastrie-Kreis)
-            m_chartWidget->highlightPlanet(-1);
+            // Person 2 Planet - Synastrie (Index 200+)
+            m_chartWidget->highlightPlanet(planetIndex - 200, true);
         } else {
             // Häuser-Header oder Haus
             m_chartWidget->highlightPlanet(-1);
