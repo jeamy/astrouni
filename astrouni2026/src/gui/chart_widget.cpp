@@ -447,21 +447,21 @@ void ChartWidget::calculateRadii() {
     
     // Radien für verschiedene Kreise (aus constants.h)
     if (m_show3Degree && m_show9Degree) {
-        // Normal
+        // Normal: 3er und 9er aktiv
         m_radiusStz = m_radius * KREIS_STZ;
         m_radius10 = m_radius * KREIS_10_GRAD;
         m_radius3 = m_radius * KREIS_3_GRAD;
         m_radius5 = m_radius * KREIS_5_GRAD;
         m_radiusPlanet = m_radius * KREIS_PLANET;
-    } else if (!m_show3Degree && m_show9Degree) {
-        // Ohne 3er
+    } else if (m_show3Degree || m_show9Degree) {
+        // Nur eine Teilung aktiv (ohne 3er oder 9er)
         m_radiusStz = m_radius * KREIS3_STZ;
         m_radius10 = m_radius * KREIS3_10_GRAD;
         m_radius3 = m_radius * KREIS3_3_GRAD;
         m_radius5 = m_radius * KREIS3_5_GRAD;
         m_radiusPlanet = m_radius * KREIS3_PLANET;
     } else {
-        // Ohne 3er und 9er
+        // Keine Teilung (ohne 3er und 9er)
         m_radiusStz = m_radius * KREIS9_STZ;
         m_radius10 = m_radius * KREIS9_10_GRAD;
         m_radius3 = m_radius * KREIS9_3_GRAD;
@@ -498,33 +498,39 @@ QPointF ChartWidget::degreeToPoint(double degree, double radius) const {
 //==============================================================================
 
 void ChartWidget::drawRadix(QPainter& painter) {
+    // STRICT LEGACY: sRadix() aus auwurzel.c
     // Hintergrund-Kreis des Radix (grau hinterlegt wie im Legacy)
     painter.setPen(Qt::NoPen);
     painter.setBrush(sColor[COL_HINTER]);
     painter.drawEllipse(m_center, m_radius, m_radius);
     
-    // Äußerer Kreis
+    // 1. Äußerer Kreis
     painter.setPen(QPen(sColor[COL_RADIX], 2));
     painter.setBrush(Qt::NoBrush);
     painter.drawEllipse(m_center, m_radius, m_radius);
     
-    // Sternzeichen-Kreis
+    // 2. Sternzeichen-Kreis (STZ)
     painter.setPen(QPen(sColor[COL_RADIX], 1));
     painter.drawEllipse(m_center, m_radiusStz, m_radiusStz);
     
-    // 10-Grad-Kreis
-    painter.drawEllipse(m_center, m_radius10, m_radius10);
-    
-    // 5-Grad-Kreis (wenn 3er/9er angezeigt)
-    if (m_show3Degree || m_show9Degree) {
-        painter.drawEllipse(m_center, m_radius5, m_radius5);
+    // 3. 10-Grad-Kreis - NUR wenn 3er aktiv (Legacy: if (auinit.sTeilung&S_3er))
+    if (m_show3Degree) {
+        painter.drawEllipse(m_center, m_radius10, m_radius10);
     }
     
-    // Planeten-Kreis
-    painter.drawEllipse(m_center, m_radiusPlanet, m_radiusPlanet);
+    // 4. 3.33-Grad-Kreis (dKREIS_3) - NUR wenn 9er aktiv (Legacy: if (auinit.sTeilung&S_9er))
+    if (m_show9Degree) {
+        painter.drawEllipse(m_center, m_radius3, m_radius3);
+    }
     
-    // Aspekt-Kreis (innerer Kreis)
+    // 5. 5-Grad-Kreis - IMMER gezeichnet (Legacy: Ellipse ohne Bedingung)
+    painter.drawEllipse(m_center, m_radius5, m_radius5);
+    
+    // 6. Aspekt-Kreis (innerer Kreis)
     painter.drawEllipse(m_center, m_radiusAsp, m_radiusAsp);
+    
+    // Planeten-Kreis (nicht als Ellipse, nur für Radius-Berechnung)
+    // Legacy zeichnet diesen Kreis nicht explizit
 }
 
 //==============================================================================
@@ -532,13 +538,14 @@ void ChartWidget::drawRadix(QPainter& painter) {
 //==============================================================================
 
 void ChartWidget::drawZodiacSigns(QPainter& painter) {
-    // Sternzeichen-Trennlinien (alle 30°)
+    // STRICT LEGACY: sRadix() aus auwurzel.c
+    // Sternzeichen-Trennlinien (alle 30°) - von äußerem Kreis bis 10-Grad-Kreis
     painter.setPen(QPen(sColor[COL_RADIX], 1));
     
     for (int i = 0; i < 12; ++i) {
         double degree = i * 30.0;
         QPointF outer = degreeToPoint(degree, m_radius);
-        QPointF inner = degreeToPoint(degree, m_radiusStz);
+        QPointF inner = degreeToPoint(degree, m_radius10);
         painter.drawLine(outer, inner);
     }
     
@@ -563,6 +570,7 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
         sColor[COL_WASSER]   // Wasser: Krebs, Skorpion, Fische
     };
     
+    // Große Sternzeichen-Symbole im äußeren Ring (zwischen äußerem Kreis und STZ-Kreis)
     for (int i = 0; i < 12; ++i) {
         double degree = i * 30.0 + 15.0;  // Mitte des Zeichens
         double symbolRadius = (m_radius + m_radiusStz) / 2.0;
@@ -577,6 +585,113 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
         QRectF rect(pos.x() - 12, pos.y() - 12, 24, 24);
         painter.drawText(rect, Qt::AlignCenter, symbol);
     }
+    
+    // STRICT LEGACY: Kleine Sternzeichen-Symbole im 3er-Ring (10°-Einteilung)
+    // Legacy: dA=Radix->dStzGrad; for (sA=0; sA<18; sA++) dA+=PI/18.0
+    // Zeichnet 2 Symbole pro Iteration (gegenüberliegende Seiten)
+    if (m_show3Degree) {
+        QFont smallFont = zodiacFont;
+        smallFont.setPointSize(11);
+        painter.setFont(smallFont);
+        
+        // sRHZ=sRG-(sRG-sRI)/2 -> Mitte zwischen STZ und 10-Grad-Kreis
+        double symbolRadius3 = m_radiusStz - (m_radiusStz - m_radius10) / 2.0;
+        
+        // Legacy: dA=Radix->dStzGrad (Startwinkel in Radiant)
+        // m_radix.stzGrad ist der Startwinkel des ASC-Sternzeichens
+        double dA = m_radix.stzGrad * PI / 180.0;  // Grad -> Radiant
+        
+        // Legacy-Algorithmus für Sternzeichen-Reihenfolge im 3er-Ring
+        int sZ = 0, sZ4 = 0;
+        int stzIndex = m_radix.stzIndex;  // Startzeichen vom ASC
+        
+        for (int sA = 0; sA < 18; ++sA) {  // 18 Iterationen (Legacy: for sA=0; sA<18)
+            if (sZ4 > 11) {
+                sZ4 = 0;
+                sZ = (sZ + 1) > 5 ? 0 : (sZ + 1);
+            }
+            int sStz = (stzIndex + sZ + sZ4) % 12;
+            sZ4 += 4;
+            
+            // Symbol-Position: dA + PI/36.0 (Mitte des 10°-Segments)
+            double symbolAngle = dA + PI / 36.0;
+            double degree = symbolAngle * 180.0 / PI;  // Radiant -> Grad
+            
+            // Erste Hälfte
+            QPointF pos = degreeToPoint(degree, symbolRadius3);
+            int element = sStz % 4;
+            painter.setPen(elementColors[element]);
+            QString symbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[sStz]);
+            QRectF rect(pos.x() - 8, pos.y() - 8, 16, 16);
+            painter.drawText(rect, Qt::AlignCenter, symbol);
+            
+            // Zweite Hälfte (gegenüberliegend: +180°)
+            int sStz2 = (sStz + 6) % 12;
+            QPointF pos2 = degreeToPoint(degree + 180.0, symbolRadius3);
+            int element2 = sStz2 % 4;
+            painter.setPen(elementColors[element2]);
+            QString symbol2 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[sStz2]);
+            QRectF rect2(pos2.x() - 8, pos2.y() - 8, 16, 16);
+            painter.drawText(rect2, Qt::AlignCenter, symbol2);
+            
+            dA += PI / 18.0;  // 10° Schritt
+        }
+    }
+    
+    // STRICT LEGACY: Kleine Sternzeichen-Symbole im 9er-Ring (3.33°-Einteilung)
+    // Legacy: dA=Radix->dStzGrad; for (sA=0; sA<54; sA++) dA+=PI/54.0
+    // Zeichnet 2 Symbole pro Iteration (gegenüberliegende Seiten)
+    if (m_show9Degree) {
+        QFont smallFont = zodiacFont;
+        smallFont.setPointSize(9);
+        painter.setFont(smallFont);
+        
+        // sRHZ=sRG-(sRG-sRI)/2 -> Mitte zwischen 10-Grad und 3-Grad-Kreis
+        double outerR = m_show3Degree ? m_radius10 : m_radiusStz;
+        double symbolRadius9 = outerR - (outerR - m_radius3) / 2.0;
+        
+        // Legacy: dA=Radix->dStzGrad (Startwinkel in Radiant)
+        double dA = m_radix.stzGrad * PI / 180.0;  // Grad -> Radiant
+        
+        // Legacy-Algorithmus für Sternzeichen-Reihenfolge im 9er-Ring
+        int stzIndex = m_radix.stzIndex;
+        int sZ = 0;
+        switch (stzIndex) {
+            case 0: case 4: case 8:  sZ = 0; break;
+            case 1: case 5: case 9:  sZ = 9; break;
+            case 2: case 6: case 10: sZ = 6; break;
+            case 3: case 7: case 11: sZ = 3; break;
+        }
+        
+        for (int sA = 0; sA < 54; ++sA) {  // 54 Iterationen (Legacy: for sA=0; sA<54)
+            int sStz = sZ % 12;
+            
+            // Symbol-Position: dA + PI/108.0 (Mitte des 3.33°-Segments)
+            double symbolAngle = dA + PI / 108.0;
+            double degree = symbolAngle * 180.0 / PI;  // Radiant -> Grad
+            
+            // Erste Hälfte
+            QPointF pos = degreeToPoint(degree, symbolRadius9);
+            int element = sStz % 4;
+            painter.setPen(elementColors[element]);
+            QString symbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[sStz]);
+            QRectF rect(pos.x() - 6, pos.y() - 6, 12, 12);
+            painter.drawText(rect, Qt::AlignCenter, symbol);
+            
+            // Zweite Hälfte (gegenüberliegend: +180°)
+            int sStz2 = (sStz + 6) % 12;
+            QPointF pos2 = degreeToPoint(degree + 180.0, symbolRadius9);
+            int element2 = sStz2 % 4;
+            painter.setPen(elementColors[element2]);
+            QString symbol2 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[sStz2]);
+            QRectF rect2(pos2.x() - 6, pos2.y() - 6, 12, 12);
+            painter.drawText(rect2, Qt::AlignCenter, symbol2);
+            
+            sZ++;
+            sZ %= 12;
+            dA += PI / 54.0;  // 3.33° Schritt
+        }
+    }
 }
 
 //==============================================================================
@@ -584,35 +699,52 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
 //==============================================================================
 
 void ChartWidget::drawDegreeMarks(QPainter& painter) {
+    // STRICT LEGACY: sRadix() Grad-Einteilungen aus auwurzel.c
     painter.setPen(QPen(sColor[COL_RADIX], 1));
     
-    for (int i = 0; i < 360; ++i) {
-        double degree = static_cast<double>(i);
-        double innerRadius, outerRadius;
-        
-        if (i % 10 == 0) {
-            // 10-Grad-Markierung
-            innerRadius = m_radius10;
-            outerRadius = m_radiusStz;
-        } else if (i % 5 == 0 && (m_show3Degree || m_show9Degree)) {
-            // 5-Grad-Markierung
-            innerRadius = m_radius5;
-            outerRadius = m_radius10;
-        } else if (i % 3 == 0 && m_show3Degree) {
-            // 3-Grad-Markierung
-            innerRadius = m_radius3;
-            outerRadius = m_radius10;
-        } else if (i % 1 == 0 && m_show9Degree) {
-            // 1-Grad-Markierung (nur bei 9er)
-            innerRadius = m_radius5 + (m_radius10 - m_radius5) * 0.3;
-            outerRadius = m_radius10;
-        } else {
-            continue;
-        }
-        
-        QPointF outer = degreeToPoint(degree, outerRadius);
-        QPointF inner = degreeToPoint(degree, innerRadius);
+    // 30-Grad-Einteilung (Sternzeichen-Grenzen) - von STZ bis äußerem Kreis
+    // Legacy: for (sA=0; sA<6; sA++) mit dA+=PI/6
+    for (int i = 0; i < 12; ++i) {
+        double degree = i * 30.0;
+        QPointF outer = degreeToPoint(degree, m_radius);
+        QPointF inner = degreeToPoint(degree, m_radius10);  // bis 10-Grad-Kreis
         painter.drawLine(outer, inner);
+    }
+    
+    // 10-Grad-Einteilung (3er) - von 10-Grad-Kreis bis STZ-Kreis
+    // Legacy: if (auinit.sTeilung&S_3er) for (sA=0; sA<18; sA++) mit dA+=PI/18
+    if (m_show3Degree) {
+        for (int i = 0; i < 36; ++i) {
+            if (i % 3 == 0) continue;  // 30-Grad-Linien bereits gezeichnet
+            double degree = i * 10.0;
+            QPointF outer = degreeToPoint(degree, m_radiusStz);
+            QPointF inner = degreeToPoint(degree, m_radius10);
+            painter.drawLine(outer, inner);
+        }
+    }
+    
+    // 3.33-Grad-Einteilung (9er) - von 3-Grad-Kreis bis 10-Grad-Kreis
+    // Legacy: if (auinit.sTeilung&S_9er) for (sA=0; sA<54; sA++) mit dA+=PI/54
+    if (m_show9Degree) {
+        double outerR = m_show3Degree ? m_radius10 : m_radiusStz;
+        for (int i = 0; i < 108; ++i) {
+            double degree = i * (360.0 / 108.0);  // 3.33 Grad
+            QPointF outer = degreeToPoint(degree, outerR);
+            QPointF inner = degreeToPoint(degree, m_radius3);
+            painter.drawLine(outer, inner);
+        }
+    }
+    
+    // 5-Grad-Einteilung (2 Grad) - von 5-Grad-Kreis bis 3-Grad-Kreis (oder 10-Grad)
+    // Legacy: for (sA=0; sA<90; sA++) mit dA+=PI/90 (4 Grad Schritte = 2 Grad)
+    {
+        double outerR = m_show9Degree ? m_radius3 : (m_show3Degree ? m_radius10 : m_radiusStz);
+        for (int i = 0; i < 180; ++i) {
+            double degree = i * 2.0;  // 2-Grad-Schritte
+            QPointF outer = degreeToPoint(degree, outerR);
+            QPointF inner = degreeToPoint(degree, m_radius5);
+            painter.drawLine(outer, inner);
+        }
     }
 }
 
@@ -624,12 +756,16 @@ void ChartWidget::drawDegreeMarks(QPainter& painter) {
 void ChartWidget::drawHouses(QPainter& painter) {
     if (m_radix.haus.isEmpty()) return;
     
+    // STRICT LEGACY: sHaus() aus auwurzel.c
+    // sRG=(short)((double)sRadius*dKREIS_STZ) -> Normale Häuser bis STZ-Kreis
+    // Hauptachsen bis äußerem Kreis (sRD=sRadius+sDruber)
+    
     // Häuser-Linien
     for (int i = 0; i < MAX_HAUS; ++i) {
         double degree = m_radix.haus[i];
         
         // STRICT LEGACY: ASC(1), IC(4), DSC(7), MC(10) bis zum äußersten Kreis
-        // Andere Häuser nur bis zum Planeten-Kreis
+        // Andere Häuser nur bis zum STZ-Kreis (nicht Planeten-Kreis!)
         bool isMainAxis = (i == 0 || i == 3 || i == 6 || i == 9);
         
         if (isMainAxis) {
@@ -639,9 +775,9 @@ void ChartWidget::drawHouses(QPainter& painter) {
             QPointF inner = degreeToPoint(degree, m_radiusAsp);
             painter.drawLine(outer, inner);
         } else {
-            // Normale Häuser: dünn, nur bis Planeten-Kreis
+            // Normale Häuser: dünn, bis STZ-Kreis (Legacy: sRG=dKREIS_STZ)
             painter.setPen(QPen(sColor[COL_HAUSER], 1));
-            QPointF outer = degreeToPoint(degree, m_radiusPlanet);
+            QPointF outer = degreeToPoint(degree, m_radiusStz);
             QPointF inner = degreeToPoint(degree, m_radiusAsp);
             painter.drawLine(outer, inner);
         }
@@ -765,18 +901,23 @@ void ChartWidget::drawPlanets(QPainter& painter) {
 }
 
 void ChartWidget::drawPlanetTic(QPainter& painter, double angle, bool isTransit, int offsetLevel) {
+    // STRICT LEGACY: vPlanetTicDraw() aus auwurzel.c
+    // sRP=(short)((double)sRadius*dKREIS_STZ) -> von STZ-Kreis
+    // sRPi=(short)((double)sRadius*dKREIS_PLANET) -> bis Planeten-Kreis
+    
     QColor color = isTransit ? sColor[COL_PLANET_TICT] : sColor[COL_PLANET_TIC];
     
     // STRICT LEGACY: Alle Linien gleichdick
     painter.setPen(QPen(color, 1));
     
-    // STRICT LEGACY: Linie vom Planeten-Kreis bis zum Planeten-Symbol durchziehen
+    // STRICT LEGACY: Linie vom STZ-Kreis bis zum Planeten-Symbol durchziehen
     // Versatz nach innen für jeden Level
     double offset = offsetLevel * 25.0;
-    double symbolRadius = m_radiusPlanet - 30 - offset;
+    double symbolRadius = m_radiusPlanet - 20 - offset;
     
-    QPointF outer = degreeToPoint(angle, m_radiusPlanet);
-    QPointF inner = degreeToPoint(angle, symbolRadius + 12);  // Bis kurz vor das Symbol
+    // Linie von STZ-Kreis bis Planeten-Symbol
+    QPointF outer = degreeToPoint(angle, m_radiusStz);
+    QPointF inner = degreeToPoint(angle, symbolRadius + 24);  // Kürzer, Abstand zum Symbol
     painter.drawLine(outer, inner);
 }
 
@@ -826,7 +967,7 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
     // Position im Inneren des Planeten-Kreises, mit Versatz für Kollisionsvermeidung
     // STRICT LEGACY: Größerer Abstand zwischen versetzten Planeten
     double offset = offsetLevel * 25.0;
-    double symbolRadius = m_radiusPlanet - 30 - offset;
+    double symbolRadius = m_radiusPlanet - 20 - offset;
     QPointF pos = degreeToPoint(angle, symbolRadius);
     
     if (isHighlighted) {
