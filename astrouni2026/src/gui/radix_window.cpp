@@ -99,6 +99,10 @@ void RadixWindow::setupUI() {
     // Chart-Widget
     m_chartWidget = new ChartWidget(splitter);
     m_chartWidget->setSettings(m_auinit);
+    // Maus-Signale verbinden (Planet/Haus-Klick)
+    connect(m_chartWidget, &ChartWidget::planetClicked, this, &RadixWindow::onPlanetClicked);
+    connect(m_chartWidget, &ChartWidget::houseClicked, this, &RadixWindow::onHouseClicked);
+    connect(m_chartWidget, &ChartWidget::aspectClicked, this, &RadixWindow::onAspectClicked);
     splitter->addWidget(m_chartWidget);
     
     // Rechte Seite: Liste und Buttons
@@ -309,6 +313,84 @@ void RadixWindow::fillDatenList() {
         addGrayItem(QString("Länge: %1").arg(syn.rFix.laenge, 0, 'f', 4));
         addGrayItem(QString("Breite: %1").arg(syn.rFix.breite, 0, 'f', 4));
         addGrayItem(QString("Zeitzone: %1").arg(syn.rFix.zone, 0, 'f', 1));
+    }
+}
+
+//==============================================================================
+// Maus-Slots aus ChartWidget
+//==============================================================================
+
+void RadixWindow::onPlanetClicked(int planetIndex, bool isTransit) {
+    // STRICT LEGACY: Bei Klick in Grafik immer Positionen-Liste aktivieren
+    m_listMode = Positionen;
+    if (m_radix.horoTyp == TYP_SYNASTRIE) {
+        m_showPerson2 = isTransit;  // Transit-Flag entspricht Person 2 bei Synastrie
+    }
+    updateDisplay();
+    
+    // Ziel-UserRole-Wert ermitteln
+    int target = -1;
+    if (isTransit) {
+        target = (m_radix.horoTyp == TYP_SYNASTRIE) ? planetIndex + 200 : planetIndex + 100;
+    } else {
+        target = m_showPerson2 ? planetIndex + 200 : planetIndex;
+    }
+    
+    // Eintrag selektieren
+    for (int i = 0; i < m_listWidget->count(); ++i) {
+        QListWidgetItem* it = m_listWidget->item(i);
+        if (it->data(Qt::UserRole).toInt() == target) {
+            m_listWidget->setCurrentItem(it);
+            m_listWidget->scrollToItem(it, QAbstractItemView::PositionAtCenter);
+            break;
+        }
+    }
+    
+    // Hervorhebung im Chart
+    if (!isTransit) {
+        m_chartWidget->highlightPlanet(planetIndex);
+    } else {
+        m_chartWidget->highlightPlanet(-1);
+        m_chartWidget->highlightTransitAspect(-1, -1);
+    }
+}
+
+void RadixWindow::onHouseClicked(int houseIndex) {
+    Q_UNUSED(houseIndex);
+    // Häuser nur in Person 1 anzeigen (Legacy-Verhalten)
+    m_listMode = Positionen;
+    m_showPerson2 = false;
+    updateDisplay();
+    m_chartWidget->highlightPlanet(-1);
+    m_chartWidget->highlightAspect(-1, -1);
+}
+
+void RadixWindow::onAspectClicked(int idx1, int idx2, bool isTransit) {
+    m_listMode = Aspekte;
+    m_showSynastrieAspects = isTransit;
+    updateDisplay();
+    
+    // Ziel-UserRole Wert berechnen
+    int targetOffset = 0;
+    if (isTransit) {
+        targetOffset = (m_radix.horoTyp == TYP_SYNASTRIE) ? 2000 : 1000;
+    }
+    QPoint target(idx1 + targetOffset, idx2);
+    
+    for (int i = 0; i < m_listWidget->count(); ++i) {
+        QListWidgetItem* it = m_listWidget->item(i);
+        QVariant v = it->data(Qt::UserRole);
+        if (v.canConvert<QPoint>() && v.toPoint() == target) {
+            m_listWidget->setCurrentItem(it);
+            m_listWidget->scrollToItem(it, QAbstractItemView::PositionAtCenter);
+            break;
+        }
+    }
+    
+    if (isTransit) {
+        m_chartWidget->highlightTransitAspect(idx1, idx2);
+    } else {
+        m_chartWidget->highlightAspect(idx1, idx2);
     }
 }
 

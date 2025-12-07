@@ -9,7 +9,9 @@
 #include "../core/calculations.h"
 #include <QPainterPath>
 #include <QMouseEvent>
+#include <QImage>
 #include <cmath>
+#include <limits>
 
 namespace astro {
 
@@ -132,32 +134,306 @@ QSize ChartWidget::sizeHint() const {
 //==============================================================================
 
 void ChartWidget::paintEvent(QPaintEvent* /*event*/) {
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
+    // Offscreen zeichnen (wie Legacy: Basis-Buffer, später Zoom-Ausschnitt)
+    QImage buffer(size(), QImage::Format_ARGB32_Premultiplied);
+    buffer.fill(Qt::transparent);
+    QPainter buf(&buffer);
+    buf.setRenderHint(QPainter::Antialiasing);
     
-    // Radien berechnen
+    // Radien berechnen (bezogen auf Widget-Größe)
     calculateRadii();
     
     // Zeichnen
-    drawRadix(painter);
-    drawZodiacSigns(painter);
-    drawDegreeMarks(painter);
-    drawHouses(painter);
-    drawPlanets(painter);
+    drawRadix(buf);
+    drawZodiacSigns(buf);
+    drawDegreeMarks(buf);
+    drawHouses(buf);
+    drawPlanets(buf);
     
     if (m_showAspects) {
-        drawAspects(painter);
+        drawAspects(buf);
     }
+    
+    // Zusätzlicher Aspekt-Kreis wenn aktiviert (MAUS_ASPEKT)
+    if (m_aspectCircleActive) {
+        // Legacy nutzte keinen separaten Aspekt-Kreis-Farbindex; wir verwenden den Radix-Farbton
+        buf.setPen(QPen(sColor[COL_RADIX], 2, Qt::DashLine));
+        buf.setBrush(Qt::NoBrush);
+        buf.drawEllipse(m_center, m_radiusAsp, m_radiusAsp);
+    }
+    
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    if (m_zoomActive && m_zoomFactor > 1.0) {
+        painter.translate(m_zoomCenter);
+        painter.scale(m_zoomFactor, m_zoomFactor);
+        painter.translate(-m_zoomCenter);
+    }
+    painter.drawImage(QPoint(0, 0), buffer);
 }
 
 void ChartWidget::mousePressEvent(QMouseEvent* event) {
-    // TODO: Klick auf Planet/Haus erkennen
+    if (event->button() == Qt::RightButton) {
+        // Rechtsklick: wenn Planet/Haus/Aspekt getroffen -> Signal, sonst Zoom-Toggle
+        int planetIdx = -1;
+        bool isTransit = false;
+        if (findPlanetAtPoint(event->pos(), planetIdx, isTransit)) {
+            emit planetClicked(planetIdx, isTransit);
+            return;
+        }
+        int hausIdx = findHouseAtPoint(event->pos());
+        if (hausIdx >= 0) {
+            emit houseClicked(hausIdx);
+            return;
+        }
+        int a1 = -1, a2 = -1;
+        bool aspTransit = false;
+        if (findAspectAtPoint(event->pos(), a1, a2, aspTransit)) {
+            emit aspectClicked(a1, a2, aspTransit);
+            return;
+        }
+        toggleZoom(event->pos());
+        return;
+    }
+    
+    if (event->button() == Qt::LeftButton) {
+        // Klick auf Planet?
+        int planetIdx = -1;
+        bool isTransit = false;
+        if (findPlanetAtPoint(event->pos(), planetIdx, isTransit)) {
+            emit planetClicked(planetIdx, isTransit);
+            return;
+        }
+        
+        // Klick auf Haus?
+        int hausIdx = findHouseAtPoint(event->pos());
+        if (hausIdx >= 0) {
+            emit houseClicked(hausIdx);
+            return;
+        }
+        
+        // Klick auf Aspekt-Linie?
+        int a1 = -1, a2 = -1;
+        bool aspTransit = false;
+        if (findAspectAtPoint(event->pos(), a1, a2, aspTransit)) {
+            emit aspectClicked(a1, a2, aspTransit);
+            return;
+        }
+        
+        // Sonst Aspekt-Kreis toggeln (MAUS_ASPEKT)
+        toggleAspectCircle();
+        return;
+    }
+    
     QWidget::mousePressEvent(event);
+}
+
+void ChartWidget::mouseReleaseEvent(QMouseEvent* event) {
+    QWidget::mouseReleaseEvent(event);
+}
+
+void ChartWidget::mouseMoveEvent(QMouseEvent* event) {
+    QWidget::mouseMoveEvent(event);
+}
+
+void ChartWidget::mouseDoubleClickEvent(QMouseEvent* event) {
+    // Doppelklick: Aspekt-Kreis toggeln
+    Q_UNUSED(event);
+    toggleAspectCircle();
 }
 
 void ChartWidget::resizeEvent(QResizeEvent* event) {
     calculateRadii();
     QWidget::resizeEvent(event);
+}
+
+//==============================================================================
+// Maus-/Interaktions-Helper
+//==============================================================================
+
+double ChartWidget::pointToDegree(const QPointF& p) const {
+    // Umkehrung von degreeToPoint: 0° = links, CCW positiv
+    double dx = p.x() - m_center.x();
+    double dy = m_center.y() - p.y();  // invertiertes Y
+    double rad = std::atan2(dy, dx);   // 0 rechts, CCW
+    double degScreen = rad * 180.0 / PI;
+    double rotated = degScreen - 180.0;      // inverse zu (180 + rotatedDegree)
+    double degree = rotated - m_rotation;    // inverse zur Rotation
+    return Calculations::mod360(degree);
+}
+
+bool ChartWidget::findPlanetAtPoint(const QPointF& p, int& planetIdx, bool& isTransit) const {
+    planetIdx = -1;
+    isTransit = false;
+    double bestDist = std::numeric_limits<double>::max();
+    
+    // Kollisions-Versatz wie in drawPlanets (Radix)
+    QVector<int> offsetLevel(m_radix.anzahlPlanet, 0);
+    for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
+        for (int j = 0; j < i; ++j) {
+            double diff = std::fabs(m_radix.planet[i] - m_radix.planet[j]);
+            if (diff > 180.0) diff = 360.0 - diff;
+            if (diff < 6.0) {
+                offsetLevel[i] = std::max(offsetLevel[i], offsetLevel[j] + 1);
+            }
+        }
+    }
+    
+    for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
+        double offset = offsetLevel[i] * 25.0;
+        double symbolRadius = m_radiusPlanet - 30 - offset;
+        QPointF pos = degreeToPoint(m_radix.planet[i], symbolRadius);
+        double dist = std::hypot(p.x() - pos.x(), p.y() - pos.y());
+        if (dist <= 16.0 && dist < bestDist) {  // Nähe zum Symbol
+            bestDist = dist;
+            planetIdx = i;
+            isTransit = false;
+        }
+    }
+    
+    // Transit-/Synastrie-Planeten (wenn vorhanden)
+    if (m_transit != nullptr) {
+        QVector<int> transitOffsetLevel(m_transit->anzahlPlanet, 0);
+        for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
+            for (int j = 0; j < i; ++j) {
+                double diff = std::fabs(m_transit->planet[i] - m_transit->planet[j]);
+                if (diff > 180.0) diff = 360.0 - diff;
+                if (diff < 6.0) {
+                    transitOffsetLevel[i] = std::max(transitOffsetLevel[i], transitOffsetLevel[j] + 1);
+                }
+            }
+        }
+        for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
+            double offset = transitOffsetLevel[i] * 25.0;
+            double symbolRadius = m_radiusPlanet - 30 - offset;
+            QPointF pos = degreeToPoint(m_transit->planet[i], symbolRadius);
+            double dist = std::hypot(p.x() - pos.x(), p.y() - pos.y());
+            if (dist <= 16.0 && dist < bestDist) {
+                bestDist = dist;
+                planetIdx = i;
+                isTransit = true;
+            }
+        }
+    }
+    
+    return planetIdx >= 0;
+}
+
+int ChartWidget::findHouseAtPoint(const QPointF& p) const {
+    if (m_radix.haus.isEmpty()) return -1;
+    
+    double degree = pointToDegree(p);
+    double r = std::hypot(p.x() - m_center.x(), p.y() - m_center.y());
+    
+    // Nur Klicks im Bereich der Häuser-Linien berücksichtigen
+    if (r < m_radiusAsp * 0.7 || r > m_radius + 12) {
+        return -1;
+    }
+    
+    int bestIdx = -1;
+    double bestDiff = 999.0;
+    for (int i = 0; i < MAX_HAUS; ++i) {
+        double diff = std::fabs(Calculations::minDist(degree, m_radix.haus[i]));
+        if (diff < bestDiff) {
+            bestDiff = diff;
+            bestIdx = i;
+        }
+    }
+    return (bestDiff <= 6.0) ? bestIdx : -1;
+}
+
+void ChartWidget::toggleZoom(const QPoint& pos) {
+    if (!m_zoomActive) {
+        m_zoomActive = true;
+        m_zoomCenter = pos;
+        m_zoomFactor = 2.0;
+    } else {
+        m_zoomActive = false;
+        m_zoomFactor = 1.0;
+    }
+    update();
+}
+
+void ChartWidget::toggleAspectCircle() {
+    m_aspectCircleActive = !m_aspectCircleActive;
+    update();
+}
+
+bool ChartWidget::findAspectAtPoint(const QPointF& p, int& idx1, int& idx2, bool& isTransit) const {
+    idx1 = idx2 = -1;
+    isTransit = false;
+    double bestDist = std::numeric_limits<double>::max();
+    
+    auto distToSegment = [](const QPointF& a, const QPointF& b, const QPointF& p) {
+        double vx = b.x() - a.x();
+        double vy = b.y() - a.y();
+        double wx = p.x() - a.x();
+        double wy = p.y() - a.y();
+        double c1 = vx * wx + vy * wy;
+        if (c1 <= 0) return std::hypot(p.x() - a.x(), p.y() - a.y());
+        double c2 = vx * vx + vy * vy;
+        if (c2 <= c1) return std::hypot(p.x() - b.x(), p.y() - b.y());
+        double t = c1 / c2;
+        double projx = a.x() + t * vx;
+        double projy = a.y() + t * vy;
+        return std::hypot(p.x() - projx, p.y() - projy);
+    };
+    
+    // Radix-Aspekte
+    if (!m_showSynastrieAspects || m_transit == nullptr) {
+        int numPlanets = m_radix.anzahlPlanet;
+        for (int i = 0; i < numPlanets; ++i) {
+            for (int j = i + 1; j < numPlanets; ++j) {
+                int idx = i * numPlanets + j;
+                int8_t asp = m_radix.aspPlanet[idx];
+                if (asp == KEIN_ASP) continue;
+                QPointF p1 = degreeToPoint(m_radix.planet[i], m_radiusAsp);
+                QPointF p2 = degreeToPoint(m_radix.planet[j], m_radiusAsp);
+                double d = distToSegment(p1, p2, p);
+                if (d < 8.0 && d < bestDist) {
+                    bestDist = d;
+                    idx1 = i;
+                    idx2 = j;
+                    isTransit = false;
+                }
+            }
+        }
+    } else {
+        // Transit/Synastrie-Aspekte: Transit-Planet zu Radix-Planet
+        int numTransit = m_transit->anzahlPlanet;
+        int numPlanets = m_radix.anzahlPlanet;
+        for (int i = 0; i < numTransit; ++i) {
+            for (int j = 0; j < numPlanets; ++j) {
+                double transitPos = m_transit->planet[i];
+                double radixPos = m_radix.planet[j];
+                double diff = std::abs(transitPos - radixPos);
+                if (diff > 180.0) diff = 360.0 - diff;
+                
+                int8_t asp = KEIN_ASP;
+                if (diff <= 10.0) asp = KONJUNKTION;
+                else if (std::abs(diff - 30.0) <= 3.0) asp = HALBSEX;
+                else if (std::abs(diff - 60.0) <= 6.0) asp = SEXTIL;
+                else if (std::abs(diff - 90.0) <= 8.0) asp = QUADRATUR;
+                else if (std::abs(diff - 120.0) <= 8.0) asp = TRIGON;
+                else if (std::abs(diff - 150.0) <= 3.0) asp = QUINCUNX;
+                else if (std::abs(diff - 180.0) <= 10.0) asp = OPOSITION;
+                
+                if (asp == KEIN_ASP) continue;
+                
+                QPointF p1 = degreeToPoint(transitPos, m_radiusAsp);
+                QPointF p2 = degreeToPoint(radixPos, m_radiusAsp);
+                double d = distToSegment(p1, p2, p);
+                if (d < 8.0 && d < bestDist) {
+                    bestDist = d;
+                    idx1 = i;
+                    idx2 = j;
+                    isTransit = true;
+                }
+            }
+        }
+    }
+    return idx1 >= 0 && idx2 >= 0;
 }
 
 //==============================================================================

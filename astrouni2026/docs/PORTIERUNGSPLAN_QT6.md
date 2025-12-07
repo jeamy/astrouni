@@ -355,6 +355,14 @@ astrouni2026/
 | `DlgOrbenEin()` | `OrbenDialog` | `orben_dialog.cpp` |
 | `DlgFarben()` | `FarbenDialog` | `farben_dialog.cpp` |
 | `DlgTransEin()` | `TransSelDialog` | `trans_sel_dialog.cpp` |
+| `DlgDatum()` | `DatumDialog` | `datum_dialog.cpp` |
+| `DlgGrad()` | `GradDialog` | `grad_dialog.cpp` |
+| `DlgOrtDuplikat()` | `OrtDuplikatDialog` | `ort_duplikat_dialog.cpp` |
+| `DlgPersonHilfe()` | `PersonHilfeDialog` | `person_hilfe_dialog.cpp` |
+| `DlgAspekte()` | `AspekteDialog` | `aspekte_dialog.cpp` |
+| `DlgCalc()` | `CalcDialog` | `calc_dialog.cpp` |
+| `DlgTransitAbort()` | `TransitAbortDialog` | `transit_abort_dialog.cpp` |
+| `DlgRückläufig()` | `RückläufigDialog` | `retrograde_dialog.cpp` |
 
 ### 4.5 I/O-Funktionen
 
@@ -501,3 +509,40 @@ public:
 
 *Erstellt: Dezember 2025*
 *Basierend auf Legacy-Code-Analyse*
+
+---
+
+## 9. Offene 1:1-Portierungen (Stand)
+
+- Erledigt (Dialoge vorhanden in `src/gui/CMakeLists.txt`):
+  - `DlgPErfassen` (PersonDialog)
+  - `DlgOErfassen` (OrtDialog)
+  - `DlgOrtAuswahl` (OrtSearchDialog)
+  - `DlgHausAuswahl` (HausDialog)
+  - `DlgHoroAuswahl` (HoroTypDialog)
+  - `DlgTransit` (TransitDialog)
+  - `DlgOrbenEin` (OrbenDialog)
+  - `DlgFarben` (FarbenDialog)
+  - `DlgRuck` (RückläufigDialog – Implementierung vorhanden, Funktionsgleichheit trotzdem prüfen)
+  - `DlgTransAbort` (TransitAbortDialog – Implementierung vorhanden, Funktionsgleichheit trotzdem prüfen)
+
+- Dialoge fehlend:
+  - `DlgDDProc` (Datum)
+  - `DlgDGProc` (Grad)
+  - `DlgODProc` (Ort-Duplikat)
+  - `DlgPHProc` (Person-Hilfe)
+  - `DlgAspekte` (Aspekte-Dialog)
+  - `DlgCalc` (Berechnungs-Dialog)
+  - `DlgTransEin` (Transit-Auswahl; geplantes `TransSelDialog` fehlt)
+  - `DlgRuck` (Rückläufig) – Qt `retrograde_dialog` vorhanden, Funktionsgleichheit prüfen
+  - `DlgTransAbort` – Qt `transit_abort_dialog` vorhanden, Funktionsgleichheit prüfen
+
+- Maus-/Interaktions-Features Radix-Grafik (Legacy `WM_*BUTTON*`, `MAUS_*` in `astrouni.c`, `auwurzel.c`):
+  - Zoom-Toggle per Maus (MAUS_ZOOM) inkl. Rechteck-Redraw
+  - Aspekt-Kreis/Single-Aspekt (MAUS_ASPEKT, `sOneAspekt`)
+  - Klick-Auswahl Planet/Haus (links/rechts) und zugehörige Listbox-Umschaltungen
+  - Maus-Handling im ChartWidget (`mousePressEvent` TODO) inkl. ggf. Move/Release
+
+- Weitere Prüfung/Druck/Export:
+  - Druck-/Abbruch-Pfade (`DlgAbort`, `sDlgPrint`, Printer-Init) noch nicht erfasst
+  - Export-Funktionen (PNG/PDF) laut Plan Phase 6 – Status prüfen

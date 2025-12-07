@@ -61,6 +61,11 @@ private slots:
     // Listbox
     void onListItemClicked(QListWidgetItem* item);
     
+    // Maus aus ChartWidget
+    void onPlanetClicked(int planetIndex, bool isTransit);
+    void onHouseClicked(int houseIndex);
+    void onAspectClicked(int idx1, int idx2, bool isTransit);
+    
 private:
     void setupUI();
     void fillDatenList();
