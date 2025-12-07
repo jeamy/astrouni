@@ -4,8 +4,10 @@
  * @brief 1:1 Port der Transit-Berechnungen aus legacy/autransi.c
  */
 
-#include "data_types.h"
 #include <QDateTime>
+#include <functional>
+#include "data_types.h"
+#include "chart_calc.h"
 
 namespace astro {
 
@@ -43,7 +45,18 @@ public:
      * 
      * Port von: sCalcMultiTransit(RADIX*, short)
      */
-    static int calcMultiTransit(const Radix& radix, Radix& transit, int inkrement);
+    static int calcMultiTransit(const Radix& radix,
+                                const QDate& startDatum,
+                                const QTime& startZeit,
+                                const QDate& endDatum,
+                                const QTime& endZeit,
+                                int inkrement,
+                                QVector<Radix>* transits = nullptr,
+                                QVector<TransitAspekt>* aspekte = nullptr,
+                                const QVector<float>& orbenPlanet = {},
+                                const QVector<float>& orbenHaus = {},
+                                bool* abortFlag = nullptr,
+                                const std::function<void(int,const QDate&,const QTime&)>& progressCb = nullptr);
     
     //==========================================================================
     // Rückläufigkeit
@@ -126,6 +139,10 @@ struct TransitAspekt {
     double orb;                 // Orbis
     bool applying;              // true = zunehmend, false = abnehmend
     bool retrograde;            // Transit-Planet rückläufig?
+    bool isHaus = false;        // true = Aspekt zu Haus (radixPlanet = Hausindex)
+    int transitIndex = 0;       // Index im Multi-Transit-Lauf
+    int startIndex = 0;         // Beginn-Index für Sequenz
+    int endIndex = 0;           // Ende-Index für Sequenz
 };
 
 } // namespace astro

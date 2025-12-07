@@ -11,6 +11,8 @@
 #include "dialogs/person_search_dialog.h"
 #include "dialogs/ort_dialog.h"
 #include "dialogs/horo_typ_dialog.h"
+#include "dialogs/transit_dialog.h"
+#include "transit_result_window.h"
 #include "dialogs/orben_dialog.h"
 #include "dialogs/farben_dialog.h"
 #include "dialogs/settings_dialog.h"
@@ -317,7 +319,64 @@ void MainWindow::onHoroTyp() {
         ChartCalc::calcAspects(*m_currentRadix.synastrie, m_auinit.orbenSPlanet);
     }
     
-    // Ersten Radix berechnen
+    // STRICT LEGACY: Bei Transit erst Basis-Radix berechnen, dann Transit-Dialog öffnen
+    if (m_auinit.sSelHoro == TYP_TRANSIT) {
+        // Erst Basis-Radix berechnen
+        int result = ChartCalc::calculate(m_currentRadix, nullptr, TYP_RADIX);
+        if (result != ERR_OK) {
+            QMessageBox::warning(this, tr("Fehler"), 
+                tr("Fehler bei der Berechnung des Basis-Radix (Code: %1)").arg(result));
+            return;
+        }
+        ChartCalc::calcAspects(m_currentRadix, m_auinit.orbenPlanet);
+        
+        // Transit-Dialog öffnen (Port von DlgTransit)
+        TransitDialog transitDialog(this, m_auinit, m_currentRadix);
+        if (transitDialog.exec() != QDialog::Accepted || !transitDialog.wasCalculated()) {
+            return;  // Abgebrochen
+        }
+        
+        // Transit-Radix als synastrie setzen (für Anzeige im Chart)
+        m_currentRadix.synastrie = std::make_shared<Radix>(transitDialog.getTransitRadix());
+        m_currentRadix.horoTyp = TYP_TRANSIT;
+        
+        // Aspekte zwischen Radix und Transit berechnen
+        ChartCalc::calcAspects(m_currentRadix, m_auinit.orbenTPlanet);
+        ChartCalc::calcAngles(m_currentRadix, m_currentRadix.synastrie.get(), TYP_TRANSIT);
+        ChartCalc::calcHouseAspects(m_currentRadix, m_auinit.orbenHaus, m_auinit.sAspekte);
+        
+        // STRICT LEGACY: Transit-Ergebnis-Fenster öffnen (Port von WndTransit)
+        TransitResultWindow* transitResult = new TransitResultWindow(m_tabWidget, m_auinit, m_currentRadix);
+        transitResult->setTransits(transitDialog.getTransits(), 
+                                   transitDialog.getTransitAspekte(),
+                                   transitDialog.getVonDatum(),
+                                   transitDialog.getBisDatum());
+        
+        // Transits kopieren für Lambda (Dialog wird nach Scope zerstört)
+        QVector<Radix> transits = transitDialog.getTransits();
+        Radix basisRadix = m_currentRadix;
+        
+        // Signal für Grafik-Anzeige verbinden
+        connect(transitResult, &TransitResultWindow::requestGraphic, this, [this, transits, basisRadix](int transitIndex) {
+            if (transitIndex >= 0 && transitIndex < transits.size()) {
+                Radix transitRadix = basisRadix;
+                transitRadix.synastrie = std::make_shared<Radix>(transits.at(transitIndex));
+                transitRadix.horoTyp = TYP_TRANSIT;
+                
+                RadixWindow* radixWidget = new RadixWindow(m_tabWidget, m_auinit, transitRadix);
+                int tabIndex = m_tabWidget->addTab(radixWidget, radixWidget->getTabTitle());
+                m_tabWidget->setCurrentIndex(tabIndex);
+            }
+        });
+        
+        int tabIndex = m_tabWidget->addTab(transitResult, transitResult->getTabTitle());
+        m_tabWidget->setCurrentIndex(tabIndex);
+        
+        emit settingsChanged();
+        return;
+    }
+    
+    // Ersten Radix berechnen (Radix oder Synastrie)
     int result = ChartCalc::calculate(m_currentRadix, 
         m_currentRadix.synastrie.get(), m_auinit.sSelHoro);
     

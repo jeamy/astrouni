@@ -64,6 +64,13 @@ QString RadixWindow::getTabTitle() const {
             name2 += m_radix.synastrie->rFix.name;
         }
         name = tr("Synastrie: %1 / %2").arg(name).arg(name2);
+    } else if (m_radix.horoTyp == TYP_TRANSIT && m_radix.synastrie) {
+        // STRICT LEGACY: Bei Transit Name + Transit-Datum anzeigen
+        QString transitDatum = QString("%1.%2.%3")
+            .arg(m_radix.synastrie->rFix.tag, 2, 10, QChar('0'))
+            .arg(m_radix.synastrie->rFix.monat, 2, 10, QChar('0'))
+            .arg(m_radix.synastrie->rFix.jahr, 4, 10, QChar('0'));
+        name = tr("Transit: %1 (%2)").arg(name).arg(transitDatum);
     } else {
         // Häusersystem anhängen
         int hausIdx = m_radix.hausSys;
@@ -371,6 +378,42 @@ void RadixWindow::fillPositionenList() {
         item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund pro Eintrag
         m_listWidget->addItem(item);
     }
+    
+    // STRICT LEGACY: Bei Transit auch Transit-Planeten anzeigen
+    if (m_radix.horoTyp == TYP_TRANSIT && m_radix.synastrie) {
+        const Radix& transit = *m_radix.synastrie;
+        
+        // Transit-Header
+        QString transitDatum = QString("%1.%2.%3")
+            .arg(transit.rFix.tag, 2, 10, QChar('0'))
+            .arg(transit.rFix.monat, 2, 10, QChar('0'))
+            .arg(transit.rFix.jahr, 4, 10, QChar('0'));
+        QListWidgetItem* transitHeader = new QListWidgetItem(
+            QString("<span style='color:#FFFFFF'>") + tr("-Transit %1-").arg(transitDatum) + "</span>");
+        transitHeader->setBackground(QColor(128, 0, 0));  // Dunkelrot für Transit
+        m_listWidget->addItem(transitHeader);
+        
+        // Transit-Planeten
+        for (int i = 0; i < transit.anzahlPlanet && i < transit.planet.size(); ++i) {
+            QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
+            QString pos = Calculations::degToZeichenString(transit.planet[i], true);
+            int stz = static_cast<int>(transit.planet[i] / 30.0) % 12;
+            QString stzSymbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+            QString retro = (transit.planetTyp.size() > i && (transit.planetTyp[i] & P_TYP_RUCK)) ? " R" : "";
+            
+            QString planetColor = colorToHtml(sColor[COL_PLAN_T]);
+            int element = stz % 4;
+            QString stzColor = colorToHtml(sColor[COL_FEUER + element]);
+            
+            QString html = QString("<span style='color:%1'>%2</span> %3 <span style='color:%4'>%5</span>%6")
+                .arg(planetColor).arg(symbol).arg(pos).arg(stzColor).arg(stzSymbol).arg(retro);
+            
+            QListWidgetItem* item = new QListWidgetItem(html);
+            item->setData(Qt::UserRole, i + 100);  // Transit-Planeten ab 100
+            item->setBackground(sColor[COL_LBREC_NORM]);
+            m_listWidget->addItem(item);
+        }
+    }
 }
 
 void RadixWindow::fillAspekteList() {
@@ -507,6 +550,86 @@ void RadixWindow::fillAspekteList() {
             QListWidgetItem* item = new QListWidgetItem(html);
             item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund pro Eintrag
             m_listWidget->addItem(item);
+        }
+    }
+    
+    // STRICT LEGACY: Bei Transit auch Transit-Aspekte anzeigen (Transit-Planet zu Radix-Planet)
+    if (m_radix.horoTyp == TYP_TRANSIT && m_radix.synastrie) {
+        const Radix& transit = *m_radix.synastrie;
+        
+        // Transit-Aspekte Header
+        QString transitDatum = QString("%1.%2.%3")
+            .arg(transit.rFix.tag, 2, 10, QChar('0'))
+            .arg(transit.rFix.monat, 2, 10, QChar('0'))
+            .arg(transit.rFix.jahr, 4, 10, QChar('0'));
+        QListWidgetItem* transitHeader = new QListWidgetItem(
+            QString("<span style='color:#FFFFFF'>") + tr("-Transit %1-").arg(transitDatum) + "</span>");
+        transitHeader->setBackground(QColor(128, 0, 0));  // Dunkelrot für Transit
+        m_listWidget->addItem(transitHeader);
+        
+        // Transit-Aspekte: Transit-Planet zu Radix-Planet
+        // Die Aspekte sind in m_radix.aspPlanet gespeichert (nach calcAspects mit Transit)
+        int numTransit = qMin(transit.anzahlPlanet, static_cast<int16_t>(transit.planet.size()));
+        int numRadix = m_radix.anzahlPlanet;
+        
+        for (int t = 0; t < numTransit; ++t) {
+            for (int r = 0; r < numRadix; ++r) {
+                // Aspekt zwischen Transit-Planet t und Radix-Planet r berechnen
+                double transitPos = transit.planet[t];
+                double radixPos = m_radix.planet[r];
+                double diff = std::abs(transitPos - radixPos);
+                if (diff > 180.0) diff = 360.0 - diff;
+                
+                // Aspekt prüfen mit Transit-Orben
+                int8_t asp = KEIN_ASP;
+                if (diff <= m_auinit.orbenTPlanet[0]) asp = KONJUNKTION;
+                else if (std::abs(diff - 30.0) <= m_auinit.orbenTPlanet[1]) asp = HALBSEX;
+                else if (std::abs(diff - 60.0) <= m_auinit.orbenTPlanet[2]) asp = SEXTIL;
+                else if (std::abs(diff - 90.0) <= m_auinit.orbenTPlanet[3]) asp = QUADRATUR;
+                else if (std::abs(diff - 120.0) <= m_auinit.orbenTPlanet[4]) asp = TRIGON;
+                else if (std::abs(diff - 150.0) <= m_auinit.orbenTPlanet[5]) asp = QUINCUNX;
+                else if (std::abs(diff - 180.0) <= m_auinit.orbenTPlanet[6]) asp = OPOSITION;
+                
+                if (asp == KEIN_ASP) continue;
+                
+                // Transit-Planet Symbol
+                QString symbolT = QString::fromUtf8(PLANET_SYMBOLS[t]);
+                // Radix-Planet Symbol
+                QString symbolR = QString::fromUtf8(PLANET_SYMBOLS[r]);
+                
+                // Sternzeichen
+                int stzT = static_cast<int>(transitPos / 30.0) % 12;
+                int stzR = static_cast<int>(radixPos / 30.0) % 12;
+                QString stzSymbolT = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stzT]);
+                QString stzSymbolR = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stzR]);
+                
+                // Aspekt-Symbol
+                int aspSymIdx = getAspektSymbolIndex(asp);
+                QString aspSymbol = QString::fromUtf8(ASPEKT_SYMBOLS[aspSymIdx]);
+                
+                // Farben
+                QString transitColor = colorToHtml(sColor[COL_PLAN_T]);
+                QString radixColor = colorToHtml(sColor[COL_PLAN]);
+                int elementT = stzT % 4;
+                int elementR = stzR % 4;
+                QString stzColorT = colorToHtml(sColor[COL_FEUER + elementT]);
+                QString stzColorR = colorToHtml(sColor[COL_FEUER + elementR]);
+                QString aspColor = colorToHtml(sColor[getAspektColorIndex(asp)]);
+                
+                // HTML-formatierter Text: Transit-Planet [Aspekt] Radix-Planet
+                QString html = QString("<span style='color:%1'>%2</span> in <span style='color:%3'>%4</span> "
+                                       "<span style='color:%5'>%6</span> "
+                                       "<span style='color:%7'>%8</span> in <span style='color:%9'>%10</span>")
+                    .arg(transitColor).arg(symbolT)
+                    .arg(stzColorT).arg(stzSymbolT)
+                    .arg(aspColor).arg(aspSymbol)
+                    .arg(radixColor).arg(symbolR)
+                    .arg(stzColorR).arg(stzSymbolR);
+                
+                QListWidgetItem* item = new QListWidgetItem(html);
+                item->setBackground(sColor[COL_LBREC_NORM]);
+                m_listWidget->addItem(item);
+            }
         }
     }
 }

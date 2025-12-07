@@ -28,6 +28,14 @@ add_library(astrouni_gui STATIC
     dialogs/farben_dialog.cpp
     dialogs/settings_dialog.h
     dialogs/settings_dialog.cpp
+    dialogs/transit_abort_dialog.h
+    dialogs/transit_abort_dialog.cpp
+    dialogs/transit_dialog.h
+    dialogs/transit_dialog.cpp
+    dialogs/retrograde_dialog.h
+    dialogs/retrograde_dialog.cpp
+    transit_result_window.h
+    transit_result_window.cpp
 )
 
 target_include_directories(astrouni_gui PUBLIC
