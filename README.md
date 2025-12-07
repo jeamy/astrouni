@@ -1,6 +1,6 @@
 # AstroUniverse 2026 - Astrology Software
 
-Moderne C++20/Qt6 Portierung der deutschen Astrologie-Software **AstroUnivers v0.04Beta**.
+Moderne C++20/Qt6 Portierung der Astrologie-Software **AstroUnivers v0.04Beta**.
 
 ## Features
 
@@ -20,27 +20,121 @@ sudo apt-get install build-essential cmake git qt6-base-dev qt6-tools-dev
 
 **macOS:**
 ```bash
+xcode-select --install   # Xcode Command Line Tools (clang++)
 brew install cmake qt@6
 ```
 
 **Windows:**
-- Visual Studio 2022 mit C++ Desktop Development
-- Qt6 von https://www.qt.io/download-qt-installer
+- Visual Studio 2022 mit C++ Desktop Development (MSVC) **oder** Qt 6 mit MinGW
+- CMake (z.B. `winget install Kitware.CMake`)
+- Qt6 Installer: https://www.qt.io/download-qt-installer (Beispielkonfiguration mit MinGW siehe `build_windows_release.bat`)
 
 ## Build
+
+### Entwicklung (manueller CMake-Build)
 
 ```bash
 cd astrouni2026
 mkdir build && cd build
 cmake ..
-make -j$(nproc)      # Linux/macOS
-# oder: cmake --build . --config Release  # Windows
+cmake --build . -j$(nproc)
 ```
+
+### Plattform-spezifische Release-Builds mit Skripten
+
+Für fertige Releases gibt es drei Skripte im Projektwurzelverzeichnis.
+
+#### Linux
+
+```bash
+cd astrouni
+bash build_linux_release.sh
+```
+
+Das Skript:
+
+- prüft/ installiert Abhängigkeiten (über `apt`, falls vorhanden)
+- baut `astrouni2026` im Verzeichnis `astrouni2026/build-linux-release`
+- erstellt ein Minimal-Release in `astrouni2026/dist/linux` mit:
+  - `astrouni2026` (Binary)
+  - `data/astroorg.dat`, `data/astroger.dat`, `data/europa.dat` (Orte)
+  - `data/default.dat` (Standard-Orben)
+  - `resources/` (Icons etc., falls vorhanden)
+- erzeugt zusätzlich (falls `zip` installiert ist) ein Archiv
+  `astrouni2026/dist/astrouni2026-linux-release.zip`
+
+Start des Releases:
+
+```bash
+cd astrouni2026/dist/linux
+./astrouni2026
+```
+
+#### macOS
+
+```bash
+cd astrouni
+bash build_macos_release.sh
+```
+
+Das Skript:
+
+- prüft Abhängigkeiten (Xcode Command Line Tools, CMake, Qt6 über Homebrew)
+- baut `astrouni2026` im Verzeichnis `astrouni2026/build-macos-release`
+- erstellt ein Minimal-Release in `astrouni2026/dist/macos` mit denselben
+  Minimaldaten wie unter Linux (`astroorg.dat`, `astroger.dat`, `europa.dat`,
+  `default.dat` und `resources/`)
+
+Start des Releases (Terminal):
+
+```bash
+cd astrouni2026/dist/macos
+./astrouni2026
+```
+
+#### Windows
+
+```bat
+cd astrouni
+build_windows_release.bat
+```
+
+Das Skript:
+
+- prüft Abhängigkeiten (CMake, C++-Compiler, Qt6) und gibt bei Bedarf
+  Download-Links und Beispielkonfigurationen aus
+- baut `astrouni2026.exe` im Verzeichnis `astrouni2026/build-windows-release`
+- erstellt ein Minimal-Release in `astrouni2026/dist/windows` mit:
+  - `astrouni2026.exe`
+  - `data/astroorg.dat`, `data/astroger.dat`, `data/europa.dat`, `data/default.dat`
+  - `resources\` (falls vorhanden)
+- erzeugt zusätzlich (falls PowerShell verfügbar ist) ein Archiv
+  `astrouni2026\dist\astrouni2026-windows-release.zip`
+
+Start des Releases:
+
+```bat
+astrouni2026\dist\windows\astrouni2026.exe
+```
+
+## Daten-Dateien (Minimalinstallation)
+
+- `astroorg.dat`, `astroger.dat`, `europa.dat`  
+  Orte-Datenbanken. Mindestens eine dieser Dateien sollte vorhanden sein,
+  empfohlen sind alle drei.
+- `default.dat`  
+  Standard-Orben und Voreinstellungen für Aspekte.
+
+Ohne diese Dateien startet das Programm zwar, es fehlen dann aber
+Ortsdaten bzw. sinnvolle Orben-Vorgaben.
+
+Weitere `.dat`-Dateien (z.B. `astronam.dat`, `astroini.dat`, `astrorad.dat`,
+`astronot.dat`) sind **optional** und werden bei Bedarf neu angelegt.
 
 ## Tests
 
 ```bash
-cd build
+cd astrouni2026/build
 ctest --output-on-failure
 ```
 
@@ -117,10 +211,6 @@ for (int i = 0; i < radix.anzahlPlanet; ++i) {
 }
 ```
 
-## Dokumentation
-
-- **[astrouni2026/docs/PORTIERUNGSPLAN_QT6.md](astrouni2026/docs/PORTIERUNGSPLAN_QT6.md)** - Qt6 Portierungsplan
-
 ## Technologie-Stack
 
 - **C++20** - Modern C++ Standard
@@ -168,9 +258,9 @@ AstroUniverse ist freie Software unter der GPL v2 Lizenz.
 - [ ] Drucken implementieren
 - [ ] Speichern/Laden
 
-### Phase 3: Erweiterte Features (Geplant)
-- [ ] Transit-Fenster
-- [ ] Synastrie
+### Phase 3: Erweiterte Features (In Arbeit)
+- [x] Transit-Fenster
+- [x] Synastrie
 - [ ] Composit
 - [ ] Export (PNG, PDF)
 
