@@ -627,6 +627,8 @@ void RadixWindow::fillAspekteList() {
                     .arg(stzColorR).arg(stzSymbolR);
                 
                 QListWidgetItem* item = new QListWidgetItem(html);
+                // Transit-Aspekt: Transit-Planet (t+1000) und Radix-Planet (r)
+                item->setData(Qt::UserRole, QPoint(t + 1000, r));
                 item->setBackground(sColor[COL_LBREC_NORM]);
                 m_listWidget->addItem(item);
             }
@@ -685,7 +687,14 @@ void RadixWindow::onListItemClicked(QListWidgetItem* item) {
         QVariant data = item->data(Qt::UserRole);
         if (data.isValid()) {
             QPoint planets = data.toPoint();
-            m_chartWidget->highlightAspect(planets.x(), planets.y());
+            // Transit-Aspekte haben x >= 1000 (Transit-Planet + 1000)
+            if (planets.x() >= 1000) {
+                // Transit-Aspekt: Transit-Planet (x-1000) zu Radix-Planet (y)
+                m_chartWidget->highlightTransitAspect(planets.x() - 1000, planets.y());
+            } else {
+                // Normaler Aspekt: Radix-Planet zu Radix-Planet
+                m_chartWidget->highlightAspect(planets.x(), planets.y());
+            }
         }
     } else {
         // Daten-Modus: keine Hervorhebung

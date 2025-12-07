@@ -59,6 +59,13 @@ public:
     void highlightAspect(int planet1, int planet2);
     
     /**
+     * @brief Hebt einen Transit-Aspekt hervor
+     * @param transitPlanet Index des Transit-Planeten
+     * @param radixPlanet Index des Radix-Planeten
+     */
+    void highlightTransitAspect(int transitPlanet, int radixPlanet);
+    
+    /**
      * @brief Gibt die minimale Größe zurück
      */
     QSize minimumSizeHint() const override;
@@ -184,6 +191,10 @@ private:
     int m_highlightPlanet;      // -1 = keine Hervorhebung
     int m_highlightAspect1;     // Erster Planet des Aspekts
     int m_highlightAspect2;     // Zweiter Planet des Aspekts
+    
+    // Transit-Aspekt Hervorhebung
+    int m_highlightTransitPlanet;  // Transit-Planet Index (-1 = keine)
+    int m_highlightRadixPlanet;    // Radix-Planet Index (-1 = keine)
 };
 
 } // namespace astro

@@ -27,7 +27,9 @@ ChartWidget::ChartWidget(QWidget* parent)
     , m_show9Degree(true)
     , m_highlightPlanet(-1)
     , m_highlightAspect1(-1)
-    , m_highlightAspect2(-1) {
+    , m_highlightAspect2(-1)
+    , m_highlightTransitPlanet(-1)
+    , m_highlightRadixPlanet(-1) {
     
     // Hintergrund nicht automatisch füllen
     // Der eigentliche Radix-Kreis wird in drawRadix() grau hinterlegt
@@ -91,6 +93,17 @@ void ChartWidget::highlightAspect(int planet1, int planet2) {
     m_highlightPlanet = -1;
     m_highlightAspect1 = planet1;
     m_highlightAspect2 = planet2;
+    m_highlightTransitPlanet = -1;
+    m_highlightRadixPlanet = -1;
+    update();
+}
+
+void ChartWidget::highlightTransitAspect(int transitPlanet, int radixPlanet) {
+    m_highlightPlanet = -1;
+    m_highlightAspect1 = -1;
+    m_highlightAspect2 = -1;
+    m_highlightTransitPlanet = transitPlanet;
+    m_highlightRadixPlanet = radixPlanet;
     update();
 }
 
@@ -614,6 +627,51 @@ void ChartWidget::drawAspects(QPainter& painter) {
             
             QPointF p1 = degreeToPoint(m_radix.planet[m_highlightAspect1], m_radiusAsp);
             QPointF p2 = degreeToPoint(m_radix.planet[m_highlightAspect2], m_radiusAsp);
+            
+            painter.drawLine(p1, p2);
+        }
+    }
+    
+    // STRICT LEGACY: Hervorgehobenen Transit-Aspekt zeichnen
+    if (m_highlightTransitPlanet >= 0 && m_highlightRadixPlanet >= 0 && m_transit) {
+        // Transit-Planet Position
+        if (m_highlightTransitPlanet < m_transit->planet.size() &&
+            m_highlightRadixPlanet < m_radix.anzahlPlanet) {
+            
+            double transitPos = m_transit->planet[m_highlightTransitPlanet];
+            double radixPos = m_radix.planet[m_highlightRadixPlanet];
+            
+            // Aspekt berechnen
+            double diff = std::abs(transitPos - radixPos);
+            if (diff > 180.0) diff = 360.0 - diff;
+            
+            int asp = KEIN_ASP;
+            if (diff <= 10.0) asp = KONJUNKTION;
+            else if (std::abs(diff - 30.0) <= 5.0) asp = HALBSEX;
+            else if (std::abs(diff - 60.0) <= 8.0) asp = SEXTIL;
+            else if (std::abs(diff - 90.0) <= 10.0) asp = QUADRATUR;
+            else if (std::abs(diff - 120.0) <= 10.0) asp = TRIGON;
+            else if (std::abs(diff - 150.0) <= 5.0) asp = QUINCUNX;
+            else if (std::abs(diff - 180.0) <= 10.0) asp = OPOSITION;
+            
+            // Dickere, hellere Linie für Hervorhebung
+            QColor color;
+            switch (asp) {
+                case KONJUNKTION: color = sColor[CKONJUNKTION]; break;
+                case HALBSEX:     color = sColor[CHALBSEX]; break;
+                case SEXTIL:      color = sColor[CSEXTIL]; break;
+                case QUADRATUR:   color = sColor[CQUADRATUR]; break;
+                case TRIGON:      color = sColor[CTRIGON]; break;
+                case QUINCUNX:    color = sColor[CQUINCUNX]; break;
+                case OPOSITION:   color = sColor[COPOSITION]; break;
+                default:          color = sColor[COL_TXT]; break;
+            }
+            color = color.lighter(150);
+            painter.setPen(QPen(color, 4, Qt::SolidLine));
+            
+            // Linie vom Transit-Planeten zum Radix-Planeten
+            QPointF p1 = degreeToPoint(transitPos, m_radiusAsp);
+            QPointF p2 = degreeToPoint(radixPos, m_radiusAsp);
             
             painter.drawLine(p1, p2);
         }
