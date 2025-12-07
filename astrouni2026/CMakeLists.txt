@@ -11,6 +11,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# MSVC: __cplusplus korrekt setzen (Qt6 Anforderung)
+if(MSVC)
+    add_compile_options(/Zc:__cplusplus)
+endif()
+
 # Qt6 Auto-Tools
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
