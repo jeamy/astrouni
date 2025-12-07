@@ -8,6 +8,8 @@ add_library(astrouni_gui STATIC
     radix_window.cpp
     chart_widget.h
     chart_widget.cpp
+    print_manager.h
+    print_manager.cpp
     
     # Dialoge
     dialogs/person_dialog.h

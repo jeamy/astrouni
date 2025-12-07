@@ -35,6 +35,11 @@ public:
     QString getTabTitle() const;
     
     /**
+     * @brief Gibt die Radix-Daten zurück
+     */
+    const Radix& getRadix() const { return m_radix; }
+    
+    /**
      * @brief Setzt die Radix-Daten
      */
     void setRadix(const Radix& radix);
