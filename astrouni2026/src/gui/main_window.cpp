@@ -29,6 +29,10 @@
 #include <QDir>
 #include <QIcon>
 #include <QFile>
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QTextBrowser>
+#include <QDialogButtonBox>
 
 namespace astro {
 
@@ -452,8 +456,99 @@ void MainWindow::onAspekte() {
 
 void MainWindow::onHelpIndex() {
     // TODO: Hilfe-System implementieren
-    QMessageBox::information(this, tr("Hilfe"), 
-                            tr("Hilfe-System noch nicht implementiert."));
+    QString text;
+
+    // Radix
+    text += tr("<h3>Radix</h3>");
+    text += tr("<p><b>1. Person erfassen</b><br>" 
+               "Menü &quot;Erfassen → Person…&quot; öffnen. "
+               "Name, Geburtsdatum, Geburtszeit und Geburtsort eingeben. "
+               "Den Ort bei Bedarf über &quot;Ort suchen&quot; auswählen.</p>");
+    text += tr("<p><b>2. Horoskoptyp / Häusersystem</b><br>" 
+               "Über &quot;Horoskop → Horoskoptyp…&quot; den Typ &quot;Radix&quot; "
+               "und das gewünschte Häusersystem wählen.</p>");
+    text += tr("<p><b>3. Berechnung und Anzeige</b><br>" 
+               "Im Personendialog &quot;OK&quot; wählen. "
+               "Bei erfolgreicher Berechnung wird ein neues Radix-Tab geöffnet. "
+               "Rechts können über die Schaltflächen &quot;Daten&quot;, &quot;Positionen&quot; "
+               "und &quot;Aspekte&quot; die Listen gewechselt werden.</p>");
+
+    // Synastrie
+    text += tr("<h3>Synastrie</h3>");
+    text += tr("<p><b>1. Horoskoptyp wählen</b><br>" 
+               "Unter &quot;Horoskop → Horoskoptyp…&quot; den Typ &quot;Synastrie&quot; wählen.</p>");
+    text += tr("<p><b>2. Person 1</b><br>" 
+               "Über &quot;Erfassen → Person…&quot; die erste Person erfassen oder aus der Datenbank laden "
+               "und berechnen lassen.</p>");
+    text += tr("<p><b>3. Person 2</b><br>" 
+               "Nach &quot;OK&quot; im Personendialog im Dialog &quot;Person 2 auswählen&quot; "
+               "eine zweite Person aus der Liste wählen. "
+               "Das Programm berechnet automatisch die Synastrie-Aspekte.</p>");
+    text += tr("<p><b>4. Anzeige</b><br>" 
+               "Im neuen Synastrie-Tab werden innen die Radix-Planeten der ersten Person "
+               "und außen die Planeten der zweiten Person gezeigt. "
+               "Die Aspekteliste enthält Radix- und Synastrie-Aspekte.</p>");
+
+    // Transit
+    text += tr("<h3>Transit</h3>");
+    text += tr("<p><b>1. Horoskoptyp wählen</b><br>" 
+               "Unter &quot;Horoskop → Horoskoptyp…&quot; den Typ &quot;Transit&quot; wählen. "
+               "Der zugrunde liegende Radix wird aus der aktuellen Person übernommen.</p>");
+    text += tr("<p><b>2. Transit-Dialog</b><br>" 
+               "Im Transitdialog Start-/Enddatum bzw. Suchzeitraum einstellen.</p>");
+    text += tr("<p><b>3. Transit-Auswahl (Matrix)</b><br>" 
+               "In der Auswahlmatrix festlegen, welche Transit-Planeten auf welche Radix-Planeten "
+               "oder Häuser Aspekte bilden dürfen. Ganze Zeilen/Spalten können gemeinsam ein- oder "
+               "ausgeschaltet werden.</p>");
+    text += tr("<p><b>4. Ergebnisliste und Grafik</b><br>" 
+               "Nach der Berechnung zeigt das Programm eine Liste gefundener Transite. "
+               "Über die Schaltfläche &quot;Grafik&quot; kann zu einem Eintrag ein Transit-Radix geöffnet werden. "
+               "Innen stehen die Radix-Planeten, außen die Transit-Planeten; es werden nur die "
+               "in der Matrix erlaubten Aspekte gezeichnet.</p>");
+
+    // Einstellungen / Orben / Farben / Aspekte
+    text += tr("<h3>Einstellungen, Orben, Farben, Aspekte</h3>");
+    text += tr("<p><b>Aspekte / Einstellungen</b><br>" 
+               "Unter &quot;Horoskop → Aspekte…&quot; können Aspektarten (Konjunktion, Sextil, Quadrat, "
+               "Trigon, Opposition, Halbsextil, Quincunx), die Grad-Teilung (3er/9er) "
+               "und welche Objekte (Planeten, Asteroiden, Häuser) Aspekte bilden, ein- oder "
+               "ausgeschaltet werden.</p>");
+    text += tr("<p><b>Orben</b><br>" 
+               "Unter &quot;Horoskop → Orben…&quot; werden die zulässigen Orben für Planet–Planet- und "
+               "Planet–Haus-Aspekte in Matrizen eingestellt. &quot;Default&quot; stellt die in der INI "
+               "hinterlegten Standardwerte wieder her.</p>");
+    text += tr("<p><b>Farben</b><br>" 
+               "Unter &quot;Horoskop → Farben…&quot; können die Farben von Hintergrund, Kreisen, "
+               "Aspektlinien und Planeten angepasst werden.</p>");
+
+    // Personen / Orte erfassen
+    text += tr("<h3>Personen und Orte erfassen</h3>");
+    text += tr("<p><b>Personen</b><br>" 
+               "Menü &quot;Erfassen → Person…&quot; öffnet den Personendialog. "
+               "Hier werden Name, Geburtsdaten, Ort und Zeitzone eingegeben. "
+               "Über &quot;Namen suchen&quot; kann eine Person aus der Datenbank gewählt werden.</p>");
+    text += tr("<p><b>Orte</b><br>" 
+               "Im Personendialog über &quot;Ort suchen&quot; einen Ort aus der Orteliste wählen oder "
+               "einen neuen Ort erfassen. Bei Namens-Duplikaten zeigt der Ort-Duplikat-Dialog "
+               "vorhandene Einträge an; einer davon kann übernommen werden.</p>");
+
+    // Scrollbare Hilfe über eigenen Dialog
+    QDialog dlg(this);
+    dlg.setWindowTitle(tr("Hilfe – Index"));
+    dlg.setModal(true);
+
+    QVBoxLayout* layout = new QVBoxLayout(&dlg);
+    QTextBrowser* browser = new QTextBrowser(&dlg);
+    browser->setReadOnly(true);
+    browser->setHtml(text);
+    browser->setMinimumSize(640, 480);
+    layout->addWidget(browser);
+
+    QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok, &dlg);
+    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    layout->addWidget(buttons);
+
+    dlg.exec();
 }
 
 void MainWindow::onHelpAbout() {
