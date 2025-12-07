@@ -1,64 +1,41 @@
-# General
-.DS_Store
-Thumbs.db
-*.swp
-*.tmp
-*.log
+# Build directories
+build/
+cmake-build-*/
 
-# Build output directories
-/build/
-/build-*/
-/cmake-build-*/
-/bin/
-/lib/
-/dist/
-/out/
-
-# CMake generated files and directories (anywhere)
-**/CMakeFiles/
-**/CMakeScripts/
-**/Testing/
-CMakeCache.txt
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-
-# Dependency/build helper dirs
-**/_deps/
-
-# Ninja/Make artifacts
-build.ninja
-*.ninja
-.ninja_deps
-.ninja_log
-Makefile
-
-# Object and library files
+# Compiled files
 *.o
-*.obj
-*.lo
-*.la
 *.a
-*.lib
 *.so
-*.so.*
 *.dylib
 *.dll
-
-# Executables
 *.exe
-*.out
-*.app
 
-# IDE/editor folders
-.vscode/
+# IDE files
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/settings.json
 .idea/
-*.user
-*.code-workspace
+*.swp
+*.swo
+*~
 
-# Crash dumps / cores
-#core
-#*.core
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
 
-# wxWidgets cache (if any)
-*.gch
+# Test results
+Testing/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*~
