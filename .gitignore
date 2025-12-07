@@ -1,6 +1,10 @@
 # Build directories
 build/
+build-*/
 cmake-build-*/
+
+# Distribution directories
+dist/
 
 # Compiled files
 *.o

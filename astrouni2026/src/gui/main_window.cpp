@@ -12,6 +12,7 @@
 #include "dialogs/ort_dialog.h"
 #include "dialogs/horo_typ_dialog.h"
 #include "dialogs/transit_dialog.h"
+#include "dialogs/trans_sel_dialog.h"
 #include "transit_result_window.h"
 #include "dialogs/orben_dialog.h"
 #include "dialogs/farben_dialog.h"
@@ -28,6 +29,10 @@
 #include <QDir>
 #include <QIcon>
 #include <QFile>
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QTextBrowser>
+#include <QDialogButtonBox>
 
 namespace astro {
 
@@ -147,8 +152,8 @@ void MainWindow::setupActions() {
     m_farbenAction = new QAction(tr("&Farben"), this);
     connect(m_farbenAction, &QAction::triggered, this, &MainWindow::onFarben);
     
-    m_einstAction = new QAction(tr("&Einstellungen"), this);
-    connect(m_einstAction, &QAction::triggered, this, &MainWindow::onEinstellungen);
+    m_aspekteAction = new QAction(tr("&Aspekte..."), this);
+    connect(m_aspekteAction, &QAction::triggered, this, &MainWindow::onAspekte);
     
     // Hilfe-Menü Aktionen
     m_helpIndexAction = new QAction(tr("Inde&x"), this);
@@ -176,7 +181,7 @@ void MainWindow::setupMenus() {
     m_horoskopMenu->addAction(m_horoTypAction);
     m_horoskopMenu->addAction(m_orbenAction);
     m_horoskopMenu->addAction(m_farbenAction);
-    m_horoskopMenu->addAction(m_einstAction);
+    m_horoskopMenu->addAction(m_aspekteAction);
     m_horoskopMenu->setMinimumWidth(200);  // Mindestbreite für vollständige Texte
     
     // Hilfe-Menü (Port von MAINMENU -> "&Hilfe")
@@ -345,30 +350,43 @@ void MainWindow::onHoroTyp() {
         ChartCalc::calcAngles(m_currentRadix, m_currentRadix.synastrie.get(), TYP_TRANSIT);
         ChartCalc::calcHouseAspects(m_currentRadix, m_auinit.orbenHaus, m_auinit.sAspekte);
         
+        // Transit-Auswahl-Dialog (Port von DlgTransEin)
+        TransSelDialog transSelDialog(this);
+        transSelDialog.setSelection(transitDialog.getTransSel());
+        if (transSelDialog.exec() != QDialog::Accepted) {
+            return;
+        }
+        QVector<QVector<bool>> transSel = transSelDialog.selection();
+        
         // STRICT LEGACY: Transit-Ergebnis-Fenster öffnen (Port von WndTransit)
         TransitResultWindow* transitResult = new TransitResultWindow(m_tabWidget, m_auinit, m_currentRadix);
         transitResult->setTransits(transitDialog.getTransits(), 
                                    transitDialog.getTransitAspekte(),
                                    transitDialog.getVonDatum(),
-                                   transitDialog.getBisDatum());
+                                   transitDialog.getBisDatum(),
+                                   transSel);
+        transitResult->setTransitSelection(transSel);
         
         // Transits kopieren für Lambda (Dialog wird nach Scope zerstört)
         QVector<Radix> transits = transitDialog.getTransits();
         Radix basisRadix = m_currentRadix;
         
         // Signal für Grafik-Anzeige verbinden
-        connect(transitResult, &TransitResultWindow::requestGraphic, this, [this, transits, basisRadix](int transitIndex) {
+        connect(transitResult, &TransitResultWindow::requestGraphic, this, [this, transits, basisRadix, transSel](int transitIndex) {
             if (transitIndex >= 0 && transitIndex < transits.size()) {
                 Radix transitRadix = basisRadix;
                 transitRadix.synastrie = std::make_shared<Radix>(transits.at(transitIndex));
                 transitRadix.horoTyp = TYP_TRANSIT;
                 
                 RadixWindow* radixWidget = new RadixWindow(m_tabWidget, m_auinit, transitRadix);
+                radixWidget->setTransitSelection(transSel);
                 int tabIndex = m_tabWidget->addTab(radixWidget, radixWidget->getTabTitle());
                 m_tabWidget->setCurrentIndex(tabIndex);
             }
         });
         
+        // Nur Transit-Ergebnis-Tab öffnen, kein automatisches Chart
+        // Chart wird erst bei Auswahl aus der Liste geöffnet (Grafik-Button oder Doppelklick)
         int tabIndex = m_tabWidget->addTab(transitResult, transitResult->getTabTitle());
         m_tabWidget->setCurrentIndex(tabIndex);
         
@@ -423,8 +441,8 @@ void MainWindow::onFarben() {
     }
 }
 
-void MainWindow::onEinstellungen() {
-    // Port von: EINSTELL Dialog
+void MainWindow::onAspekte() {
+    // Port von: DlgAspekte - ruft SettingsDialog auf (gleiche Funktion)
     SettingsDialog dialog(m_auinit, this);
     
     if (dialog.exec() == QDialog::Accepted) {
@@ -438,8 +456,116 @@ void MainWindow::onEinstellungen() {
 
 void MainWindow::onHelpIndex() {
     // TODO: Hilfe-System implementieren
-    QMessageBox::information(this, tr("Hilfe"), 
-                            tr("Hilfe-System noch nicht implementiert."));
+    QString text;
+
+    // Radix
+    text += tr("<h3>Radix</h3>");
+    text += tr("<p><b>1. Person erfassen</b><br>" 
+               "Menü &quot;Erfassen → Person…&quot; öffnen. "
+               "Name, Geburtsdatum, Geburtszeit und Geburtsort eingeben. "
+               "Den Ort bei Bedarf über &quot;Ort suchen&quot; auswählen.</p>");
+    text += tr("<p><b>2. Horoskoptyp / Häusersystem</b><br>" 
+               "Über &quot;Horoskop → Horoskoptyp…&quot; den Typ &quot;Radix&quot; "
+               "und das gewünschte Häusersystem wählen.</p>");
+    text += tr("<p><b>3. Berechnung und Anzeige</b><br>" 
+               "Im Personendialog &quot;OK&quot; wählen. "
+               "Bei erfolgreicher Berechnung wird ein neues Radix-Tab geöffnet. "
+               "Rechts können über die Schaltflächen &quot;Daten&quot;, &quot;Positionen&quot; "
+               "und &quot;Aspekte&quot; die Listen gewechselt werden.</p>");
+
+    // Synastrie
+    text += tr("<h3>Synastrie</h3>");
+    text += tr("<p><b>1. Horoskoptyp wählen</b><br>" 
+               "Unter &quot;Horoskop → Horoskoptyp…&quot; den Typ &quot;Synastrie&quot; wählen.</p>");
+    text += tr("<p><b>2. Person 1</b><br>" 
+               "Über &quot;Erfassen → Person…&quot; die erste Person erfassen oder aus der Datenbank laden "
+               "und berechnen lassen.</p>");
+    text += tr("<p><b>3. Person 2</b><br>" 
+               "Nach &quot;OK&quot; im Personendialog im Dialog &quot;Person 2 auswählen&quot; "
+               "eine zweite Person aus der Liste wählen. "
+               "Das Programm berechnet automatisch die Synastrie-Aspekte.</p>");
+    text += tr("<p><b>4. Anzeige</b><br>" 
+               "Im neuen Synastrie-Tab werden innen die Radix-Planeten der ersten Person "
+               "und außen die Planeten der zweiten Person gezeigt. "
+               "Die Aspekteliste enthält Radix- und Synastrie-Aspekte.</p>");
+
+    // Transit
+    text += tr("<h3>Transit</h3>");
+    text += tr("<p><b>1. Horoskoptyp wählen</b><br>" 
+               "Unter &quot;Horoskop → Horoskoptyp…&quot; den Typ &quot;Transit&quot; wählen. "
+               "Der zugrunde liegende Radix wird aus der aktuellen Person übernommen.</p>");
+    text += tr("<p><b>2. Transit-Dialog</b><br>" 
+               "Im Transitdialog Start-/Enddatum bzw. Suchzeitraum einstellen.</p>");
+    text += tr("<p><b>3. Transit-Auswahl (Matrix)</b><br>" 
+               "In der Auswahlmatrix festlegen, welche Transit-Planeten auf welche Radix-Planeten "
+               "oder Häuser Aspekte bilden dürfen. Ganze Zeilen/Spalten können gemeinsam ein- oder "
+               "ausgeschaltet werden.</p>");
+    text += tr("<p><b>4. Ergebnisliste und Grafik</b><br>" 
+               "Nach der Berechnung zeigt das Programm eine Liste gefundener Transite. "
+               "Über die Schaltfläche &quot;Grafik&quot; kann zu einem Eintrag ein Transit-Radix geöffnet werden. "
+               "Innen stehen die Radix-Planeten, außen die Transit-Planeten; es werden nur die "
+               "in der Matrix erlaubten Aspekte gezeichnet.</p>");
+
+    // Einstellungen / Orben / Farben / Aspekte
+    text += tr("<h3>Einstellungen, Orben, Farben, Aspekte</h3>");
+    text += tr("<p><b>Aspekte / Einstellungen</b><br>" 
+               "Unter &quot;Horoskop → Aspekte…&quot; können Aspektarten (Konjunktion, Sextil, Quadrat, "
+               "Trigon, Opposition, Halbsextil, Quincunx), die Grad-Teilung (3er/9er) "
+               "und welche Objekte (Planeten, Asteroiden, Häuser) Aspekte bilden, ein- oder "
+               "ausgeschaltet werden.</p>");
+    text += tr("<p><b>Orben</b><br>" 
+               "Unter &quot;Horoskop → Orben…&quot; werden die zulässigen Orben für Planet–Planet- und "
+               "Planet–Haus-Aspekte in Matrizen eingestellt. &quot;Default&quot; stellt die in der INI "
+               "hinterlegten Standardwerte wieder her.</p>");
+    text += tr("<p><b>Farben</b><br>" 
+               "Unter &quot;Horoskop → Farben…&quot; können die Farben von Hintergrund, Kreisen, "
+               "Aspektlinien und Planeten angepasst werden.</p>");
+
+    // Personen / Orte erfassen
+    text += tr("<h3>Personen und Orte erfassen</h3>");
+    text += tr("<p><b>Personen</b><br>" 
+               "Menü &quot;Erfassen → Person…&quot; öffnet den Personendialog. "
+               "Hier werden Name, Geburtsdaten, Ort und Zeitzone eingegeben. "
+               "Über &quot;Namen suchen&quot; kann eine Person aus der Datenbank gewählt werden.</p>");
+    text += tr("<p><b>Orte</b><br>" 
+               "Im Personendialog über &quot;Ort suchen&quot; einen Ort aus der Orteliste wählen oder "
+               "einen neuen Ort erfassen. Bei Namens-Duplikaten zeigt der Ort-Duplikat-Dialog "
+               "vorhandene Einträge an; einer davon kann übernommen werden.</p>");
+
+    // Mausaktionen in der Grafik
+    text += tr("<h3>Mausaktionen in der Grafik</h3>");
+    text += tr("<p><b>Linksklick auf Planet</b><br>" 
+               "Wählt den Planet aus, hebt ihn in der Grafik hervor und markiert den Eintrag in der Positionsliste.</p>");
+    text += tr("<p><b>Linksklick auf Hauslinie</b><br>" 
+               "Wählt das Haus aus und hebt die entsprechende Häuserlinie hervor.</p>");
+    text += tr("<p><b>Linksklick auf Aspektlinie</b><br>" 
+               "Wählt den Aspekt zwischen zwei Planeten, hebt die Aspektlinie hervor und synchronisiert die Aspekteliste.</p>");
+    text += tr("<p><b>Linksklick in freien Bereich</b><br>" 
+               "Schaltet den Aspekt-Kreis ein bzw. aus (Messhilfe für Winkel).</p>");
+    text += tr("<p><b>Rechtsklick auf Planet/Haus/Aspekt</b><br>" 
+               "Verhält sich wie der Linksklick: das angeklickte Objekt wird ausgewählt und hervorgehoben.</p>");
+    text += tr("<p><b>Rechtsklick in freien Bereich</b><br>" 
+               "Schaltet den Zoom ein bzw. aus. Der Zoom zentriert sich auf die angeklickte Position.</p>");
+    text += tr("<p><b>Doppelklick</b><br>" 
+               "Schaltet ebenfalls den Aspekt-Kreis ein bzw. aus.</p>");
+
+    // Scrollbare Hilfe über eigenen Dialog
+    QDialog dlg(this);
+    dlg.setWindowTitle(tr("Hilfe – Index"));
+    dlg.setModal(true);
+
+    QVBoxLayout* layout = new QVBoxLayout(&dlg);
+    QTextBrowser* browser = new QTextBrowser(&dlg);
+    browser->setReadOnly(true);
+    browser->setHtml(text);
+    browser->setMinimumSize(640, 480);
+    layout->addWidget(browser);
+
+    QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok, &dlg);
+    connect(buttons, &QDialogButtonBox::accepted, &dlg, &QDialog::accept);
+    layout->addWidget(buttons);
+
+    dlg.exec();
 }
 
 void MainWindow::onHelpAbout() {

@@ -6,9 +6,10 @@
  */
 
 #include "transit_dialog.h"
+#include "trans_sel_dialog.h"
 #include "ort_search_dialog.h"
-#include "../../core/transit_calc.h"
-#include "../../core/constants.h"
+#include "../../core/chart_calc.h"
+#include "../../data/orte_db.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -178,7 +179,6 @@ bool TransitDialog::validateInput() {
 void TransitDialog::calculateTransit() {
     // STRICT LEGACY: Multi-Transit berechnen (sCalcMultiTransit)
     m_transits.clear();
-    m_transitRadix.clear();
     m_transitTexts.clear();
     m_aspekte.clear();
     
@@ -241,6 +241,10 @@ void TransitDialog::calculateTransit() {
             tr("Fehler bei der Transit-Berechnung (Code: %1)").arg(result));
         m_calculated = false;
     }
+    
+    if (m_calculated) {
+        ensureDefaultTransSel();
+    }
 }
 
 QString TransitDialog::getVonDatum() const {
@@ -251,6 +255,25 @@ QString TransitDialog::getBisDatum() const {
     return m_bisDatumEdit->date().toString("dd.MM.yyyy");
 }
 
+void TransitDialog::ensureDefaultTransSel() {
+    // Größe ableiten: Transit-Planeten aus erster Transit-Radix (falls vorhanden)
+    int transitCount = m_transitRadix.planet.size();
+    if (!m_transits.isEmpty()) {
+        transitCount = m_transits.first().planet.size();
+    }
+    int radixPlanets = m_basisRadix.planet.size();
+    int radixCount = radixPlanets + MAX_HAUS;  // Planeten + Häuser (Legacy: MAX_PLANET+5)
+    
+    if (transitCount <= 0 || radixCount <= 0) {
+        m_transSel.clear();
+        return;
+    }
+    
+    if (m_transSel.size() != transitCount || (!m_transSel.isEmpty() && m_transSel.first().size() != radixCount)) {
+        m_transSel = QVector<QVector<bool>>(transitCount, QVector<bool>(radixCount, true));
+    }
+}
+
 void TransitDialog::onAccept() {
     if (!validateInput()) {
         return;
@@ -258,9 +281,9 @@ void TransitDialog::onAccept() {
     
     calculateTransit();
     
-    if (m_calculated) {
-        accept();
-    }
+    m_auinit.bZeit = m_bisZeitEdit->time().toString("HH:mm");
+    
+    accept();
 }
 
 } // namespace astro

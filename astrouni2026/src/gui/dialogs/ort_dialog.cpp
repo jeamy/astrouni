@@ -5,6 +5,7 @@
 
 #include "ort_dialog.h"
 #include "../../data/orte_db.h"
+#include "ort_duplikat_dialog.h"
 
 #include <QVBoxLayout>
 #include <QFormLayout>
@@ -122,10 +123,15 @@ void OrtDialog::onAccept() {
     if (m_isNew) {
         Orte existing = orteDB().getByName(name);
         if (existing.gultig) {
-            QMessageBox::warning(this, tr("Fehler"),
-                tr("Ein Ort mit diesem Namen existiert bereits.\n"
-                   "Bitte wählen Sie einen anderen Namen."));
-            m_nameEdit->setFocus();
+            // Duplikat-Dialog anbieten
+            OrtDuplikatDialog dupDlg(this, existing);
+            if (dupDlg.exec() != QDialog::Accepted || !dupDlg.useExisting()) {
+                m_nameEdit->setFocus();
+                return;
+            }
+            // Vorhandenen Ort übernehmen und akzeptieren
+            m_ort = existing;
+            accept();
             return;
         }
     }

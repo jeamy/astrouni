@@ -9,7 +9,9 @@
 #include "../core/calculations.h"
 #include <QPainterPath>
 #include <QMouseEvent>
+#include <QImage>
 #include <cmath>
+#include <limits>
 
 namespace astro {
 
@@ -20,22 +22,17 @@ namespace astro {
 ChartWidget::ChartWidget(QWidget* parent)
     : QWidget(parent)
     , m_transit(nullptr)
-    , m_radius(0)
-    , m_rotation(0)
     , m_showAspects(true)
-    , m_show3Degree(true)
-    , m_show9Degree(true)
+    , m_show3Degree(false)
+    , m_show9Degree(false)
+    , m_rotation(0.0)
+    , m_showSynastrieAspects(false)
     , m_highlightPlanet(-1)
+    , m_highlightIsTransit(false)
     , m_highlightAspect1(-1)
     , m_highlightAspect2(-1)
-    , m_showSynastrieAspects(false)
     , m_highlightTransitPlanet(-1)
     , m_highlightRadixPlanet(-1) {
-    
-    // Hintergrund nicht automatisch füllen
-    // Der eigentliche Radix-Kreis wird in drawRadix() grau hinterlegt
-    setAutoFillBackground(false);
-    
     // Fonts - serifenlose Systemfonts für Plattformunabhängigkeit
     m_mainFont = QFont(QFont().defaultFamily(), 10);  // System-Standardfont
     // Symbol-Fonts werden direkt in den Zeichenfunktionen mit Fallback-Kette gesetzt
@@ -83,10 +80,13 @@ void ChartWidget::updateChart() {
     update();
 }
 
-void ChartWidget::highlightPlanet(int planetIndex) {
+void ChartWidget::highlightPlanet(int planetIndex, bool isTransit) {
     m_highlightPlanet = planetIndex;
+    m_highlightIsTransit = isTransit;
     m_highlightAspect1 = -1;
     m_highlightAspect2 = -1;
+    m_highlightTransitPlanet = -1;
+    m_highlightRadixPlanet = -1;
     update();
 }
 
@@ -132,32 +132,306 @@ QSize ChartWidget::sizeHint() const {
 //==============================================================================
 
 void ChartWidget::paintEvent(QPaintEvent* /*event*/) {
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
+    // Offscreen zeichnen (wie Legacy: Basis-Buffer, später Zoom-Ausschnitt)
+    QImage buffer(size(), QImage::Format_ARGB32_Premultiplied);
+    buffer.fill(Qt::transparent);
+    QPainter buf(&buffer);
+    buf.setRenderHint(QPainter::Antialiasing);
     
-    // Radien berechnen
+    // Radien berechnen (bezogen auf Widget-Größe)
     calculateRadii();
     
     // Zeichnen
-    drawRadix(painter);
-    drawZodiacSigns(painter);
-    drawDegreeMarks(painter);
-    drawHouses(painter);
-    drawPlanets(painter);
+    drawRadix(buf);
+    drawZodiacSigns(buf);
+    drawDegreeMarks(buf);
+    drawHouses(buf);
+    drawPlanets(buf);
     
     if (m_showAspects) {
-        drawAspects(painter);
+        drawAspects(buf);
     }
+    
+    // Zusätzlicher Aspekt-Kreis wenn aktiviert (MAUS_ASPEKT)
+    if (m_aspectCircleActive) {
+        // Legacy nutzte keinen separaten Aspekt-Kreis-Farbindex; wir verwenden den Radix-Farbton
+        buf.setPen(QPen(sColor[COL_RADIX], 2, Qt::DashLine));
+        buf.setBrush(Qt::NoBrush);
+        buf.drawEllipse(m_center, m_radiusAsp, m_radiusAsp);
+    }
+    
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    if (m_zoomActive && m_zoomFactor > 1.0) {
+        painter.translate(m_zoomCenter);
+        painter.scale(m_zoomFactor, m_zoomFactor);
+        painter.translate(-m_zoomCenter);
+    }
+    painter.drawImage(QPoint(0, 0), buffer);
 }
 
 void ChartWidget::mousePressEvent(QMouseEvent* event) {
-    // TODO: Klick auf Planet/Haus erkennen
+    if (event->button() == Qt::RightButton) {
+        // Rechtsklick: wenn Planet/Haus/Aspekt getroffen -> Signal, sonst Zoom-Toggle
+        int planetIdx = -1;
+        bool isTransit = false;
+        if (findPlanetAtPoint(event->pos(), planetIdx, isTransit)) {
+            emit planetClicked(planetIdx, isTransit);
+            return;
+        }
+        int hausIdx = findHouseAtPoint(event->pos());
+        if (hausIdx >= 0) {
+            emit houseClicked(hausIdx);
+            return;
+        }
+        int a1 = -1, a2 = -1;
+        bool aspTransit = false;
+        if (findAspectAtPoint(event->pos(), a1, a2, aspTransit)) {
+            emit aspectClicked(a1, a2, aspTransit);
+            return;
+        }
+        toggleZoom(event->pos());
+        return;
+    }
+    
+    if (event->button() == Qt::LeftButton) {
+        // Klick auf Planet?
+        int planetIdx = -1;
+        bool isTransit = false;
+        if (findPlanetAtPoint(event->pos(), planetIdx, isTransit)) {
+            emit planetClicked(planetIdx, isTransit);
+            return;
+        }
+        
+        // Klick auf Haus?
+        int hausIdx = findHouseAtPoint(event->pos());
+        if (hausIdx >= 0) {
+            emit houseClicked(hausIdx);
+            return;
+        }
+        
+        // Klick auf Aspekt-Linie?
+        int a1 = -1, a2 = -1;
+        bool aspTransit = false;
+        if (findAspectAtPoint(event->pos(), a1, a2, aspTransit)) {
+            emit aspectClicked(a1, a2, aspTransit);
+            return;
+        }
+        
+        // Sonst Aspekt-Kreis toggeln (MAUS_ASPEKT)
+        toggleAspectCircle();
+        return;
+    }
+    
     QWidget::mousePressEvent(event);
+}
+
+void ChartWidget::mouseReleaseEvent(QMouseEvent* event) {
+    QWidget::mouseReleaseEvent(event);
+}
+
+void ChartWidget::mouseMoveEvent(QMouseEvent* event) {
+    QWidget::mouseMoveEvent(event);
+}
+
+void ChartWidget::mouseDoubleClickEvent(QMouseEvent* event) {
+    // Doppelklick: Aspekt-Kreis toggeln
+    Q_UNUSED(event);
+    toggleAspectCircle();
 }
 
 void ChartWidget::resizeEvent(QResizeEvent* event) {
     calculateRadii();
     QWidget::resizeEvent(event);
+}
+
+//==============================================================================
+// Maus-/Interaktions-Helper
+//==============================================================================
+
+double ChartWidget::pointToDegree(const QPointF& p) const {
+    // Umkehrung von degreeToPoint: 0° = links, CCW positiv
+    double dx = p.x() - m_center.x();
+    double dy = m_center.y() - p.y();  // invertiertes Y
+    double rad = std::atan2(dy, dx);   // 0 rechts, CCW
+    double degScreen = rad * 180.0 / PI;
+    double rotated = degScreen - 180.0;      // inverse zu (180 + rotatedDegree)
+    double degree = rotated - m_rotation;    // inverse zur Rotation
+    return Calculations::mod360(degree);
+}
+
+bool ChartWidget::findPlanetAtPoint(const QPointF& p, int& planetIdx, bool& isTransit) const {
+    planetIdx = -1;
+    isTransit = false;
+    double bestDist = std::numeric_limits<double>::max();
+    
+    // Kollisions-Versatz wie in drawPlanets (Radix)
+    QVector<int> offsetLevel(m_radix.anzahlPlanet, 0);
+    for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
+        for (int j = 0; j < i; ++j) {
+            double diff = std::fabs(m_radix.planet[i] - m_radix.planet[j]);
+            if (diff > 180.0) diff = 360.0 - diff;
+            if (diff < 6.0) {
+                offsetLevel[i] = std::max(offsetLevel[i], offsetLevel[j] + 1);
+            }
+        }
+    }
+    
+    for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
+        double offset = offsetLevel[i] * 25.0;
+        double symbolRadius = m_radiusPlanet - 30 - offset;
+        QPointF pos = degreeToPoint(m_radix.planet[i], symbolRadius);
+        double dist = std::hypot(p.x() - pos.x(), p.y() - pos.y());
+        if (dist <= 16.0 && dist < bestDist) {  // Nähe zum Symbol
+            bestDist = dist;
+            planetIdx = i;
+            isTransit = false;
+        }
+    }
+    
+    // Transit-/Synastrie-Planeten (wenn vorhanden)
+    if (m_transit != nullptr) {
+        QVector<int> transitOffsetLevel(m_transit->anzahlPlanet, 0);
+        for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
+            for (int j = 0; j < i; ++j) {
+                double diff = std::fabs(m_transit->planet[i] - m_transit->planet[j]);
+                if (diff > 180.0) diff = 360.0 - diff;
+                if (diff < 6.0) {
+                    transitOffsetLevel[i] = std::max(transitOffsetLevel[i], transitOffsetLevel[j] + 1);
+                }
+            }
+        }
+        for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
+            double offset = transitOffsetLevel[i] * 25.0;
+            double symbolRadius = m_radiusPlanet - 30 - offset;
+            QPointF pos = degreeToPoint(m_transit->planet[i], symbolRadius);
+            double dist = std::hypot(p.x() - pos.x(), p.y() - pos.y());
+            if (dist <= 16.0 && dist < bestDist) {
+                bestDist = dist;
+                planetIdx = i;
+                isTransit = true;
+            }
+        }
+    }
+    
+    return planetIdx >= 0;
+}
+
+int ChartWidget::findHouseAtPoint(const QPointF& p) const {
+    if (m_radix.haus.isEmpty()) return -1;
+    
+    double degree = pointToDegree(p);
+    double r = std::hypot(p.x() - m_center.x(), p.y() - m_center.y());
+    
+    // Nur Klicks im Bereich der Häuser-Linien berücksichtigen
+    if (r < m_radiusAsp * 0.7 || r > m_radius + 12) {
+        return -1;
+    }
+    
+    int bestIdx = -1;
+    double bestDiff = 999.0;
+    for (int i = 0; i < MAX_HAUS; ++i) {
+        double diff = std::fabs(Calculations::minDist(degree, m_radix.haus[i]));
+        if (diff < bestDiff) {
+            bestDiff = diff;
+            bestIdx = i;
+        }
+    }
+    return (bestDiff <= 6.0) ? bestIdx : -1;
+}
+
+void ChartWidget::toggleZoom(const QPoint& pos) {
+    if (!m_zoomActive) {
+        m_zoomActive = true;
+        m_zoomCenter = pos;
+        m_zoomFactor = 2.0;
+    } else {
+        m_zoomActive = false;
+        m_zoomFactor = 1.0;
+    }
+    update();
+}
+
+void ChartWidget::toggleAspectCircle() {
+    m_aspectCircleActive = !m_aspectCircleActive;
+    update();
+}
+
+bool ChartWidget::findAspectAtPoint(const QPointF& p, int& idx1, int& idx2, bool& isTransit) const {
+    idx1 = idx2 = -1;
+    isTransit = false;
+    double bestDist = std::numeric_limits<double>::max();
+    
+    auto distToSegment = [](const QPointF& a, const QPointF& b, const QPointF& p) {
+        double vx = b.x() - a.x();
+        double vy = b.y() - a.y();
+        double wx = p.x() - a.x();
+        double wy = p.y() - a.y();
+        double c1 = vx * wx + vy * wy;
+        if (c1 <= 0) return std::hypot(p.x() - a.x(), p.y() - a.y());
+        double c2 = vx * vx + vy * vy;
+        if (c2 <= c1) return std::hypot(p.x() - b.x(), p.y() - b.y());
+        double t = c1 / c2;
+        double projx = a.x() + t * vx;
+        double projy = a.y() + t * vy;
+        return std::hypot(p.x() - projx, p.y() - projy);
+    };
+    
+    // Radix-Aspekte
+    if (!m_showSynastrieAspects || m_transit == nullptr) {
+        int numPlanets = m_radix.anzahlPlanet;
+        for (int i = 0; i < numPlanets; ++i) {
+            for (int j = i + 1; j < numPlanets; ++j) {
+                int idx = i * numPlanets + j;
+                int8_t asp = m_radix.aspPlanet[idx];
+                if (asp == KEIN_ASP) continue;
+                QPointF p1 = degreeToPoint(m_radix.planet[i], m_radiusAsp);
+                QPointF p2 = degreeToPoint(m_radix.planet[j], m_radiusAsp);
+                double d = distToSegment(p1, p2, p);
+                if (d < 8.0 && d < bestDist) {
+                    bestDist = d;
+                    idx1 = i;
+                    idx2 = j;
+                    isTransit = false;
+                }
+            }
+        }
+    } else {
+        // Transit/Synastrie-Aspekte: Transit-Planet zu Radix-Planet
+        int numTransit = m_transit->anzahlPlanet;
+        int numPlanets = m_radix.anzahlPlanet;
+        for (int i = 0; i < numTransit; ++i) {
+            for (int j = 0; j < numPlanets; ++j) {
+                double transitPos = m_transit->planet[i];
+                double radixPos = m_radix.planet[j];
+                double diff = std::abs(transitPos - radixPos);
+                if (diff > 180.0) diff = 360.0 - diff;
+                
+                int8_t asp = KEIN_ASP;
+                if (diff <= 10.0) asp = KONJUNKTION;
+                else if (std::abs(diff - 30.0) <= 3.0) asp = HALBSEX;
+                else if (std::abs(diff - 60.0) <= 6.0) asp = SEXTIL;
+                else if (std::abs(diff - 90.0) <= 8.0) asp = QUADRATUR;
+                else if (std::abs(diff - 120.0) <= 8.0) asp = TRIGON;
+                else if (std::abs(diff - 150.0) <= 3.0) asp = QUINCUNX;
+                else if (std::abs(diff - 180.0) <= 10.0) asp = OPOSITION;
+                
+                if (asp == KEIN_ASP) continue;
+                
+                QPointF p1 = degreeToPoint(transitPos, m_radiusAsp);
+                QPointF p2 = degreeToPoint(radixPos, m_radiusAsp);
+                double d = distToSegment(p1, p2, p);
+                if (d < 8.0 && d < bestDist) {
+                    bestDist = d;
+                    idx1 = i;
+                    idx2 = j;
+                    isTransit = true;
+                }
+            }
+        }
+    }
+    return idx1 >= 0 && idx2 >= 0;
 }
 
 //==============================================================================
@@ -173,21 +447,21 @@ void ChartWidget::calculateRadii() {
     
     // Radien für verschiedene Kreise (aus constants.h)
     if (m_show3Degree && m_show9Degree) {
-        // Normal
+        // Normal: 3er und 9er aktiv
         m_radiusStz = m_radius * KREIS_STZ;
         m_radius10 = m_radius * KREIS_10_GRAD;
         m_radius3 = m_radius * KREIS_3_GRAD;
         m_radius5 = m_radius * KREIS_5_GRAD;
         m_radiusPlanet = m_radius * KREIS_PLANET;
-    } else if (!m_show3Degree && m_show9Degree) {
-        // Ohne 3er
+    } else if (m_show3Degree || m_show9Degree) {
+        // Nur eine Teilung aktiv (ohne 3er oder 9er)
         m_radiusStz = m_radius * KREIS3_STZ;
         m_radius10 = m_radius * KREIS3_10_GRAD;
         m_radius3 = m_radius * KREIS3_3_GRAD;
         m_radius5 = m_radius * KREIS3_5_GRAD;
         m_radiusPlanet = m_radius * KREIS3_PLANET;
     } else {
-        // Ohne 3er und 9er
+        // Keine Teilung (ohne 3er und 9er)
         m_radiusStz = m_radius * KREIS9_STZ;
         m_radius10 = m_radius * KREIS9_10_GRAD;
         m_radius3 = m_radius * KREIS9_3_GRAD;
@@ -224,33 +498,39 @@ QPointF ChartWidget::degreeToPoint(double degree, double radius) const {
 //==============================================================================
 
 void ChartWidget::drawRadix(QPainter& painter) {
+    // STRICT LEGACY: sRadix() aus auwurzel.c
     // Hintergrund-Kreis des Radix (grau hinterlegt wie im Legacy)
     painter.setPen(Qt::NoPen);
     painter.setBrush(sColor[COL_HINTER]);
     painter.drawEllipse(m_center, m_radius, m_radius);
     
-    // Äußerer Kreis
+    // 1. Äußerer Kreis
     painter.setPen(QPen(sColor[COL_RADIX], 2));
     painter.setBrush(Qt::NoBrush);
     painter.drawEllipse(m_center, m_radius, m_radius);
     
-    // Sternzeichen-Kreis
+    // 2. Sternzeichen-Kreis (STZ)
     painter.setPen(QPen(sColor[COL_RADIX], 1));
     painter.drawEllipse(m_center, m_radiusStz, m_radiusStz);
     
-    // 10-Grad-Kreis
-    painter.drawEllipse(m_center, m_radius10, m_radius10);
-    
-    // 5-Grad-Kreis (wenn 3er/9er angezeigt)
-    if (m_show3Degree || m_show9Degree) {
-        painter.drawEllipse(m_center, m_radius5, m_radius5);
+    // 3. 10-Grad-Kreis - NUR wenn 3er aktiv (Legacy: if (auinit.sTeilung&S_3er))
+    if (m_show3Degree) {
+        painter.drawEllipse(m_center, m_radius10, m_radius10);
     }
     
-    // Planeten-Kreis
-    painter.drawEllipse(m_center, m_radiusPlanet, m_radiusPlanet);
+    // 4. 3.33-Grad-Kreis (dKREIS_3) - NUR wenn 9er aktiv (Legacy: if (auinit.sTeilung&S_9er))
+    if (m_show9Degree) {
+        painter.drawEllipse(m_center, m_radius3, m_radius3);
+    }
     
-    // Aspekt-Kreis (innerer Kreis)
+    // 5. 5-Grad-Kreis - IMMER gezeichnet (Legacy: Ellipse ohne Bedingung)
+    painter.drawEllipse(m_center, m_radius5, m_radius5);
+    
+    // 6. Aspekt-Kreis (innerer Kreis)
     painter.drawEllipse(m_center, m_radiusAsp, m_radiusAsp);
+    
+    // Planeten-Kreis (nicht als Ellipse, nur für Radius-Berechnung)
+    // Legacy zeichnet diesen Kreis nicht explizit
 }
 
 //==============================================================================
@@ -258,13 +538,14 @@ void ChartWidget::drawRadix(QPainter& painter) {
 //==============================================================================
 
 void ChartWidget::drawZodiacSigns(QPainter& painter) {
-    // Sternzeichen-Trennlinien (alle 30°)
+    // STRICT LEGACY: sRadix() aus auwurzel.c
+    // Sternzeichen-Trennlinien (alle 30°) - von äußerem Kreis bis 10-Grad-Kreis
     painter.setPen(QPen(sColor[COL_RADIX], 1));
     
     for (int i = 0; i < 12; ++i) {
         double degree = i * 30.0;
         QPointF outer = degreeToPoint(degree, m_radius);
-        QPointF inner = degreeToPoint(degree, m_radiusStz);
+        QPointF inner = degreeToPoint(degree, m_radius10);
         painter.drawLine(outer, inner);
     }
     
@@ -289,6 +570,7 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
         sColor[COL_WASSER]   // Wasser: Krebs, Skorpion, Fische
     };
     
+    // Große Sternzeichen-Symbole im äußeren Ring (zwischen äußerem Kreis und STZ-Kreis)
     for (int i = 0; i < 12; ++i) {
         double degree = i * 30.0 + 15.0;  // Mitte des Zeichens
         double symbolRadius = (m_radius + m_radiusStz) / 2.0;
@@ -303,6 +585,113 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
         QRectF rect(pos.x() - 12, pos.y() - 12, 24, 24);
         painter.drawText(rect, Qt::AlignCenter, symbol);
     }
+    
+    // STRICT LEGACY: Kleine Sternzeichen-Symbole im 3er-Ring (10°-Einteilung)
+    // Legacy: dA=Radix->dStzGrad; for (sA=0; sA<18; sA++) dA+=PI/18.0
+    // Zeichnet 2 Symbole pro Iteration (gegenüberliegende Seiten)
+    if (m_show3Degree) {
+        QFont smallFont = zodiacFont;
+        smallFont.setPointSize(11);
+        painter.setFont(smallFont);
+        
+        // sRHZ=sRG-(sRG-sRI)/2 -> Mitte zwischen STZ und 10-Grad-Kreis
+        double symbolRadius3 = m_radiusStz - (m_radiusStz - m_radius10) / 2.0;
+        
+        // Legacy: dA=Radix->dStzGrad (Startwinkel in Radiant)
+        // m_radix.stzGrad ist der Startwinkel des ASC-Sternzeichens
+        double dA = m_radix.stzGrad * PI / 180.0;  // Grad -> Radiant
+        
+        // Legacy-Algorithmus für Sternzeichen-Reihenfolge im 3er-Ring
+        int sZ = 0, sZ4 = 0;
+        int stzIndex = m_radix.stzIndex;  // Startzeichen vom ASC
+        
+        for (int sA = 0; sA < 18; ++sA) {  // 18 Iterationen (Legacy: for sA=0; sA<18)
+            if (sZ4 > 11) {
+                sZ4 = 0;
+                sZ = (sZ + 1) > 5 ? 0 : (sZ + 1);
+            }
+            int sStz = (stzIndex + sZ + sZ4) % 12;
+            sZ4 += 4;
+            
+            // Symbol-Position: dA + PI/36.0 (Mitte des 10°-Segments)
+            double symbolAngle = dA + PI / 36.0;
+            double degree = symbolAngle * 180.0 / PI;  // Radiant -> Grad
+            
+            // Erste Hälfte
+            QPointF pos = degreeToPoint(degree, symbolRadius3);
+            int element = sStz % 4;
+            painter.setPen(elementColors[element]);
+            QString symbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[sStz]);
+            QRectF rect(pos.x() - 8, pos.y() - 8, 16, 16);
+            painter.drawText(rect, Qt::AlignCenter, symbol);
+            
+            // Zweite Hälfte (gegenüberliegend: +180°)
+            int sStz2 = (sStz + 6) % 12;
+            QPointF pos2 = degreeToPoint(degree + 180.0, symbolRadius3);
+            int element2 = sStz2 % 4;
+            painter.setPen(elementColors[element2]);
+            QString symbol2 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[sStz2]);
+            QRectF rect2(pos2.x() - 8, pos2.y() - 8, 16, 16);
+            painter.drawText(rect2, Qt::AlignCenter, symbol2);
+            
+            dA += PI / 18.0;  // 10° Schritt
+        }
+    }
+    
+    // STRICT LEGACY: Kleine Sternzeichen-Symbole im 9er-Ring (3.33°-Einteilung)
+    // Legacy: dA=Radix->dStzGrad; for (sA=0; sA<54; sA++) dA+=PI/54.0
+    // Zeichnet 2 Symbole pro Iteration (gegenüberliegende Seiten)
+    if (m_show9Degree) {
+        QFont smallFont = zodiacFont;
+        smallFont.setPointSize(9);
+        painter.setFont(smallFont);
+        
+        // sRHZ=sRG-(sRG-sRI)/2 -> Mitte zwischen 10-Grad und 3-Grad-Kreis
+        double outerR = m_show3Degree ? m_radius10 : m_radiusStz;
+        double symbolRadius9 = outerR - (outerR - m_radius3) / 2.0;
+        
+        // Legacy: dA=Radix->dStzGrad (Startwinkel in Radiant)
+        double dA = m_radix.stzGrad * PI / 180.0;  // Grad -> Radiant
+        
+        // Legacy-Algorithmus für Sternzeichen-Reihenfolge im 9er-Ring
+        int stzIndex = m_radix.stzIndex;
+        int sZ = 0;
+        switch (stzIndex) {
+            case 0: case 4: case 8:  sZ = 0; break;
+            case 1: case 5: case 9:  sZ = 9; break;
+            case 2: case 6: case 10: sZ = 6; break;
+            case 3: case 7: case 11: sZ = 3; break;
+        }
+        
+        for (int sA = 0; sA < 54; ++sA) {  // 54 Iterationen (Legacy: for sA=0; sA<54)
+            int sStz = sZ % 12;
+            
+            // Symbol-Position: dA + PI/108.0 (Mitte des 3.33°-Segments)
+            double symbolAngle = dA + PI / 108.0;
+            double degree = symbolAngle * 180.0 / PI;  // Radiant -> Grad
+            
+            // Erste Hälfte
+            QPointF pos = degreeToPoint(degree, symbolRadius9);
+            int element = sStz % 4;
+            painter.setPen(elementColors[element]);
+            QString symbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[sStz]);
+            QRectF rect(pos.x() - 6, pos.y() - 6, 12, 12);
+            painter.drawText(rect, Qt::AlignCenter, symbol);
+            
+            // Zweite Hälfte (gegenüberliegend: +180°)
+            int sStz2 = (sStz + 6) % 12;
+            QPointF pos2 = degreeToPoint(degree + 180.0, symbolRadius9);
+            int element2 = sStz2 % 4;
+            painter.setPen(elementColors[element2]);
+            QString symbol2 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[sStz2]);
+            QRectF rect2(pos2.x() - 6, pos2.y() - 6, 12, 12);
+            painter.drawText(rect2, Qt::AlignCenter, symbol2);
+            
+            sZ++;
+            sZ %= 12;
+            dA += PI / 54.0;  // 3.33° Schritt
+        }
+    }
 }
 
 //==============================================================================
@@ -310,35 +699,52 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
 //==============================================================================
 
 void ChartWidget::drawDegreeMarks(QPainter& painter) {
+    // STRICT LEGACY: sRadix() Grad-Einteilungen aus auwurzel.c
     painter.setPen(QPen(sColor[COL_RADIX], 1));
     
-    for (int i = 0; i < 360; ++i) {
-        double degree = static_cast<double>(i);
-        double innerRadius, outerRadius;
-        
-        if (i % 10 == 0) {
-            // 10-Grad-Markierung
-            innerRadius = m_radius10;
-            outerRadius = m_radiusStz;
-        } else if (i % 5 == 0 && (m_show3Degree || m_show9Degree)) {
-            // 5-Grad-Markierung
-            innerRadius = m_radius5;
-            outerRadius = m_radius10;
-        } else if (i % 3 == 0 && m_show3Degree) {
-            // 3-Grad-Markierung
-            innerRadius = m_radius3;
-            outerRadius = m_radius10;
-        } else if (i % 1 == 0 && m_show9Degree) {
-            // 1-Grad-Markierung (nur bei 9er)
-            innerRadius = m_radius5 + (m_radius10 - m_radius5) * 0.3;
-            outerRadius = m_radius10;
-        } else {
-            continue;
-        }
-        
-        QPointF outer = degreeToPoint(degree, outerRadius);
-        QPointF inner = degreeToPoint(degree, innerRadius);
+    // 30-Grad-Einteilung (Sternzeichen-Grenzen) - von STZ bis äußerem Kreis
+    // Legacy: for (sA=0; sA<6; sA++) mit dA+=PI/6
+    for (int i = 0; i < 12; ++i) {
+        double degree = i * 30.0;
+        QPointF outer = degreeToPoint(degree, m_radius);
+        QPointF inner = degreeToPoint(degree, m_radius10);  // bis 10-Grad-Kreis
         painter.drawLine(outer, inner);
+    }
+    
+    // 10-Grad-Einteilung (3er) - von 10-Grad-Kreis bis STZ-Kreis
+    // Legacy: if (auinit.sTeilung&S_3er) for (sA=0; sA<18; sA++) mit dA+=PI/18
+    if (m_show3Degree) {
+        for (int i = 0; i < 36; ++i) {
+            if (i % 3 == 0) continue;  // 30-Grad-Linien bereits gezeichnet
+            double degree = i * 10.0;
+            QPointF outer = degreeToPoint(degree, m_radiusStz);
+            QPointF inner = degreeToPoint(degree, m_radius10);
+            painter.drawLine(outer, inner);
+        }
+    }
+    
+    // 3.33-Grad-Einteilung (9er) - von 3-Grad-Kreis bis 10-Grad-Kreis
+    // Legacy: if (auinit.sTeilung&S_9er) for (sA=0; sA<54; sA++) mit dA+=PI/54
+    if (m_show9Degree) {
+        double outerR = m_show3Degree ? m_radius10 : m_radiusStz;
+        for (int i = 0; i < 108; ++i) {
+            double degree = i * (360.0 / 108.0);  // 3.33 Grad
+            QPointF outer = degreeToPoint(degree, outerR);
+            QPointF inner = degreeToPoint(degree, m_radius3);
+            painter.drawLine(outer, inner);
+        }
+    }
+    
+    // 5-Grad-Einteilung (2 Grad) - von 5-Grad-Kreis bis 3-Grad-Kreis (oder 10-Grad)
+    // Legacy: for (sA=0; sA<90; sA++) mit dA+=PI/90 (4 Grad Schritte = 2 Grad)
+    {
+        double outerR = m_show9Degree ? m_radius3 : (m_show3Degree ? m_radius10 : m_radiusStz);
+        for (int i = 0; i < 180; ++i) {
+            double degree = i * 2.0;  // 2-Grad-Schritte
+            QPointF outer = degreeToPoint(degree, outerR);
+            QPointF inner = degreeToPoint(degree, m_radius5);
+            painter.drawLine(outer, inner);
+        }
     }
 }
 
@@ -350,12 +756,16 @@ void ChartWidget::drawDegreeMarks(QPainter& painter) {
 void ChartWidget::drawHouses(QPainter& painter) {
     if (m_radix.haus.isEmpty()) return;
     
+    // STRICT LEGACY: sHaus() aus auwurzel.c
+    // sRG=(short)((double)sRadius*dKREIS_STZ) -> Normale Häuser bis STZ-Kreis
+    // Hauptachsen bis äußerem Kreis (sRD=sRadius+sDruber)
+    
     // Häuser-Linien
     for (int i = 0; i < MAX_HAUS; ++i) {
         double degree = m_radix.haus[i];
         
         // STRICT LEGACY: ASC(1), IC(4), DSC(7), MC(10) bis zum äußersten Kreis
-        // Andere Häuser nur bis zum Planeten-Kreis
+        // Andere Häuser nur bis zum STZ-Kreis (nicht Planeten-Kreis!)
         bool isMainAxis = (i == 0 || i == 3 || i == 6 || i == 9);
         
         if (isMainAxis) {
@@ -365,9 +775,9 @@ void ChartWidget::drawHouses(QPainter& painter) {
             QPointF inner = degreeToPoint(degree, m_radiusAsp);
             painter.drawLine(outer, inner);
         } else {
-            // Normale Häuser: dünn, nur bis Planeten-Kreis
+            // Normale Häuser: dünn, bis STZ-Kreis (Legacy: sRG=dKREIS_STZ)
             painter.setPen(QPen(sColor[COL_HAUSER], 1));
-            QPointF outer = degreeToPoint(degree, m_radiusPlanet);
+            QPointF outer = degreeToPoint(degree, m_radiusStz);
             QPointF inner = degreeToPoint(degree, m_radiusAsp);
             painter.drawLine(outer, inner);
         }
@@ -491,18 +901,23 @@ void ChartWidget::drawPlanets(QPainter& painter) {
 }
 
 void ChartWidget::drawPlanetTic(QPainter& painter, double angle, bool isTransit, int offsetLevel) {
+    // STRICT LEGACY: vPlanetTicDraw() aus auwurzel.c
+    // sRP=(short)((double)sRadius*dKREIS_STZ) -> von STZ-Kreis
+    // sRPi=(short)((double)sRadius*dKREIS_PLANET) -> bis Planeten-Kreis
+    
     QColor color = isTransit ? sColor[COL_PLANET_TICT] : sColor[COL_PLANET_TIC];
     
     // STRICT LEGACY: Alle Linien gleichdick
     painter.setPen(QPen(color, 1));
     
-    // STRICT LEGACY: Linie vom Planeten-Kreis bis zum Planeten-Symbol durchziehen
+    // STRICT LEGACY: Linie vom STZ-Kreis bis zum Planeten-Symbol durchziehen
     // Versatz nach innen für jeden Level
     double offset = offsetLevel * 25.0;
-    double symbolRadius = m_radiusPlanet - 30 - offset;
+    double symbolRadius = m_radiusPlanet - 20 - offset;
     
-    QPointF outer = degreeToPoint(angle, m_radiusPlanet);
-    QPointF inner = degreeToPoint(angle, symbolRadius + 12);  // Bis kurz vor das Symbol
+    // Linie von STZ-Kreis bis Planeten-Symbol
+    QPointF outer = degreeToPoint(angle, m_radiusStz);
+    QPointF inner = degreeToPoint(angle, symbolRadius + 24);  // Kürzer, Abstand zum Symbol
     painter.drawLine(outer, inner);
 }
 
@@ -518,9 +933,18 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
     }
     
     // Hervorhebung: Größerer Font und hellere Farbe
-    bool isHighlighted = (planet == m_highlightPlanet) || 
-                         (planet == m_highlightAspect1) || 
-                         (planet == m_highlightAspect2);
+    bool isHighlighted = false;
+    if (isTransit) {
+        // Transit-Planet: Nur hervorheben wenn m_highlightIsTransit gesetzt
+        isHighlighted = (planet == m_highlightPlanet && m_highlightIsTransit) ||
+                        (planet == m_highlightTransitPlanet);
+    } else {
+        // Radix-Planet
+        isHighlighted = (planet == m_highlightPlanet && !m_highlightIsTransit) || 
+                        (planet == m_highlightAspect1) || 
+                        (planet == m_highlightAspect2) ||
+                        (planet == m_highlightRadixPlanet);
+    }
     
     // STRICT LEGACY: Kleinerer Font wenn versetzt
     int fontSize = isHighlighted ? 24 : (offsetLevel > 0 ? 16 : 20);
@@ -543,7 +967,7 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
     // Position im Inneren des Planeten-Kreises, mit Versatz für Kollisionsvermeidung
     // STRICT LEGACY: Größerer Abstand zwischen versetzten Planeten
     double offset = offsetLevel * 25.0;
-    double symbolRadius = m_radiusPlanet - 30 - offset;
+    double symbolRadius = m_radiusPlanet - 20 - offset;
     QPointF pos = degreeToPoint(angle, symbolRadius);
     
     if (isHighlighted) {
@@ -622,21 +1046,44 @@ void ChartWidget::drawAspects(QPainter& painter) {
         
         for (int i = 0; i < numTransit; ++i) {
             for (int j = 0; j < numPlanets; ++j) {
+                // Filter anhand TransitSelection (TransSelDialog)
+                if (!m_transitSelection.isEmpty()) {
+                    int radixPlanets = m_radix.planet.size();
+                    int rIdx = (j < radixPlanets) ? j : (radixPlanets + (j - radixPlanets));
+                    int tIdx = i;
+                    if (tIdx >= 0 && tIdx < m_transitSelection.size()) {
+                        if (rIdx >= m_transitSelection[tIdx].size() || !m_transitSelection[tIdx][rIdx]) {
+                            continue;
+                        }
+                    }
+                }
+                
                 // Aspekt zwischen Transit-Planet i und Radix-Planet j berechnen
                 double transitPos = m_transit->planet[i];
                 double radixPos = m_radix.planet[j];
                 double diff = std::abs(transitPos - radixPos);
                 if (diff > 180.0) diff = 360.0 - diff;
                 
-                // Aspekt prüfen (mit Standard-Orben)
+                // Aspekt prüfen mit konfigurierten Orben aus m_auinit
+                const QVector<float>& orben = (m_radix.horoTyp == TYP_SYNASTRIE) ? 
+                    m_auinit.orbenSPlanet : m_auinit.orbenTPlanet;
+                
                 int8_t asp = KEIN_ASP;
-                if (diff <= 10.0) asp = KONJUNKTION;
-                else if (std::abs(diff - 30.0) <= 3.0) asp = HALBSEX;
-                else if (std::abs(diff - 60.0) <= 6.0) asp = SEXTIL;
-                else if (std::abs(diff - 90.0) <= 8.0) asp = QUADRATUR;
-                else if (std::abs(diff - 120.0) <= 8.0) asp = TRIGON;
-                else if (std::abs(diff - 150.0) <= 3.0) asp = QUINCUNX;
-                else if (std::abs(diff - 180.0) <= 10.0) asp = OPOSITION;
+                float orb0 = orben.size() > 0 ? orben[0] : 8.0f;
+                float orb1 = orben.size() > 1 ? orben[1] : 2.0f;
+                float orb2 = orben.size() > 2 ? orben[2] : 4.0f;
+                float orb3 = orben.size() > 3 ? orben[3] : 6.0f;
+                float orb4 = orben.size() > 4 ? orben[4] : 6.0f;
+                float orb5 = orben.size() > 5 ? orben[5] : 2.0f;
+                float orb6 = orben.size() > 6 ? orben[6] : 8.0f;
+                
+                if (diff <= orb0) asp = KONJUNKTION;
+                else if (std::abs(diff - 30.0) <= orb1) asp = HALBSEX;
+                else if (std::abs(diff - 60.0) <= orb2) asp = SEXTIL;
+                else if (std::abs(diff - 90.0) <= orb3) asp = QUADRATUR;
+                else if (std::abs(diff - 120.0) <= orb4) asp = TRIGON;
+                else if (std::abs(diff - 150.0) <= orb5) asp = QUINCUNX;
+                else if (std::abs(diff - 180.0) <= orb6) asp = OPOSITION;
                 
                 if (asp == KEIN_ASP) continue;
                 
