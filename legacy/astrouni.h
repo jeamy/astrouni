@@ -5,37 +5,21 @@
 
 #define STRICT
 
-
-#include "c:\borlandc\include\windows.h"
-#include "c:\borlandc\include\stdio.h"
-#include "c:\borlandc\include\mem.h"
-#include "c:\borlandc\include\string.h"
-#include "c:\borlandc\include\commdlg.h"
-#include "c:\borlandc\include\dos.h"
-#include "c:\borlandc\include\math.h"
-#include "c:\borlandc\include\stdlib.h"
-#include "c:\borlandc\include\malloc.h"
-#include "c:\borlandc\include\fcntl.h"
-#include "c:\borlandc\include\conio.h"
-#include "c:\borlandc\include\malloc.h"
-#include "c:\borlandc\include\io.h"
-#include "c:\borlandc\include\ctype.h"
+#include <windows.h>
+#include <stdio.h>
+#include <mem.h>
+#include <string.h>
+#include <commdlg.h>
+#include <dos.h>
+#include <math.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <fcntl.h>
+#include <conio.h>
+#include <io.h>
+#include <ctype.h>
 
 /*
-#include "C:\PROG\BORLANDC\INCLUDE\windows.h"
-#include "C:\PROG\BORLANDC\INCLUDE\stdio.h"
-#include "C:\PROG\BORLANDC\INCLUDE\mem.h"
-#include "C:\PROG\BORLANDC\INCLUDE\string.h"
-#include "C:\PROG\BORLANDC\INCLUDE\commdlg.h"
-#include "C:\PROG\BORLANDC\INCLUDE\dos.h"
-#include "C:\PROG\BORLANDC\INCLUDE\math.h"
-#include "C:\PROG\BORLANDC\INCLUDE\stdlib.h"
-#include "C:\PROG\BORLANDC\INCLUDE\malloc.h"
-#include "C:\PROG\BORLANDC\INCLUDE\fcntl.h"
-#include "C:\PROG\BORLANDC\INCLUDE\conio.h"
-#include "C:\PROG\BORLANDC\INCLUDE\malloc.h"
-#include "C:\PROG\BORLANDC\INCLUDE\io.h"
-#include "C:\PROG\BORLANDC\INCLUDE\ctype.h"
 */
 
 //include "astrounr.h"
@@ -116,14 +100,14 @@
 #define LB_POSITION	   0x105
 
 #define MAIN_VERSION     4
-#define szAbout          " AstroUniverse\nVersion 0.04Beta\nby A.S. and J.L.\n     ©1997"
+#define szAbout          " AstroUniverse\nVersion 0.04Beta\nby A.S. and J.L.\n     ¬©1997"
 #define AboutText        "About AstroUniverse"
 #define PERSON_ERFASST_TXT "Person gespeichert."
 #define PERSON_NEU_TXT   "Neue Eingabe."
 #define ORT_ERFASST_TXT  "Ort gespeichert."
-#define PERSON_TXT       "Person ausw‰hlen"
-#define PERSON1_TXT      "Person 1 ausw‰hlen"
-#define PERSON2_TXT      "Person 2 ausw‰hlen"
+#define PERSON_TXT       "Person ausw√§hlen"
+#define PERSON1_TXT      "Person 1 ausw√§hlen"
+#define PERSON2_TXT      "Person 2 ausw√§hlen"
 #define ASPEKTE_TXT	     "Aspekte"
 #define TASPEKTE_TXT	 "TAspekte"
 #define POS_TXT          "Positionen"
@@ -156,10 +140,10 @@
 
 //RadixTexte
 #define PLANETPOS_TXT	 "Planetenpositionen"
-#define HAUSPOS_TXT		 "H‰userpositionen"
-#define HAUSSYS_TXT		 "H‰user"
+#define HAUSPOS_TXT		 "H√§userpositionen"
+#define HAUSSYS_TXT		 "H√§user"
 #define TRANSITPOS_TXT	 "Transit Planeten"
-#define QUALITAT_TXT	 "Qualit‰ten"
+#define QUALITAT_TXT	 "Qualit√§ten"
 #define SONNE_TXT        "Sonne"
 #define MOND_TXT         "Mond"
 #define MERKUR_TXT       "Merkur"
@@ -182,11 +166,11 @@
 #define STIER_TXT  		 "Stier"
 #define ZWILLING_TXT 	 "Zwilling"
 #define KREBS_TXT 		 "Krebs"
-#define LOWE_TXT  		 "Lˆwe"
+#define LOWE_TXT  		 "L√∂we"
 #define JUNGFRAU_TXT  	 "Jungfrau"
 #define WAAGE_TXT  		 "Waage"
 #define SKORPION_TXT  	 "Skorpion"
-#define SCHUTZE_TXT  	 "Sch¸tze"
+#define SCHUTZE_TXT  	 "Sch√ºtze"
 #define STEINBOCK_TXT  	 "Steinbock"
 #define WASSERMANN_TXT   "Wassermann"
 #define FISCHE_TXT  	 "Fische"
@@ -211,7 +195,7 @@
 #define  QU_FIX_TXT			"Fix"
 #define  QU_BEWEGLICH_TXT	"Beweglich"
 #define  QU_FRAU_TXT		"Weiblich"
-#define  QU_MANN_TXT		"M‰nnlich"
+#define  QU_MANN_TXT		"M√§nnlich"
 #define  CEND				#
 //Indizes in TextTabelle
 #define iWIDDER       0
@@ -299,7 +283,7 @@
 #define  INC_MONATE      6
 #define  INC_JAHRE       7
 
-//H‰usertypen
+//H√§usertypen
 #define  TYP_KOCH        0
 #define  TYP_PLACIDUS    1
 #define  TYP_EQUAL		 2
@@ -335,7 +319,7 @@
 #define  P_TYP_COMPOSIT    0x10
 #define  P_TYP_IGNORE      -1
 
-//Qualit‰ten
+//Qualit√§ten
 #define  QU_ERDE		   0
 #define  QU_WASSER		   1
 #define  QU_FEUER		   2
@@ -627,9 +611,9 @@ typedef struct
   long    lIndexRadix;				//Index Record im Radix-Datenfile
   short   slRadix;                  //Recordlange RadixDaten
   long    lIndexName;				//Index im Namen-Datenfile
-  short   slName;                   //Recordl‰nge Namen
+  short   slName;                   //Recordl√§nge Namen
   long    lIndexNotiz;              //Index Notiz-Datenfile
-  short   slNotiz;                  //l‰nge Notiz
+  short   slNotiz;                  //l√§nge Notiz
   short   clVorName;
   short   clName;
   short   clBeruf;
