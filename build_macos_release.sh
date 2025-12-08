@@ -155,6 +155,84 @@ if [ -d "$PROJECT_DIR/resources" ]; then
   cp -r "$PROJECT_DIR/resources/." "$DIST_DIR/resources/"
 fi
 
+# Qt-Frameworks für portable App bündeln
+APP_BUNDLE="$DIST_DIR/AstroUniverse2026.app"
+mkdir -p "$APP_BUNDLE/Contents/MacOS"
+mkdir -p "$APP_BUNDLE/Contents/Resources"
+mkdir -p "$APP_BUNDLE/Contents/Frameworks"
+mkdir -p "$APP_BUNDLE/Contents/PlugIns"
+
+# Binary ins Bundle verschieben (falls noch nicht dort)
+if [ -f "$DIST_DIR/astrouni2026" ]; then
+  mv "$DIST_DIR/astrouni2026" "$APP_BUNDLE/Contents/MacOS/astrouni2026"
+fi
+
+# Icon optional kopieren
+ICON_SRC="$PROJECT_DIR/resources/icons/astrouni.icns"
+if [ -f "$ICON_SRC" ]; then
+  cp "$ICON_SRC" "$APP_BUNDLE/Contents/Resources/astrouni.icns"
+fi
+
+# Minimal Info.plist
+cat > "$APP_BUNDLE/Contents/Info.plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key><string>AstroUniverse 2026</string>
+  <key>CFBundleDisplayName</key><string>AstroUniverse 2026</string>
+  <key>CFBundleExecutable</key><string>astrouni2026</string>
+  <key>CFBundleIdentifier</key><string>com.astro.universe2026</string>
+  <key>CFBundleVersion</key><string>1.0</string>
+  <key>CFBundleShortVersionString</key><string>1.0</string>
+  <key>LSMinimumSystemVersion</key><string>10.15.0</string>
+  <key>CFBundleIconFile</key><string>astrouni</string>
+</dict>
+</plist>
+EOF
+
+if command -v macdeployqt &>/dev/null; then
+  echo "Bündele Qt-Frameworks mit macdeployqt..."
+  macdeployqt "$APP_BUNDLE" -verbose=1 || {
+    echo "WARNUNG: macdeployqt konnte die Qt-Frameworks nicht bündeln." >&2
+  }
+elif command -v qtpaths6 &>/dev/null; then
+  echo "Bündele Qt-Frameworks manuell (Fallback ohne macdeployqt)..."
+  QT_PREFIX="$(qtpaths6 --install-prefix 2>/dev/null || true)"
+  QT_PLUGIN_DIR="$(qtpaths6 --plugin-dir 2>/dev/null || true)"
+  QT_QML_DIR="$(qtpaths6 --qml-dir 2>/dev/null || true)"
+  
+  # Frameworks kopieren
+  if [ -d "$QT_PREFIX/Frameworks" ]; then
+    rsync -a "$QT_PREFIX/Frameworks/Qt6"*.framework "$APP_BUNDLE/Contents/Frameworks/" 2>/dev/null || true
+  fi
+  
+  # Plugins kopieren
+  for sub in platforms styles imageformats iconengines; do
+    if [ -d "$QT_PLUGIN_DIR/$sub" ]; then
+      mkdir -p "$APP_BUNDLE/Contents/PlugIns/$sub"
+      cp -R "$QT_PLUGIN_DIR/$sub"/Qt6*.dylib "$APP_BUNDLE/Contents/PlugIns/$sub"/ 2>/dev/null || true
+    fi
+  done
+  
+  # qt.conf damit Qt lokale Pfade nutzt
+  cat > "$APP_BUNDLE/Contents/Resources/qt.conf" <<EOF
+[Paths]
+Prefix=..
+Plugins=PlugIns
+Imports=.
+Qml2Imports=.
+EOF
+  
+  # RPATH für Binary setzen
+  if command -v install_name_tool &>/dev/null; then
+    install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP_BUNDLE/Contents/MacOS/astrouni2026" || true
+  fi
+else
+  echo "Hinweis: Weder macdeployqt noch qtpaths6 gefunden – Qt-Frameworks werden nicht mitgeliefert."
+  echo "Installiere entweder macdeployqt (Qt@6) oder qtpaths6, um eine portable App zu erzeugen."
+fi
+
 echo ""
 echo "========================================"
 echo "  Release-Build fertig!"

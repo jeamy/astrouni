@@ -43,8 +43,16 @@ private:
     QRadioButton* m_kochRadio;
     QRadioButton* m_regiomontanRadio;
     QRadioButton* m_campanoRadio;
+    QRadioButton* m_equalMcRadio;
     QRadioButton* m_equalRadio;
     QRadioButton* m_wholeRadio;
+    QRadioButton* m_topocentricRadio;
+    QRadioButton* m_meridianRadio;
+    QRadioButton* m_porphyryRadio;
+    QRadioButton* m_porphyryNewRadio;
+    QRadioButton* m_morinusRadio;
+    QRadioButton* m_alcabitiusRadio;
+    QRadioButton* m_nullRadio;
 };
 
 } // namespace astro
