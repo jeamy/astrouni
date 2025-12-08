@@ -177,15 +177,13 @@ if exist "%QT_BIN_DIR%\windeployqt.exe" (
 ) else (
   echo WARNUNG: windeployqt.exe wurde nicht gefunden (QT_BIN_DIR=%QT_BIN_DIR%). Fallback: Qt-DLLs werden direkt kopiert.
 
-  rem Fallback: Qt6*.dll direkt ins Dist-Verzeichnis kopieren (robust ueber Schleife)
+  rem Fallback: Qt6*.dll direkt ins Dist-Verzeichnis kopieren
   if exist "%QT_BIN_DIR%\Qt6Core.dll" (
-    for %%F in ("%QT_BIN_DIR%\Qt6*.dll") do (
-      copy /Y "%%~fF" "%DIST_DIR%" >NUL
-    )
+    xcopy "%QT_BIN_DIR%\Qt6*.dll" "%DIST_DIR%\\" /Y /I >NUL
 
     rem Qt-Plugins (platforms, styles, etc.) mitnehmen, falls vorhanden
     if exist "%QT_BIN_DIR%\..\plugins" (
-      xcopy "%QT_BIN_DIR%\..\plugins\*" "%DIST_DIR%\plugins\" /E /I /Y >NUL
+      xcopy "%QT_BIN_DIR%\..\plugins\*" "%DIST_DIR%\plugins\\" /E /I /Y >NUL
     )
   ) else (
     echo FEHLER: In QT_BIN_DIR wurden keine Qt6-DLLs gefunden. Bitte Qt-Installation/Pfad pruefen.
