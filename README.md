@@ -1,7 +1,7 @@
 # AstroUniverse 2026 - Astrology Software
 
 Portierung der Legacy-Astrologie-Software **AstroUnivers v0.04Beta (1996)** aus dem
-Verzeichnis `legacy/` (Borland C++ / Windows) nach C++20/Qt6
+Verzeichnis `legacy/` (16-bit Borland C++ / Windows) nach C++20/Qt6
 Cross-Platform-Architektur.
 
 ## Features
