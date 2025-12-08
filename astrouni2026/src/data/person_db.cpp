@@ -108,7 +108,12 @@ int PersonDB::load(const QString& dataPath) {
             rf.tag = legacy.sTag;
             rf.monat = legacy.sMonat;
             rf.jahr = legacy.sJahr;
-            rf.land = QString::fromLatin1(legacy.szLand, 4).trimmed();
+            // Ländercode: bis Nullterminator, max 3 Zeichen (Legacy char[4])
+            int landLen = 0;
+            for (int i = 0; i < 4 && legacy.szLand[i] != '\0'; ++i) {
+                landLen++;
+            }
+            rf.land = QString::fromLatin1(legacy.szLand, landLen).trimmed();
             
             // Namen lesen (Reihenfolge: Name, Vorname, Beruf, Ort)
             int namePos = pos;
