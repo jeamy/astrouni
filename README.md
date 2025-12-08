@@ -111,6 +111,20 @@ Das Skript:
 - erzeugt zusätzlich (falls PowerShell verfügbar ist) ein Archiv
   `astrouni2026\dist\astrouni2026-windows-release.zip`
 
+**Wichtig (Windows / Qt + MinGW):**
+
+- Vor dem Aufruf des Skripts müssen die Qt-Umgebungsvariablen gesetzt sein
+  (entweder in der Shell oder über die Default-Logik im Skript):
+
+  ```bat
+  rem Beispiel (an eigene Installation anpassen):
+  set Qt6_DIR=C:\Qt\6.10.1\mingw_64
+  set PATH=C:\Qt\Tools\mingw1310_64\bin;%PATH%
+  ```
+
+- Im Batch-Skript ist ein entsprechender Beispiel-Schnipsel kommentiert; dort
+  ggf. Version/Pfad an die eigene Qt-Installation anpassen.
+
 Start des Releases:
 
 ```bat

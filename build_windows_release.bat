@@ -10,6 +10,20 @@ set BUILD_DIR=%PROJECT_DIR%\build-windows-release
 set DIST_DIR=%PROJECT_DIR%\dist\windows
 set BUILD_TYPE=Release
 
+rem Optionale Default-Konfiguration fuer Qt6 + MinGW nur setzen,
+rem wenn noch nichts gesetzt ist (kann in der aufrufenden Shell ueberschrieben werden)
+if not defined Qt6_DIR (
+  set "Qt6_DIR=C:\Qt\6.10.1\mingw_64"
+)
+if not defined CMAKE_PREFIX_PATH (
+  set "CMAKE_PREFIX_PATH=%Qt6_DIR%"
+)
+set "QT_MINGW_BIN=C:\Qt\Tools\mingw1310_64\bin"
+echo %PATH% | findstr /I /C:"%QT_MINGW_BIN%" >NUL
+if errorlevel 1 (
+  set "PATH=%QT_MINGW_BIN%;%PATH%"
+)
+
 echo === AstroUniverse 2026 - Windows Release Build ===
 echo.
 rem Beispiel-Konfiguration fuer Qt mit MinGW:
@@ -70,15 +84,15 @@ if defined MISSING_DEPS (
     echo     Option B: MinGW ^(empfohlen mit Qt^)
     echo       Qt6 Installer installiert MinGW automatisch mit!
     echo       Nur PATH setzen:
-    echo         set PATH=G:\Qt\Tools\mingw1120_64\bin;%%PATH%%
+    echo         set PATH=C:\Qt\Tools\mingw1310_64\bin;%%PATH%%
   )
   
   echo !MISSING_DEPS! | findstr /C:"qt6" >NUL && (
     echo   - Qt6: https://www.qt.io/download-qt-installer
     echo     Bei Installation "MinGW" Komponente auswaehlen ^(inkl. Compiler^)
     echo     Nach Installation Qt6_DIR setzen:
-    echo       set Qt6_DIR=G:\Qt\6.7.0\mingw_64
-    echo       set PATH=G:\Qt\Tools\mingw1120_64\bin;%%PATH%%
+    echo       set Qt6_DIR=C:\Qt\6.10.1\mingw_64
+    echo       set PATH=C:\Qt\Tools\mingw1310_64\bin;%%PATH%%
   )
   
   echo.
