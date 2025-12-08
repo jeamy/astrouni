@@ -94,18 +94,18 @@ void AstroFontProvider::initSymbols() {
     // Legacy Sternzeichen (szBNamen aus auwurzel.h)
     // Hex-Werte aus dem Original: 0xE5-0xF0
     m_legacySternzeichenSymbols = {
-        QString(QChar(0xE5)),   // Widder
-        QString(QChar(0xE6)),   // Stier
-        QString(QChar(0xE7)),   // Zwillinge
-        QString(QChar(0xE8)),   // Krebs
-        QString(QChar(0xE9)),   // Löwe
-        QString(QChar(0xEA)),   // Jungfrau
-        QString(QChar(0xEB)),   // Waage
-        QString(QChar(0xEC)),   // Skorpion
-        QString(QChar(0xED)),   // Schütze
-        QString(QChar(0xEE)),   // Steinbock
-        QString(QChar(0xEF)),   // Wassermann
-        QString(QChar(0xF0))    // Fische
+        QString(QChar(0xC5)),   // Widder
+        QString(QChar(0xC6)),   // Stier
+        QString(QChar(0xC7)),   // Zwillinge
+        QString(QChar(0xC8)),   // Krebs
+        QString(QChar(0xC9)),   // Löwe
+        QString(QChar(0xCA)),   // Jungfrau
+        QString(QChar(0xCB)),   // Waage
+        QString(QChar(0xCC)),   // Skorpion
+        QString(QChar(0xCD)),   // Schütze
+        QString(QChar(0xCE)),   // Steinbock
+        QString(QChar(0xCF)),   // Wassermann
+        QString(QChar(0xD0))    // Fische
     };
     
     // Legacy Aspekt-Symbole (cAspektGly aus auwurzel.h)
@@ -183,14 +183,9 @@ QFont AstroFontProvider::getSymbolFont(int pointSize) const {
 QString AstroFontProvider::planetSymbol(int planet) const {
     if (planet < 0) return "";
     
-    if (m_hasAstroFont) {
-        if (planet < m_legacyPlanetSymbols.size()) {
-            return m_legacyPlanetSymbols[planet];
-        }
-    } else {
-        if (planet < m_unicodePlanetSymbols.size()) {
-            return m_unicodePlanetSymbols[planet];
-        }
+    // Immer Unicode-Symbole für Planeten (System-Font)
+    if (planet < m_unicodePlanetSymbols.size()) {
+        return m_unicodePlanetSymbols[planet];
     }
     return "";
 }
@@ -226,24 +221,21 @@ QString AstroFontProvider::aspektSymbol(int aspekt) const {
     
     if (idx < 0) return "";
     
-    if (m_hasAstroFont) {
-        if (idx < m_legacyAspektSymbols.size()) {
-            return m_legacyAspektSymbols[idx];
-        }
-    } else {
-        if (idx < m_unicodeAspektSymbols.size()) {
-            return m_unicodeAspektSymbols[idx];
-        }
+    // Immer Unicode-Symbole für Aspekte (System-Font)
+    if (idx < m_unicodeAspektSymbols.size()) {
+        return m_unicodeAspektSymbols[idx];
     }
     return "";
 }
 
 QString AstroFontProvider::retrogradeSymbol() const {
-    return m_hasAstroFont ? m_legacyRetrograde : m_unicodeRetrograde;
+    // Immer Unicode für Retrograde (System-Font)
+    return m_unicodeRetrograde;
 }
 
 QString AstroFontProvider::gradSymbol() const {
-    return m_hasAstroFont ? m_legacyGrad : m_unicodeGrad;
+    // Immer Unicode für Grad (System-Font)
+    return m_unicodeGrad;
 }
 
 } // namespace astro
