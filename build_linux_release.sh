@@ -130,6 +130,18 @@ for f in astroorg.dat astroger.dat europa.dat default.dat; do
   fi
 done
 
+# Swiss Ephemeris Dateien (PFLICHT für Planetenberechnung)
+#   - sepl_18.se1  (Planeten 1800-2400)
+#   - semo_18.se1  (Mond 1800-2400)
+#   - seas_18.se1  (Asteroiden 1800-2400)
+mkdir -p "$DIST_DIR/swisseph/ephe"
+if [ -d "$PROJECT_DIR/swisseph/ephe" ]; then
+  echo "Kopiere Swiss Ephemeris Dateien..."
+  cp "$PROJECT_DIR/swisseph/ephe/"*.se1 "$DIST_DIR/swisseph/ephe/" 2>/dev/null || true
+else
+  echo "WARNUNG: Swiss Ephemeris Dateien nicht gefunden unter $PROJECT_DIR/swisseph/ephe"
+fi
+
  # Ressourcen (Icons etc.) - optional aber empfohlen
  if [ -d "$PROJECT_DIR/resources" ]; then
    mkdir -p "$DIST_DIR/resources"

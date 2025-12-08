@@ -169,6 +169,18 @@ for %%F in (astroorg.dat astroger.dat europa.dat default.dat) do (
   if exist "%PROJECT_DIR%\data\%%F" copy /Y "%PROJECT_DIR%\data\%%F" "%DIST_DIR%\data" >NUL
 )
 
+rem Swiss Ephemeris Dateien (PFLICHT fuer Planetenberechnung)
+rem   - sepl_18.se1  (Planeten 1800-2400)
+rem   - semo_18.se1  (Mond 1800-2400)
+rem   - seas_18.se1  (Asteroiden 1800-2400)
+mkdir "%DIST_DIR%\swisseph\ephe" 2>NUL
+if exist "%PROJECT_DIR%\swisseph\ephe" (
+  echo Kopiere Swiss Ephemeris Dateien...
+  xcopy "%PROJECT_DIR%\swisseph\ephe\*.se1" "%DIST_DIR%\swisseph\ephe" /Y >NUL
+) else (
+  echo WARNUNG: Swiss Ephemeris Dateien nicht gefunden unter %PROJECT_DIR%\swisseph\ephe
+)
+
 rem Ressourcen (Icons etc.) - optional aber empfohlen
 if exist "%PROJECT_DIR%\resources" (
   xcopy "%PROJECT_DIR%\resources" "%DIST_DIR%\resources" /E /I /Y >NUL
