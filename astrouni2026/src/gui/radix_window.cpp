@@ -9,6 +9,7 @@
 #include "dialogs/person_dialog.h"
 #include "../core/calculations.h"
 #include "../core/chart_calc.h"
+#include "../core/astro_font_provider.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -468,10 +469,10 @@ void RadixWindow::fillPositionenList() {
         
         // Transit-Planeten
         for (int i = 0; i < transit.anzahlPlanet && i < transit.planet.size(); ++i) {
-            QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
+            QString symbol = astroFont().planetSymbol(i);
             QString pos = Calculations::degToZeichenString(transit.planet[i], true);
             int stz = static_cast<int>(transit.planet[i] / 30.0) % 12;
-            QString stzSymbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+            QString stzSymbol = astroFont().sternzeichenSymbol(stz);
             QString retro = (transit.planetTyp.size() > i && (transit.planetTyp[i] & P_TYP_RUCK)) ? " R" : "";
             
             QString planetColor = colorToHtml(sColor[COL_PLAN_T]);
@@ -495,14 +496,14 @@ void RadixWindow::fillPositionenList() {
     
     // STRICT LEGACY: Format mit verschiedenen Farben für Symbol, Position, Zeichen
     for (int i = 0; i < displayRadix->anzahlPlanet; ++i) {
-        QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
+        QString symbol = astroFont().planetSymbol(i);
         
         // Position im Sternzeichen (0-30°)
         QString pos = Calculations::degToZeichenString(displayRadix->planet[i], true);
         
         // Sternzeichen-Symbol und Farbe
         int stz = static_cast<int>(displayRadix->planet[i] / 30.0) % 12;
-        QString stzSymbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+        QString stzSymbol = astroFont().sternzeichenSymbol(stz);
         
         // Rückläufigkeit
         QString retro = (displayRadix->planetTyp.size() > i && (displayRadix->planetTyp[i] & P_TYP_RUCK)) ? " R" : "";
@@ -656,16 +657,16 @@ void RadixWindow::fillAspekteList() {
                 
                 if (asp == KEIN_ASP) continue;
                 
-                QString symbol1 = QString::fromUtf8(PLANET_SYMBOLS[i]);
-                QString symbol2 = QString::fromUtf8(PLANET_SYMBOLS[j]);
+                QString symbol1 = astroFont().planetSymbol(i);
+                QString symbol2 = astroFont().planetSymbol(j);
                 
                 int stz1 = static_cast<int>(m_radix.planet[i] / 30.0) % 12;
                 int stz2 = static_cast<int>(m_radix.planet[j] / 30.0) % 12;
-                QString stzSymbol1 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz1]);
-                QString stzSymbol2 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz2]);
+                QString stzSymbol1 = astroFont().sternzeichenSymbol(stz1);
+                QString stzSymbol2 = astroFont().sternzeichenSymbol(stz2);
                 
                 int aspSymIdx = getAspektSymbolIndex(asp);
-                QString aspSymbol = QString::fromUtf8(ASPEKT_SYMBOLS[aspSymIdx]);
+                QString aspSymbol = astroFont().aspektSymbol(aspSymIdx);
                 
                 QString planetColor = colorToHtml(sColor[COL_PLAN]);
                 int element1 = stz1 % 4;
@@ -704,15 +705,15 @@ void RadixWindow::fillAspekteList() {
                 int8_t asp = m_radix.aspHaus[idx];
                 if (asp == KEIN_ASP) continue;
                 
-                QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
+                QString symbol = astroFont().planetSymbol(i);
                 
                 int stzPlanet = static_cast<int>(m_radix.planet[i] / 30.0) % 12;
                 int stzHaus = static_cast<int>(m_radix.haus[h] / 30.0) % 12;
-                QString stzSymbol1 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stzPlanet]);
-                QString stzSymbol2 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stzHaus]);
+                QString stzSymbol1 = astroFont().sternzeichenSymbol(stzPlanet);
+                QString stzSymbol2 = astroFont().sternzeichenSymbol(stzHaus);
                 
                 int aspSymIdx = getAspektSymbolIndex(asp);
-                QString aspSymbol = QString::fromUtf8(ASPEKT_SYMBOLS[aspSymIdx]);
+                QString aspSymbol = astroFont().aspektSymbol(aspSymIdx);
                 
                 QString planetColor = colorToHtml(sColor[COL_PLAN]);
                 QString hausColor = colorToHtml(sColor[COL_HAUSER]);
@@ -777,16 +778,16 @@ void RadixWindow::fillAspekteList() {
                 
                 if (asp == KEIN_ASP) continue;
                 
-                QString symbol1 = QString::fromUtf8(PLANET_SYMBOLS[i]);
-                QString symbol2 = QString::fromUtf8(PLANET_SYMBOLS[j]);
+                QString symbol1 = astroFont().planetSymbol(i);
+                QString symbol2 = astroFont().planetSymbol(j);
                 
                 int stz1 = static_cast<int>(pos1 / 30.0) % 12;
                 int stz2 = static_cast<int>(pos2 / 30.0) % 12;
-                QString stzSymbol1 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz1]);
-                QString stzSymbol2 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz2]);
+                QString stzSymbol1 = astroFont().sternzeichenSymbol(stz1);
+                QString stzSymbol2 = astroFont().sternzeichenSymbol(stz2);
                 
                 int aspSymIdx = getAspektSymbolIndex(asp);
-                QString aspSymbol = QString::fromUtf8(ASPEKT_SYMBOLS[aspSymIdx]);
+                QString aspSymbol = astroFont().aspektSymbol(aspSymIdx);
                 
                 QString p1Color = colorToHtml(sColor[COL_PLAN_T]);  // Synastrie/Transit-Farbe
                 QString p2Color = colorToHtml(sColor[COL_PLAN]);

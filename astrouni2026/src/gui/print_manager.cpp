@@ -10,6 +10,7 @@
 #include "../core/calculations.h"
 #include "../core/constants.h"
 #include "../core/transit_calc.h"
+#include "../core/astro_font_provider.h"
 
 #include <QPrintDialog>
 #include <QPrintPreviewDialog>
@@ -175,7 +176,7 @@ bool PrintManager::printTransits(const Radix& basisRadix,
         const Radix& trEnd = transits.at(endIdx);
         
         // Transit-Planet
-        QString transitPlanet = QString::fromUtf8(PLANET_SYMBOLS[ta.transitPlanet]);
+        QString transitPlanet = astroFont().planetSymbol(ta.transitPlanet);
         if (trStart.planetTyp.size() > ta.transitPlanet && 
             (trStart.planetTyp[ta.transitPlanet] & P_TYP_RUCK)) {
             transitPlanet += " R";
@@ -194,14 +195,14 @@ bool PrintManager::printTransits(const Radix& basisRadix,
             case OPOSITION:   aspIdx = 6; break;
         }
         painter.drawText(xText + static_cast<int>(150 * m_factor), yText, 
-                         QString::fromUtf8(ASPEKT_SYMBOLS[aspIdx]));
+                         astroFont().aspektSymbol(aspIdx));
         
         // Radix-Objekt
         QString radixObj;
         if (ta.isHaus) {
             radixObj = QString("H%1").arg(ta.radixPlanet + 1);
         } else {
-            radixObj = QString::fromUtf8(PLANET_SYMBOLS[ta.radixPlanet]);
+            radixObj = astroFont().planetSymbol(ta.radixPlanet);
         }
         painter.drawText(xText + static_cast<int>(220 * m_factor), yText, radixObj);
         
@@ -304,7 +305,7 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
         }
         
         // Planet-Symbol
-        QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
+        QString symbol = astroFont().planetSymbol(i);
         painter.drawText(xText, yText, symbol);
         
         // Position
@@ -313,7 +314,7 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
         
         // Sternzeichen
         int stz = static_cast<int>(radix.planet[i] / 30.0) % 12;
-        QString stzSymbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+        QString stzSymbol = astroFont().sternzeichenSymbol(stz);
         painter.drawText(xText + xAdd * 4, yText, stzSymbol);
         
         // In Haus
@@ -343,7 +344,7 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
         
         // Sternzeichen
         int stz = static_cast<int>(radix.haus[i] / 30.0) % 12;
-        QString stzSymbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+        QString stzSymbol = astroFont().sternzeichenSymbol(stz);
         painter.drawText(xHaus + xAdd * 4, yText, stzSymbol);
     }
 }
@@ -377,7 +378,7 @@ void PrintManager::printAspects(QPainter& painter, const Radix& radix, double fa
     painter.drawLine(xBox, yBox, xBoxE, yBox);
     for (int i = 0; i < numPlanets; ++i) {
         // Planet-Symbol links
-        QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
+        QString symbol = astroFont().planetSymbol(i);
         painter.drawText(xText, yText, symbol);
         
         yBox += yAdd;
@@ -403,7 +404,7 @@ void PrintManager::printAspects(QPainter& painter, const Radix& radix, double fa
                         case OPOSITION:   aspIdx = 6; break;
                     }
                     painter.drawText(sAddX + (j - i - 1) * xAdd, yText, 
-                                     QString::fromUtf8(ASPEKT_SYMBOLS[aspIdx]));
+                                     astroFont().aspektSymbol(aspIdx));
                 }
             }
         }
@@ -419,7 +420,7 @@ void PrintManager::printAspects(QPainter& painter, const Radix& radix, double fa
     painter.drawLine(xBox, yBox, xBox, yBoxE);
     for (int i = 1; i < numPlanets; ++i) {
         // Planet-Symbol unten
-        QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
+        QString symbol = astroFont().planetSymbol(i);
         painter.drawText(sAddX, yText, symbol);
         
         sAddX += xAdd;
@@ -458,7 +459,7 @@ void PrintManager::printHouseAspects(QPainter& painter, const Radix& radix, int 
             if (asp < 0 && asp != KEIN_ASP) asp += 256;
             if (asp == KEIN_ASP) continue;
             
-            QString planetSymbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
+            QString planetSymbol = astroFont().planetSymbol(i);
             int aspIdx = 0;
             switch (asp) {
                 case KONJUNKTION: aspIdx = 0; break;
@@ -469,7 +470,7 @@ void PrintManager::printHouseAspects(QPainter& painter, const Radix& radix, int 
                 case QUINCUNX:    aspIdx = 5; break;
                 case OPOSITION:   aspIdx = 6; break;
             }
-            QString aspSymbol = QString::fromUtf8(ASPEKT_SYMBOLS[aspIdx]);
+            QString aspSymbol = astroFont().aspektSymbol(aspIdx);
             
             QString line = QString("%1 %2 H%3")
                 .arg(planetSymbol)
@@ -670,7 +671,7 @@ void PrintManager::drawRadixForPrint(QPainter& painter, const Radix& radix, cons
         double degree = i * 30.0 + 15.0;
         double symbolRadius = (radius + radiusStz) / 2.0;
         QPointF pos = degreeToPoint(degree, symbolRadius);
-        QString symbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[i]);
+        QString symbol = astroFont().sternzeichenSymbol(i);
         QRectF rect(pos.x() - 10, pos.y() - 10, 20, 20);
         painter.drawText(rect, Qt::AlignCenter, symbol);
     }
@@ -722,7 +723,7 @@ void PrintManager::drawRadixForPrint(QPainter& painter, const Radix& radix, cons
         
         // Symbol
         QPointF pos = degreeToPoint(degree, symbolRadius);
-        QString symbol = QString::fromUtf8(PLANET_SYMBOLS[i]);
+        QString symbol = astroFont().planetSymbol(i);
         QRectF rect(pos.x() - 10, pos.y() - 10, 20, 20);
         painter.drawText(rect, Qt::AlignCenter, symbol);
     }

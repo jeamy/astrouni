@@ -8,6 +8,7 @@
 #include "transit_result_window.h"
 #include "dialogs/retrograde_dialog.h"
 #include "../core/constants.h"
+#include "../core/astro_font_provider.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -134,7 +135,7 @@ void TransitResultWindow::buildTransitTexts() {
         const Radix& trEnd   = m_transits.at(endIdx);
         
         // Transit-Planet mit Retrograde-Symbol
-        QString transitPlanet = QString::fromUtf8(PLANET_SYMBOLS[ta.transitPlanet]);
+        QString transitPlanet = astroFont().planetSymbol(ta.transitPlanet);
         bool isRetro = (trStart.planetTyp.size() > ta.transitPlanet) && 
                        (trStart.planetTyp[ta.transitPlanet] & P_TYP_RUCK);
         if (isRetro) {
@@ -149,7 +150,7 @@ void TransitResultWindow::buildTransitTexts() {
             if (tr.stzPlanet.size() > ta.transitPlanet) {
                 int8_t stz = tr.stzPlanet[ta.transitPlanet];
                 if (stz != lastStz && stz >= 0 && stz < 12) {
-                    transitZeichen += QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+                    transitZeichen += astroFont().sternzeichenSymbol(stz);
                     lastStz = stz;
                 }
             }
@@ -159,7 +160,7 @@ void TransitResultWindow::buildTransitTexts() {
         }
         
         // Aspekt-Symbol
-        QString aspekt = QString::fromUtf8(ASPEKT_SYMBOLS[aspektToIndex(ta.aspekt)]);
+        QString aspekt = astroFont().aspektSymbol(aspektToIndex(ta.aspekt));
         
         // Radix-Planet oder Haus
         QString radixObj;
@@ -171,12 +172,12 @@ void TransitResultWindow::buildTransitTexts() {
             if (m_basisRadix.stzHaus.size() > ta.radixPlanet) {
                 int8_t stz = m_basisRadix.stzHaus[ta.radixPlanet];
                 if (stz >= 0 && stz < 12) {
-                    radixZeichen = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+                    radixZeichen = astroFont().sternzeichenSymbol(stz);
                 }
             }
         } else {
             // Planet
-            radixObj = QString::fromUtf8(PLANET_SYMBOLS[ta.radixPlanet]);
+            radixObj = astroFont().planetSymbol(ta.radixPlanet);
             // Retrograde-Symbol für Radix-Planet
             if (m_basisRadix.planetTyp.size() > ta.radixPlanet &&
                 (m_basisRadix.planetTyp[ta.radixPlanet] & P_TYP_RUCK)) {
@@ -186,7 +187,7 @@ void TransitResultWindow::buildTransitTexts() {
             if (m_basisRadix.stzPlanet.size() > ta.radixPlanet) {
                 int8_t stz = m_basisRadix.stzPlanet[ta.radixPlanet];
                 if (stz >= 0 && stz < 12) {
-                    radixZeichen = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+                    radixZeichen = astroFont().sternzeichenSymbol(stz);
                 }
             }
         }
@@ -303,7 +304,7 @@ void TransitResultWindow::onRuecklaufClicked() {
     if (!foundAny) {
         QMessageBox::information(this, tr("Rückläufigkeit"),
             tr("Keine Rückläufigkeit für %1 im gewählten Zeitraum gefunden.")
-                .arg(QString::fromUtf8(PLANET_SYMBOLS[planet])));
+                .arg(astroFont().planetSymbol(planet)));
     }
 }
 

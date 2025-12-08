@@ -96,8 +96,13 @@ Orte Orte::fromLegacy(const OrteLegacy& legacy, const QString& ortName) {
     o.gultig = (legacy.cGultig != 0);
     o.index = legacy.lIndex;
     o.name = ortName;
-    // Ländercode: Null-terminiert, max 3 Zeichen
-    o.land = QString::fromLatin1(legacy.szLand).trimmed();
+    // Ländercode: max 3 Zeichen, kann Null-Bytes enthalten
+    // Finde das erste Null-Byte oder nimm max 3 Zeichen
+    int landLen = 0;
+    for (int i = 0; i < 3 && legacy.szLand[i] != '\0'; ++i) {
+        landLen++;
+    }
+    o.land = QString::fromLatin1(legacy.szLand, landLen).trimmed();
     o.zone = legacy.fZone;
     o.breite = legacy.dBreite;
     o.laenge = legacy.dLange;

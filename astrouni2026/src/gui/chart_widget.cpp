@@ -7,6 +7,7 @@
 
 #include "chart_widget.h"
 #include "../core/calculations.h"
+#include "../core/astro_font_provider.h"
 #include <QPainterPath>
 #include <QMouseEvent>
 #include <QImage>
@@ -985,19 +986,30 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
     QRectF rect(pos.x() - rectSize/2, pos.y() - rectSize/2, rectSize, rectSize);
     
     if (planet < MAX_PLANET) {
-        QString symbol = QString::fromUtf8(PLANET_SYMBOLS[planet]);
+        // AstroUniverse-Font verwenden wenn verfügbar
+        if (astroFont().hasAstroFont()) {
+            QFont symbolFont = astroFont().getSymbolFont(isHighlighted ? 18 : (offsetLevel > 0 ? 12 : 16));
+            painter.setFont(symbolFont);
+        }
+        QString symbol = astroFont().planetSymbol(planet);
         painter.drawText(rect, Qt::AlignCenter, symbol);
     }
     
     // Rückläufigkeits-Symbol
     if (m_radix.planetTyp[planet] & P_TYP_RUCK) {
-        // Systemabhängiger Standard-Font statt fester Arial-Angabe
-        QFont retroFont = m_mainFont;
-        retroFont.setPointSize(offsetLevel > 0 ? 7 : 9);
-        painter.setFont(retroFont);
-        painter.setPen(color);
-        QRectF retroRect(pos.x() + 12, pos.y() - 6, 12, 12);
-        painter.drawText(retroRect, Qt::AlignCenter, "R");
+        if (astroFont().hasAstroFont()) {
+            QFont retroFont = astroFont().getSymbolFont(offsetLevel > 0 ? 7 : 9);
+            painter.setFont(retroFont);
+            QRectF retroRect(pos.x() + 12, pos.y() - 6, 12, 12);
+            painter.drawText(retroRect, Qt::AlignCenter, astroFont().retrogradeSymbol());
+        } else {
+            QFont retroFont = m_mainFont;
+            retroFont.setPointSize(offsetLevel > 0 ? 7 : 9);
+            painter.setFont(retroFont);
+            painter.setPen(color);
+            QRectF retroRect(pos.x() + 12, pos.y() - 6, 12, 12);
+            painter.drawText(retroRect, Qt::AlignCenter, "R");
+        }
     }
 }
 
