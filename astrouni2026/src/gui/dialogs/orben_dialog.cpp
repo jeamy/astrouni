@@ -12,6 +12,7 @@
 
 #include "orben_dialog.h"
 #include "../../core/constants.h"
+#include "../../core/astro_font_provider.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -125,16 +126,24 @@ void OrbenDialog::setupUI() {
     headerFont.setBold(true);
     
     for (int i = 0; i < ASPEKTE; ++i) {
-        QTableWidgetItem* item = new QTableWidgetItem(QString::fromUtf8(ASPEKT_SYMBOLS[i]));
-        item->setFont(headerFont);
+        QTableWidgetItem* item = new QTableWidgetItem(astroFont().aspektSymbol(i));
+        if (astroFont().hasAstroFont()) {
+            item->setFont(astroFont().getSymbolFont(headerFont.pointSize()));
+        } else {
+            item->setFont(headerFont);
+        }
         item->setForeground(ASPEKT_COLORS[i]);
         m_orbenTable->setHorizontalHeaderItem(i, item);
     }
     
     // Zeilen-Header (Planeten-Symbole - Y-Achse) mit Farben
     for (int i = 0; i < NUM_PLANETS; ++i) {
-        QTableWidgetItem* item = new QTableWidgetItem(QString::fromUtf8(PLANET_SYMBOLS[i]));
-        item->setFont(headerFont);
+        QTableWidgetItem* item = new QTableWidgetItem(astroFont().planetSymbol(i));
+        if (astroFont().hasAstroFont()) {
+            item->setFont(astroFont().getSymbolFont(headerFont.pointSize()));
+        } else {
+            item->setFont(headerFont);
+        }
         item->setForeground(PLANET_COLORS[i]);
         m_orbenTable->setVerticalHeaderItem(i, item);
     }

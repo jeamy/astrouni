@@ -52,71 +52,76 @@ void AstroFontProvider::detectFont() {
     }
     
     // Prüfe ob der Font bereits im System installiert ist
-    if (QFontDatabase::families().contains("AstroUniverse")) {
-        m_fontName = "AstroUniverse";
-        m_hasAstroFont = true;
-        qInfo() << "AstroFontProvider: AstroUniverse-Font im System gefunden";
-        return;
+    // Case-insensitive Suche, da Windows den Font-Namen anders registrieren kann
+    QStringList families = QFontDatabase::families();
+    for (const QString& family : families) {
+        if (family.compare("AstroUniverse", Qt::CaseInsensitive) == 0) {
+            m_fontName = family;  // Verwende den exakten Namen aus der DB
+            m_hasAstroFont = true;
+            qInfo() << "AstroFontProvider: AstroUniverse-Font im System gefunden:" << family;
+            return;
+        }
     }
     
     qInfo() << "AstroFontProvider: AstroUniverse-Font nicht gefunden, verwende Unicode-Symbole";
+    qDebug() << "AstroFontProvider: Verfügbare Fonts:" << families.filter("Astro", Qt::CaseInsensitive);
 }
 
 void AstroFontProvider::initSymbols() {
     // Legacy-Font Zeichen aus auwurzel.h szLNANamen[]
-    // Diese Zeichen sind im AstroUniverse-Font auf ASCII-Positionen gemappt
-    // Original: "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "<", "L", "Ch", "C", "P", "J", "V"
-    // Die tatsächlichen Glyphen im Font sind auf diese Positionen:
+    // Hex-Werte aus dem Original: 0xAA-0xBA
+    // Diese Zeichen sind im AstroUniverse-Font auf Latin1 Extended Positionen gemappt
     m_legacyPlanetSymbols = {
-        "Q",   // Sonne
-        "R",   // Mond
-        "S",   // Merkur
-        "T",   // Venus
-        "U",   // Mars
-        "V",   // Jupiter
-        "W",   // Saturn
-        "X",   // Uranus
-        "Y",   // Neptun
-        "Z",   // Pluto
-        "<",   // Nordknoten
-        "L",   // Lilith
-        "K",   // Chiron (angepasst)
-        "C",   // Ceres
-        "P",   // Pallas
-        "J",   // Juno
-        "v"    // Vesta
+        QString(QChar(0xAA)),   // Sonne
+        QString(QChar(0xAB)),   // Mond
+        QString(QChar(0xAC)),   // Merkur
+        QString(QChar(0xAD)),   // Venus
+        QString(QChar(0xAE)),   // Mars
+        QString(QChar(0xAF)),   // Jupiter
+        QString(QChar(0xB0)),   // Saturn
+        QString(QChar(0xB1)),   // Uranus
+        QString(QChar(0xB2)),   // Neptun
+        QString(QChar(0xB3)),   // Pluto
+        QString(QChar(0xB4)),   // Nordknoten
+        QString(QChar(0xB5)),   // Lilith
+        QString(QChar(0xB6)),   // Chiron
+        QString(QChar(0xB7)),   // Ceres
+        QString(QChar(0xB8)),   // Pallas
+        QString(QChar(0xB9)),   // Juno
+        QString(QChar(0xBA))    // Vesta
     };
     
     // Legacy Sternzeichen (szBNamen aus auwurzel.h)
-    // Auf ASCII-Positionen A-L gemappt
+    // Hex-Werte aus dem Original: 0xE5-0xF0
     m_legacySternzeichenSymbols = {
-        "A",   // Widder
-        "B",   // Stier
-        "C",   // Zwillinge
-        "D",   // Krebs
-        "E",   // Löwe
-        "F",   // Jungfrau
-        "G",   // Waage
-        "H",   // Skorpion
-        "I",   // Schütze
-        "J",   // Steinbock
-        "K",   // Wassermann
-        "L"    // Fische
+        QString(QChar(0xE5)),   // Widder
+        QString(QChar(0xE6)),   // Stier
+        QString(QChar(0xE7)),   // Zwillinge
+        QString(QChar(0xE8)),   // Krebs
+        QString(QChar(0xE9)),   // Löwe
+        QString(QChar(0xEA)),   // Jungfrau
+        QString(QChar(0xEB)),   // Waage
+        QString(QChar(0xEC)),   // Skorpion
+        QString(QChar(0xED)),   // Schütze
+        QString(QChar(0xEE)),   // Steinbock
+        QString(QChar(0xEF)),   // Wassermann
+        QString(QChar(0xF0))    // Fische
     };
     
     // Legacy Aspekt-Symbole (cAspektGly aus auwurzel.h)
+    // Hex-Werte: 0x91, 0x97, 0x93, 0x94, 0x92, 0x95, 0x96
     m_legacyAspektSymbols = {
-        "q",   // Konjunktion
-        "y",   // Halbsextil
-        "x",   // Sextil
-        "r",   // Quadratur
-        "e",   // Trigon
-        "i",   // Quincunx
-        "w"    // Opposition
+        QString(QChar(0x91)),   // Konjunktion
+        QString(QChar(0x97)),   // Halbsextil
+        QString(QChar(0x93)),   // Sextil
+        QString(QChar(0x94)),   // Quadratur
+        QString(QChar(0x92)),   // Trigon
+        QString(QChar(0x95)),   // Quincunx
+        QString(QChar(0x96))    // Opposition
     };
     
-    m_legacyRetrograde = "f";  // Retrograde-Symbol im Legacy-Font
-    m_legacyGrad = "`";        // Grad-Symbol
+    m_legacyRetrograde = QString(QChar(0x9A));  // Retrograde-Symbol im Legacy-Font
+    m_legacyGrad = QString(QChar(0xB0));        // Grad-Symbol (gleich wie Saturn, prüfen!)
     
     // Unicode-Fallback Symbole (aus constants.h)
     m_unicodePlanetSymbols = {
@@ -169,7 +174,9 @@ void AstroFontProvider::initSymbols() {
 }
 
 QFont AstroFontProvider::getSymbolFont(int pointSize) const {
-    QFont font(m_fontName, pointSize);
+    // AstroUniverse-Font 4pt größer darstellen für bessere Lesbarkeit
+    int adjustedSize = m_hasAstroFont ? pointSize + 5 : pointSize;
+    QFont font(m_fontName, adjustedSize);
     return font;
 }
 
