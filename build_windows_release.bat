@@ -213,9 +213,13 @@ if errorlevel 1 (
   echo Erzeuge Release-Zip: %ZIP_NAME%
   pushd "%PROJECT_DIR%\dist"
   if exist "%ZIP_NAME%" del /F /Q "%ZIP_NAME%"
-  powershell -NoLogo -NoProfile -Command "Compress-Archive -Path 'windows\*' -DestinationPath '%ZIP_NAME%' -Force"
+  powershell -NoLogo -NoProfile -Command "Compress-Archive -Path 'windows\*' -DestinationPath '%ZIP_NAME%' -Force" >NUL 2>&1
   popd
-  echo Release-Zip erstellt: %PROJECT_DIR%\dist\%ZIP_NAME%
+  if exist "%ZIP_NAME%" (
+    echo Release-Zip erstellt: %PROJECT_DIR%\dist\%ZIP_NAME%
+  ) else (
+    echo Hinweis: ZIP-Archiv konnte nicht erstellt werden, Dist-Verzeichnis ist dennoch vollstaendig.
+  )
 )
 
 echo.
