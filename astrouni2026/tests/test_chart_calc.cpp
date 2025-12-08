@@ -19,6 +19,8 @@ private slots:
     void testHousesWhole();
     void testGetHouseOfPlanet();
     void testCalcQualities();
+    void testAllHouseSystemsSingleRadix();
+    void testAllHouseSystemsMultipleRadix();
     void cleanupTestCase();
 };
 
@@ -104,6 +106,104 @@ void TestChartCalc::testCalcQualities() {
     QCOMPARE(radix.qualitaten[QU_CARDINAL], static_cast<int16_t>(2));
     QCOMPARE(radix.qualitaten[QU_FIX], static_cast<int16_t>(1));
     QCOMPARE(radix.qualitaten[QU_BEWEGLICH], static_cast<int16_t>(1));
+}
+
+// Hilfsfunktion: Beispiel-Radix mit fixen Daten initialisieren
+static void initSampleRadix(Radix& radix, int tag, int monat, int jahr,
+                            double zeit, double laenge, double breite,
+                            int hausSys) {
+    radix.clear();
+    radix.hausSys = static_cast<int8_t>(hausSys);
+    radix.rFix.tag = static_cast<int16_t>(tag);
+    radix.rFix.monat = static_cast<int16_t>(monat);
+    radix.rFix.jahr = static_cast<int16_t>(jahr);
+    radix.rFix.zeit = zeit;
+    radix.rFix.laenge = laenge;
+    radix.rFix.breite = breite;
+}
+
+// Test: alle Häusersysteme für einen Beispiel-Radix durchrechnen
+void TestChartCalc::testAllHouseSystemsSingleRadix() {
+    // Beispiel: 04.04.1918, 02:20, Wien (wie Demo-Datensatz)
+    const int tag = 4;
+    const int monat = 4;
+    const int jahr = 1918;
+    const double zeit = 2.333333333; // 02:20
+    const double laenge = 16.3667;   // ca. Wien
+    const double breite = 48.2000;
+
+    const int houseTypes[] = {
+        TYP_KOCH, TYP_PLACIDUS, TYP_EQUAL, TYP_EQUALMID,
+        TYP_WHOLE, TYP_TOPOZEN, TYP_CAMPANUS, TYP_MERIDIAN,
+        TYP_REGIOMONTANUS, TYP_PORPHYRY, TYP_PORPHYRYN,
+        TYP_MORINUS, TYP_ALCABIT, TYP_NULL
+    };
+
+    for (int hsys : houseTypes) {
+        Radix radix;
+        initSampleRadix(radix, tag, monat, jahr, zeit, laenge, breite, hsys);
+
+        int result = ChartCalc::calculate(radix, nullptr, TYP_RADIX);
+        QVERIFY2(result == ERR_OK, QByteArray("House system calc failed for type ") + QByteArray::number(hsys));
+
+        // Grundlegende Invarianten prüfen
+        QCOMPARE(radix.hausSys, static_cast<int8_t>(hsys));
+        // haus wird intern als MAX_HAUS+1 (13 Einträge, 0-12) angelegt
+        QCOMPARE(radix.haus.size(), static_cast<int>(MAX_HAUS) + 1);
+
+        // Häuser müssen im Bereich [0,360) liegen
+        for (int i = 0; i < MAX_HAUS; ++i) {
+            QVERIFY2(radix.haus[i] >= 0.0 && radix.haus[i] < 360.0,
+                     QByteArray("haus[") + QByteArray::number(i) + "] out of range for type " + QByteArray::number(hsys));
+        }
+    }
+}
+
+// Test: mehrere Beispiel-Radixe (unterschiedliche Orte/Zeiten) über alle Häusersysteme
+void TestChartCalc::testAllHouseSystemsMultipleRadix() {
+    struct Sample {
+        int tag;
+        int monat;
+        int jahr;
+        double zeit;    // Dezimalstunden
+        double laenge;  // Ost positiv
+        double breite;  // Nord positiv
+    };
+
+    // Drei typische Beispiele (Europa, USA, Südhalbkugel)
+    const Sample samples[] = {
+        { 4,  4, 1918,  2.333333333,  16.3667,  48.2000 }, // Wien
+        { 20, 7, 1984, 14.500000000, -74.0060,  40.7128 }, // New York (ca.)
+        { 10,12,2000,  6.750000000, 151.2093, -33.8688 }  // Sydney (ca.)
+    };
+
+    const int houseTypes[] = {
+        TYP_KOCH, TYP_PLACIDUS, TYP_EQUAL, TYP_EQUALMID,
+        TYP_WHOLE, TYP_TOPOZEN, TYP_CAMPANUS, TYP_MERIDIAN,
+        TYP_REGIOMONTANUS, TYP_PORPHYRY, TYP_PORPHYRYN,
+        TYP_MORINUS, TYP_ALCABIT, TYP_NULL
+    };
+
+    for (const auto& s : samples) {
+        for (int hsys : houseTypes) {
+            Radix radix;
+            initSampleRadix(radix, s.tag, s.monat, s.jahr,
+                            s.zeit, s.laenge, s.breite, hsys);
+
+            int result = ChartCalc::calculate(radix, nullptr, TYP_RADIX);
+            QVERIFY2(result == ERR_OK,
+                     QByteArray("calculate() failed for sample and house type ") + QByteArray::number(hsys));
+
+            // Prüfen: ASC und MC im gültigen Bereich
+            QVERIFY(radix.asc >= 0.0 && radix.asc < 360.0);
+            QVERIFY(radix.mc  >= 0.0 && radix.mc  < 360.0);
+
+            // Planetenanzahl sollte gesetzt sein und mindestens Sonne/Mond enthalten
+            QVERIFY(radix.anzahlPlanet >= 2);
+            QVERIFY(radix.planet[0] >= 0.0 && radix.planet[0] < 360.0);
+            QVERIFY(radix.planet[1] >= 0.0 && radix.planet[1] < 360.0);
+        }
+    }
 }
 
 QTEST_MAIN(TestChartCalc)
