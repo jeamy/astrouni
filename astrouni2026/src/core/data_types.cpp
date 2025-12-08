@@ -144,7 +144,12 @@ RadixFix RadixFix::fromLegacy(const RadixFixLegacy& legacy) {
     rf.tag = legacy.sTag;
     rf.monat = legacy.sMonat;
     rf.jahr = legacy.sJahr;
-    rf.land = QString::fromLatin1(legacy.szLand, 4).trimmed();
+    // Ländercode: max 3 Zeichen + Terminator, kann Null-Bytes enthalten
+    int landLen = 0;
+    for (int i = 0; i < 4 && legacy.szLand[i] != '\0'; ++i) {
+        landLen++;
+    }
+    rf.land = QString::fromLatin1(legacy.szLand, landLen).trimmed();
     return rf;
 }
 

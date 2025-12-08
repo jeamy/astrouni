@@ -29,35 +29,20 @@ AstroFontProvider::AstroFontProvider()
 
 void AstroFontProvider::detectFont() {
     QString appPath = QCoreApplication::applicationDirPath();
-    QString logPath = appPath + "/font_debug.log";
-    QFile logFile(logPath);
-    QTextStream log(&logFile);
-    bool logging = logFile.open(QIODevice::WriteOnly | QIODevice::Text);
-    
-    if (logging) log << "AstroFontProvider Debug Log\n";
-    if (logging) log << "App Path: " << appPath << "\n";
     
     // ZUERST: Prüfe ob der Font bereits im System installiert ist
     // Case-insensitive Suche, da Windows den Font-Namen anders registrieren kann
     QStringList families = QFontDatabase::families();
-    if (logging) log << "System Fonts count: " << families.size() << "\n";
     
     for (const QString& family : families) {
         if (family.compare("AstroUniverse", Qt::CaseInsensitive) == 0 ||
             family.contains("AstroUniverse", Qt::CaseInsensitive)) {
             m_fontName = family;  // Verwende den exakten Namen aus der DB
             m_hasAstroFont = true;
-            qInfo() << "AstroFontProvider: AstroUniverse-Font im System gefunden:" << family;
-            if (logging) log << "FOUND in system: " << family << "\n";
-            logFile.close();
             return;
         }
     }
     
-    // Log alle Fonts die "Astro" enthalten
-    if (logging) {
-        log << "Fonts with 'Astro': " << families.filter("Astro", Qt::CaseInsensitive).join(", ") << "\n";
-    }
     
     // Versuche den Font aus dem Ressourcen-Verzeichnis zu laden
     QStringList fontPaths = {
@@ -69,19 +54,14 @@ void AstroFontProvider::detectFont() {
     
     for (const QString& path : fontPaths) {
         QFileInfo fi(path);
-        if (logging) log << "Checking path: " << path << " exists=" << fi.exists() << "\n";
         if (fi.exists() && fi.isFile()) {
             int fontId = QFontDatabase::addApplicationFont(path);
-            if (logging) log << "  addApplicationFont returned: " << fontId << "\n";
             if (fontId != -1) {
                 QStringList loadedFamilies = QFontDatabase::applicationFontFamilies(fontId);
-                if (logging) log << "  Loaded families: " << loadedFamilies.join(", ") << "\n";
                 if (!loadedFamilies.isEmpty()) {
                     m_fontName = loadedFamilies.first();
                     m_hasAstroFont = true;
                     qInfo() << "AstroFontProvider: AstroUniverse-Font geladen aus:" << path;
-                    if (logging) log << "LOADED from file: " << path << " as " << m_fontName << "\n";
-                    logFile.close();
                     return;
                 }
             }
@@ -89,8 +69,6 @@ void AstroFontProvider::detectFont() {
     }
     
     qInfo() << "AstroFontProvider: AstroUniverse-Font nicht gefunden, verwende Unicode-Symbole";
-    if (logging) log << "NOT FOUND - using Unicode fallback\n";
-    logFile.close();
 }
 
 void AstroFontProvider::initSymbols() {
@@ -201,7 +179,7 @@ void AstroFontProvider::initSymbols() {
 
 QFont AstroFontProvider::getSymbolFont(int pointSize) const {
     // AstroUniverse-Font 4pt größer darstellen für bessere Lesbarkeit
-    int adjustedSize = m_hasAstroFont ? pointSize + 5 : pointSize;
+    int adjustedSize = m_hasAstroFont ? pointSize + 3 : pointSize;
     QFont font(m_fontName, adjustedSize);
     return font;
 }

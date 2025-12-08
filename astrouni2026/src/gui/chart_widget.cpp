@@ -550,14 +550,18 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
         painter.drawLine(outer, inner);
     }
     
-    // Sternzeichen-Symbole mit Unicode
-    // Plattformübergreifende Symbol-Font Fallback-Kette
+    // Sternzeichen-Symbole
+    // Wenn AstroUniverse installiert ist, verwende diesen Font, sonst Fallback-Kette
     QFont zodiacFont;
-    QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
-    for (const QString& fontName : symbolFonts) {
-        zodiacFont = QFont(fontName, 18);
-        if (QFontInfo(zodiacFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
-            break;
+    if (astroFont().hasAstroFont()) {
+        zodiacFont = astroFont().getSymbolFont(18);
+    } else {
+        QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+        for (const QString& fontName : symbolFonts) {
+            zodiacFont = QFont(fontName, 18);
+            if (QFontInfo(zodiacFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
+                break;
+            }
         }
     }
     painter.setFont(zodiacFont);
@@ -582,7 +586,7 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
         painter.setPen(elementColors[element]);
         
         // Unicode-Symbol zentriert zeichnen
-        QString symbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[i]);
+        QString symbol = astroFont().sternzeichenSymbol(i);
         QRectF rect(pos.x() - 12, pos.y() - 12, 24, 24);
         painter.drawText(rect, Qt::AlignCenter, symbol);
     }
@@ -622,7 +626,7 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
             QPointF pos = degreeToPoint(degree, symbolRadius3);
             int element = sStz % 4;
             painter.setPen(elementColors[element]);
-            QString symbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[sStz]);
+            QString symbol = astroFont().sternzeichenSymbol(sStz);
             QRectF rect(pos.x() - 8, pos.y() - 8, 16, 16);
             painter.drawText(rect, Qt::AlignCenter, symbol);
             
@@ -631,7 +635,7 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
             QPointF pos2 = degreeToPoint(degree + 180.0, symbolRadius3);
             int element2 = sStz2 % 4;
             painter.setPen(elementColors[element2]);
-            QString symbol2 = QString::fromUtf8(STERNZEICHEN_SYMBOLS[sStz2]);
+            QString symbol2 = astroFont().sternzeichenSymbol(sStz2);
             QRectF rect2(pos2.x() - 8, pos2.y() - 8, 16, 16);
             painter.drawText(rect2, Qt::AlignCenter, symbol2);
             
@@ -643,8 +647,13 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
     // Legacy: dA=Radix->dStzGrad; for (sA=0; sA<54; sA++) dA+=PI/54.0
     // Zeichnet 2 Symbole pro Iteration (gegenüberliegende Seiten)
     if (m_show9Degree) {
-        QFont smallFont = zodiacFont;
-        smallFont.setPointSize(9);
+        QFont smallFont;
+        if (astroFont().hasAstroFont()) {
+            smallFont = astroFont().getSymbolFont(9);
+        } else {
+            smallFont = zodiacFont;
+            smallFont.setPointSize(9);
+        }
         painter.setFont(smallFont);
         
         // sRHZ=sRG-(sRG-sRI)/2 -> Mitte zwischen 10-Grad und 3-Grad-Kreis
@@ -986,30 +995,19 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
     QRectF rect(pos.x() - rectSize/2, pos.y() - rectSize/2, rectSize, rectSize);
     
     if (planet < MAX_PLANET) {
-        // AstroUniverse-Font verwenden wenn verfügbar
-        if (astroFont().hasAstroFont()) {
-            QFont symbolFont = astroFont().getSymbolFont(isHighlighted ? 18 : (offsetLevel > 0 ? 12 : 16));
-            painter.setFont(symbolFont);
-        }
+        // Symbol aus AstroFontProvider (immer Unicode), aber mit System-Symbolfont zeichnen
         QString symbol = astroFont().planetSymbol(planet);
         painter.drawText(rect, Qt::AlignCenter, symbol);
     }
     
-    // Rückläufigkeits-Symbol
+    // Rückläufigkeits-Symbol (immer System-Font)
     if (m_radix.planetTyp[planet] & P_TYP_RUCK) {
-        if (astroFont().hasAstroFont()) {
-            QFont retroFont = astroFont().getSymbolFont(offsetLevel > 0 ? 7 : 9);
-            painter.setFont(retroFont);
-            QRectF retroRect(pos.x() + 12, pos.y() - 6, 12, 12);
-            painter.drawText(retroRect, Qt::AlignCenter, astroFont().retrogradeSymbol());
-        } else {
-            QFont retroFont = m_mainFont;
-            retroFont.setPointSize(offsetLevel > 0 ? 7 : 9);
-            painter.setFont(retroFont);
-            painter.setPen(color);
-            QRectF retroRect(pos.x() + 12, pos.y() - 6, 12, 12);
-            painter.drawText(retroRect, Qt::AlignCenter, "R");
-        }
+        QFont retroFont = m_mainFont;
+        retroFont.setPointSize(offsetLevel > 0 ? 7 : 9);
+        painter.setFont(retroFont);
+        painter.setPen(color);
+        QRectF retroRect(pos.x() + 12, pos.y() - 6, 12, 12);
+        painter.drawText(retroRect, Qt::AlignCenter, astroFont().retrogradeSymbol());
     }
 }
 
