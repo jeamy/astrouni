@@ -163,8 +163,8 @@ if exist "%BUILD_DIR%\astrouni2026.exe" (
 rem Qt-Runtime und Plugins mit windeployqt ins Dist-Verzeichnis ausrollen
 set "QT_BIN_DIR="
 if defined Qt6_DIR (
-  rem Qt6_DIR zeigt auf ...\mingw_64\lib\cmake\Qt6 -> davon zwei Ebenen nach oben zu bin
-  for %%D in ("%Qt6_DIR%") do set "QT_BIN_DIR=%%~dpD..\..\bin"
+  rem Qt6_DIR zeigt auf ...\mingw_64\lib\cmake\Qt6 -> zwei Ebenen nach oben zu bin
+  for %%D in ("%Qt6_DIR%\..\..\bin") do set "QT_BIN_DIR=%%~fD"
 )
 if not defined QT_BIN_DIR (
   rem Fallback: versuche Standardpfad
@@ -177,13 +177,15 @@ if exist "%QT_BIN_DIR%\windeployqt.exe" (
 ) else (
   echo WARNUNG: windeployqt.exe wurde nicht gefunden (QT_BIN_DIR=%QT_BIN_DIR%). Fallback: Qt-DLLs werden direkt kopiert.
 
-  rem Fallback: Qt6*.dll direkt ins Dist-Verzeichnis kopieren
+  rem Fallback: Qt6*.dll direkt ins Dist-Verzeichnis kopieren (robust ueber Schleife)
   if exist "%QT_BIN_DIR%\Qt6Core.dll" (
-    copy /Y "%QT_BIN_DIR%\Qt6*.dll" "%DIST_DIR%" >NUL
+    for %%F in ("%QT_BIN_DIR%\Qt6*.dll") do (
+      copy /Y "%%~fF" "%DIST_DIR%" >NUL
+    )
 
     rem Qt-Plugins (platforms, styles, etc.) mitnehmen, falls vorhanden
     if exist "%QT_BIN_DIR%\..\plugins" (
-      xcopy "%QT_BIN_DIR%\..\plugins" "%DIST_DIR%\plugins" /E /I /Y >NUL
+      xcopy "%QT_BIN_DIR%\..\plugins\*" "%DIST_DIR%\plugins\" /E /I /Y >NUL
     )
   ) else (
     echo FEHLER: In QT_BIN_DIR wurden keine Qt6-DLLs gefunden. Bitte Qt-Installation/Pfad pruefen.
