@@ -6,6 +6,9 @@
 #include "astro_font_provider.h"
 #include <QFontDatabase>
 #include <QDir>
+#include <QFileInfo>
+#include <QFile>
+#include <QTextStream>
 #include <QCoreApplication>
 #include <QDebug>
 
@@ -25,46 +28,69 @@ AstroFontProvider::AstroFontProvider()
 }
 
 void AstroFontProvider::detectFont() {
-    // Versuche den Font aus dem Ressourcen-Verzeichnis zu laden
     QString appPath = QCoreApplication::applicationDirPath();
-    QString fontPath = appPath + "/resources/fonts/asu_____.ttf";
+    QString logPath = appPath + "/font_debug.log";
+    QFile logFile(logPath);
+    QTextStream log(&logFile);
+    bool logging = logFile.open(QIODevice::WriteOnly | QIODevice::Text);
     
-    // Fallback-Pfade
+    if (logging) log << "AstroFontProvider Debug Log\n";
+    if (logging) log << "App Path: " << appPath << "\n";
+    
+    // ZUERST: Prüfe ob der Font bereits im System installiert ist
+    // Case-insensitive Suche, da Windows den Font-Namen anders registrieren kann
+    QStringList families = QFontDatabase::families();
+    if (logging) log << "System Fonts count: " << families.size() << "\n";
+    
+    for (const QString& family : families) {
+        if (family.compare("AstroUniverse", Qt::CaseInsensitive) == 0 ||
+            family.contains("AstroUniverse", Qt::CaseInsensitive)) {
+            m_fontName = family;  // Verwende den exakten Namen aus der DB
+            m_hasAstroFont = true;
+            qInfo() << "AstroFontProvider: AstroUniverse-Font im System gefunden:" << family;
+            if (logging) log << "FOUND in system: " << family << "\n";
+            logFile.close();
+            return;
+        }
+    }
+    
+    // Log alle Fonts die "Astro" enthalten
+    if (logging) {
+        log << "Fonts with 'Astro': " << families.filter("Astro", Qt::CaseInsensitive).join(", ") << "\n";
+    }
+    
+    // Versuche den Font aus dem Ressourcen-Verzeichnis zu laden
     QStringList fontPaths = {
-        fontPath,
+        appPath + "/resources/fonts/asu_____.ttf",
+        appPath + "/fonts/asu_____.ttf",
         appPath + "/../resources/fonts/asu_____.ttf",
         ":/fonts/asu_____.ttf"  // Qt Resource
     };
     
     for (const QString& path : fontPaths) {
-        if (QDir().exists(path)) {
+        QFileInfo fi(path);
+        if (logging) log << "Checking path: " << path << " exists=" << fi.exists() << "\n";
+        if (fi.exists() && fi.isFile()) {
             int fontId = QFontDatabase::addApplicationFont(path);
+            if (logging) log << "  addApplicationFont returned: " << fontId << "\n";
             if (fontId != -1) {
-                QStringList families = QFontDatabase::applicationFontFamilies(fontId);
-                if (!families.isEmpty()) {
-                    m_fontName = families.first();
+                QStringList loadedFamilies = QFontDatabase::applicationFontFamilies(fontId);
+                if (logging) log << "  Loaded families: " << loadedFamilies.join(", ") << "\n";
+                if (!loadedFamilies.isEmpty()) {
+                    m_fontName = loadedFamilies.first();
                     m_hasAstroFont = true;
                     qInfo() << "AstroFontProvider: AstroUniverse-Font geladen aus:" << path;
+                    if (logging) log << "LOADED from file: " << path << " as " << m_fontName << "\n";
+                    logFile.close();
                     return;
                 }
             }
         }
     }
     
-    // Prüfe ob der Font bereits im System installiert ist
-    // Case-insensitive Suche, da Windows den Font-Namen anders registrieren kann
-    QStringList families = QFontDatabase::families();
-    for (const QString& family : families) {
-        if (family.compare("AstroUniverse", Qt::CaseInsensitive) == 0) {
-            m_fontName = family;  // Verwende den exakten Namen aus der DB
-            m_hasAstroFont = true;
-            qInfo() << "AstroFontProvider: AstroUniverse-Font im System gefunden:" << family;
-            return;
-        }
-    }
-    
     qInfo() << "AstroFontProvider: AstroUniverse-Font nicht gefunden, verwende Unicode-Symbole";
-    qDebug() << "AstroFontProvider: Verfügbare Fonts:" << families.filter("Astro", Qt::CaseInsensitive);
+    if (logging) log << "NOT FOUND - using Unicode fallback\n";
+    logFile.close();
 }
 
 void AstroFontProvider::initSymbols() {
