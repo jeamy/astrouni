@@ -1,12 +1,14 @@
 # AstroUniverse 2026 - Astrology Software
 
-Moderne C++20/Qt6 Portierung der Astrologie-Software **AstroUnivers v0.04Beta**.
+Portierung der Legacy-Astrologie-Software **AstroUnivers v0.04Beta (1996)** aus dem
+Verzeichnis `legacy/` (Borland C++ / Windows) nach C++20/Qt6
+Cross-Platform-Architektur.
 
 ## Features
 
 - ✅ **Präzise Berechnungen** - Swiss Ephemeris (eingebettet, Cross-Platform)
 - ✅ **Cross-Platform** - Linux, macOS, Windows
-- ✅ **Moderne GUI** - Qt6
+- ✅ **GUI** - Qt6
 - ✅ **Legacy-Kompatibel** - Liest AstroUnivers .dat Dateien
 - ✅ **Unit Tests** - Alle bestanden
 - ✅ **Open Source** - GPL v2
