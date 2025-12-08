@@ -13,6 +13,7 @@
 #include "gui/main_window.h"
 #include "core/swiss_eph.h"
 #include "core/data_types.h"
+#include "core/astro_font_provider.h"
 #include "data/legacy_io.h"
 #include "data/orte_db.h"
 
@@ -57,6 +58,9 @@ int main(int argc, char *argv[]) {
     
     // Swiss Ephemeris initialisieren
     astro::swissEph().setEphePath(ephePath);
+    
+    // Astrologie-Font initialisieren (prüft ob AstroUniverse-Font verfügbar ist)
+    astro::astroFont();  // Singleton-Initialisierung mit Konsolenausgabe
     
     // Legacy I/O initialisieren
     astro::legacyIO().setDataPath(dataPath);

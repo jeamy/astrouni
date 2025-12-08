@@ -13,6 +13,8 @@ add_library(astrouni_core STATIC
     transit_calc.cpp
     swiss_eph.h
     swiss_eph.cpp
+    astro_font_provider.h
+    astro_font_provider.cpp
 )
 
 target_include_directories(astrouni_core PUBLIC
