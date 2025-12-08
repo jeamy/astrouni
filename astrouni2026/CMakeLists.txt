@@ -46,8 +46,8 @@ add_subdirectory(src/data)
 # GUI Library
 add_subdirectory(src/gui)
 
-# Hauptprogramm
-add_executable(astrouni2026
+# Hauptprogramm (WIN32 = kein Konsolenfenster unter Windows)
+add_executable(astrouni2026 WIN32
     src/main.cpp
 )
 
