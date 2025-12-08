@@ -175,19 +175,35 @@ if exist "%PROJECT_DIR%\resources" (
 )
 
 rem Qt-Runtime (DLLs) und Plugins fuer MinGW deployen
-rem DLLs liegen im Bin-Pfad des Qt-Prefix (CMAKE_PREFIX_PATH\bin)
-set "QT_BIN=%CMAKE_PREFIX_PATH%\bin"
+rem CMAKE_PREFIX_PATH = Qt-Root (z.B. C:\Qt\6.10.1\mingw_64)
+set "QT_PREFIX=%CMAKE_PREFIX_PATH%"
+set "QT_BIN=%QT_PREFIX%\bin"
 if exist "%QT_BIN%\Qt6Core.dll" (
   echo Kopiere Qt6 Runtime-DLLs...
-  xcopy "%QT_BIN%\Qt6*.dll" "%DIST_DIR%" /Y >NUL
-  xcopy "%QT_BIN%\lib*.dll" "%DIST_DIR%" /Y >NUL
-  rem Qt-Prefix aus Qt6_DIR ableiten (..\..\..)
-  for %%I in ("%Qt6_DIR%\..\..\..") do set "QT_PREFIX=%%~fI"
-  if exist "%QT_PREFIX%\plugins\platforms" (
-    xcopy "%QT_PREFIX%\plugins\platforms" "%DIST_DIR%\plugins\platforms" /E /I /Y >NUL
+  rem Nur die wirklich benoetigten Qt-DLLs kopieren
+  for %%D in (Qt6Core.dll Qt6Gui.dll Qt6Widgets.dll Qt6PrintSupport.dll) do (
+    if exist "%QT_BIN%\%%D" copy /Y "%QT_BIN%\%%D" "%DIST_DIR%" >NUL
   )
+  rem MinGW Runtime-DLLs (libgcc, libstdc++, libwinpthread)
+  for %%D in (libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll) do (
+    if exist "%QT_BIN%\%%D" copy /Y "%QT_BIN%\%%D" "%DIST_DIR%" >NUL
+  )
+  rem Platform-Plugin (qwindows.dll) - MUSS vorhanden sein
+  mkdir "%DIST_DIR%\platforms" 2>NUL
+  if exist "%QT_PREFIX%\plugins\platforms\qwindows.dll" (
+    copy /Y "%QT_PREFIX%\plugins\platforms\qwindows.dll" "%DIST_DIR%\platforms" >NUL
+  ) else (
+    echo WARNUNG: qwindows.dll nicht gefunden unter %QT_PREFIX%\plugins\platforms
+  )
+  rem Imageformats (optional, fuer PNG/JPG etc.)
   if exist "%QT_PREFIX%\plugins\imageformats" (
-    xcopy "%QT_PREFIX%\plugins\imageformats" "%DIST_DIR%\plugins\imageformats" /E /I /Y >NUL
+    mkdir "%DIST_DIR%\imageformats" 2>NUL
+    xcopy "%QT_PREFIX%\plugins\imageformats\*.dll" "%DIST_DIR%\imageformats" /Y >NUL
+  )
+  rem Styles (optional, fuer native Windows-Look)
+  if exist "%QT_PREFIX%\plugins\styles" (
+    mkdir "%DIST_DIR%\styles" 2>NUL
+    xcopy "%QT_PREFIX%\plugins\styles\*.dll" "%DIST_DIR%\styles" /Y >NUL
   )
 ) else (
   echo WARNUNG: Qt6Core.dll nicht unter %QT_BIN% gefunden. Bitte Pfad pruefen.
