@@ -29,6 +29,7 @@ Horo_typDialog::Horo_typDialog(AuInit& auinit, QWidget* parent)
 
 void Horo_typDialog::setupUI() {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    mainLayout->setSizeConstraint(QLayout::SetFixedSize); // Dialog auf Inhalt anpassen, damit alle Häusersysteme sichtbar sind
     
     // Horoskoptyp-Gruppe (STRICT LEGACY: nur Radix, Synastrie, Transit)
     QGroupBox* horoGroup = new QGroupBox(tr("Horoskoptyp"), this);
@@ -58,24 +59,48 @@ void Horo_typDialog::setupUI() {
     
     m_placidusRadio = new QRadioButton(tr("Placidus"), this);
     m_kochRadio = new QRadioButton(tr("Koch"), this);
-    m_regiomontanRadio = new QRadioButton(tr("Regiomontanus"), this);
-    m_campanoRadio = new QRadioButton(tr("Campanus"), this);
-    m_equalRadio = new QRadioButton(tr("Äqual (gleiche Häuser)"), this);
+    m_equalRadio = new QRadioButton(tr("Äqual (ASC)"), this);
+    m_equalMcRadio = new QRadioButton(tr("Äqual (MC)"), this);
     m_wholeRadio = new QRadioButton(tr("Ganze Zeichen"), this);
+    m_topocentricRadio = new QRadioButton(tr("Topozentrisch"), this);
+    m_campanoRadio = new QRadioButton(tr("Campanus"), this);
+    m_meridianRadio = new QRadioButton(tr("Meridian"), this);
+    m_regiomontanRadio = new QRadioButton(tr("Regiomontanus"), this);
+    m_porphyryRadio = new QRadioButton(tr("Porphyry"), this);
+    m_porphyryNewRadio = new QRadioButton(tr("Porphyry (neu)"), this);
+    m_morinusRadio = new QRadioButton(tr("Morinus"), this);
+    m_alcabitiusRadio = new QRadioButton(tr("Alcabitius"), this);
+    m_nullRadio = new QRadioButton(tr("Keine Häuser"), this);
     
-    m_hausGroup->addButton(m_placidusRadio, TYP_PLACIDUS);
     m_hausGroup->addButton(m_kochRadio, TYP_KOCH);
-    m_hausGroup->addButton(m_regiomontanRadio, TYP_REGIOMONTANUS);
-    m_hausGroup->addButton(m_campanoRadio, TYP_CAMPANUS);
+    m_hausGroup->addButton(m_placidusRadio, TYP_PLACIDUS);
     m_hausGroup->addButton(m_equalRadio, TYP_EQUAL);
+    m_hausGroup->addButton(m_equalMcRadio, TYP_EQUALMID);
     m_hausGroup->addButton(m_wholeRadio, TYP_WHOLE);
+    m_hausGroup->addButton(m_topocentricRadio, TYP_TOPOZEN);
+    m_hausGroup->addButton(m_campanoRadio, TYP_CAMPANUS);
+    m_hausGroup->addButton(m_meridianRadio, TYP_MERIDIAN);
+    m_hausGroup->addButton(m_regiomontanRadio, TYP_REGIOMONTANUS);
+    m_hausGroup->addButton(m_porphyryRadio, TYP_PORPHYRY);
+    m_hausGroup->addButton(m_porphyryNewRadio, TYP_PORPHYRYN);
+    m_hausGroup->addButton(m_morinusRadio, TYP_MORINUS);
+    m_hausGroup->addButton(m_alcabitiusRadio, TYP_ALCABIT);
+    m_hausGroup->addButton(m_nullRadio, TYP_NULL);
     
-    hausLayout->addWidget(m_placidusRadio);
     hausLayout->addWidget(m_kochRadio);
-    hausLayout->addWidget(m_regiomontanRadio);
-    hausLayout->addWidget(m_campanoRadio);
+    hausLayout->addWidget(m_placidusRadio);
     hausLayout->addWidget(m_equalRadio);
+    hausLayout->addWidget(m_equalMcRadio);
     hausLayout->addWidget(m_wholeRadio);
+    hausLayout->addWidget(m_topocentricRadio);
+    hausLayout->addWidget(m_campanoRadio);
+    hausLayout->addWidget(m_meridianRadio);
+    hausLayout->addWidget(m_regiomontanRadio);
+    hausLayout->addWidget(m_porphyryRadio);
+    hausLayout->addWidget(m_porphyryNewRadio);
+    hausLayout->addWidget(m_morinusRadio);
+    hausLayout->addWidget(m_alcabitiusRadio);
+    hausLayout->addWidget(m_nullRadio);
     
     mainLayout->addWidget(hausGroup);
     
