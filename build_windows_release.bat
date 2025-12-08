@@ -12,11 +12,13 @@ set BUILD_TYPE=Release
 
 rem Optionale Default-Konfiguration fuer Qt6 + MinGW nur setzen,
 rem wenn noch nichts gesetzt ist (kann in der aufrufenden Shell ueberschrieben werden)
+rem Qt6_DIR   -> Ordner mit Qt6Config.cmake
+rem CMAKE_PREFIX_PATH -> Qt-Prefix (..\mingw_64)
 if not defined Qt6_DIR (
-  set "Qt6_DIR=C:\Qt\6.10.1\mingw_64"
+  set "Qt6_DIR=C:\Qt\6.10.1\mingw_64\lib\cmake\Qt6"
 )
 if not defined CMAKE_PREFIX_PATH (
-  set "CMAKE_PREFIX_PATH=%Qt6_DIR%"
+  set "CMAKE_PREFIX_PATH=C:\Qt\6.10.1\mingw_64"
 )
 set "QT_MINGW_BIN=C:\Qt\Tools\mingw1310_64\bin"
 echo %PATH% | findstr /I /C:"%QT_MINGW_BIN%" >NUL
