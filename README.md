@@ -147,6 +147,12 @@ Ortsdaten bzw. sinnvolle Orben-Vorgaben.
 Weitere `.dat`-Dateien (z.B. `astronam.dat`, `astroini.dat`, `astrorad.dat`,
 `astronot.dat`) sind **optional** und werden bei Bedarf neu angelegt.
 
+**Hinweis zur Weiterverwendung bestehender Daten:**
+
+- Vorhandene `.dat`-Dateien aus der Legacy-Installation (AstroUnivers v0.04Beta)
+  können weiterverwendet werden, indem sie in das Verzeichnis
+  `astrouni2026/data/` kopiert werden.
+
 ## Tests
 
 ```bash
