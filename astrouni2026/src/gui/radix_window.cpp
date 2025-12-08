@@ -453,6 +453,15 @@ void RadixWindow::fillPositionenList() {
         m_listWidget->addItem(synHeader);
     }
     
+    // Hilfsfunktion: Sternzeichen-Symbol im AstroUniverse-Font (nur Symbol), Rest System-Font
+    auto wrapZodiac = [this](const QString& s) -> QString {
+        if (astroFont().hasAstroFont()) {
+            return QString("<span style='font-family:\"%1\"'>%2</span>")
+                .arg(astroFont().fontName(), s);
+        }
+        return s;
+    };
+    
     // Bei Transit: Transit-Planeten ZUERST anzeigen
     if (isTransit) {
         const Radix& transit = *m_radix.synastrie;
@@ -472,7 +481,7 @@ void RadixWindow::fillPositionenList() {
             QString symbol = astroFont().planetSymbol(i);
             QString pos = Calculations::degToZeichenString(transit.planet[i], true);
             int stz = static_cast<int>(transit.planet[i] / 30.0) % 12;
-            QString stzSymbol = astroFont().sternzeichenSymbol(stz);
+            QString stzSymbol = wrapZodiac(astroFont().sternzeichenSymbol(stz));
             QString retro = (transit.planetTyp.size() > i && (transit.planetTyp[i] & P_TYP_RUCK)) ? " R" : "";
             
             QString planetColor = colorToHtml(sColor[COL_PLAN_T]);
@@ -502,7 +511,7 @@ void RadixWindow::fillPositionenList() {
         
         // Sternzeichen-Symbol und Farbe
         int stz = static_cast<int>(displayRadix->planet[i] / 30.0) % 12;
-        QString stzSymbol = astroFont().sternzeichenSymbol(stz);
+        QString stzSymbol = wrapZodiac(astroFont().sternzeichenSymbol(stz));
         
         // Rückläufigkeit
         QString retro = (displayRadix->planetTyp.size() > i && (displayRadix->planetTyp[i] & P_TYP_RUCK)) ? " R" : "";
@@ -525,13 +534,6 @@ void RadixWindow::fillPositionenList() {
         QListWidgetItem* item = new QListWidgetItem(html);
         item->setData(Qt::UserRole, m_showPerson2 ? i + 200 : i);
         item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund pro Eintrag
-        
-        // Wenn AstroUniverse verfügbar ist, verwende diesen Font für die gesamte Zeile
-        if (astroFont().hasAstroFont()) {
-            QFont f = item->font();
-            f.setFamily(astroFont().fontName());
-            item->setFont(f);
-        }
         m_listWidget->addItem(item);
     }
     
@@ -549,7 +551,7 @@ void RadixWindow::fillPositionenList() {
             
             // Sternzeichen-Symbol
             int stz = static_cast<int>(displayRadix->haus[i] / 30.0) % 12;
-            QString stzSymbol = astroFont().sternzeichenSymbol(stz);
+            QString stzSymbol = wrapZodiac(astroFont().sternzeichenSymbol(stz));
             
             // Farben - Sternzeichen in Element-Farbe
             QString hausColor = colorToHtml(sColor[COL_HAUSER]);
@@ -576,13 +578,6 @@ void RadixWindow::fillPositionenList() {
             
             QListWidgetItem* item = new QListWidgetItem(html);
             item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund pro Eintrag
-            
-            // Wenn AstroUniverse verfügbar ist, verwende diesen Font für die gesamte Zeile
-            if (astroFont().hasAstroFont()) {
-                QFont f = item->font();
-                f.setFamily(astroFont().fontName());
-                item->setFont(f);
-            }
             m_listWidget->addItem(item);
         }
     }

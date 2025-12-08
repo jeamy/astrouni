@@ -23,6 +23,7 @@
 #include "../data/person_db.h"
 #include "../core/swiss_eph.h"
 #include "../core/chart_calc.h"
+#include "../core/astro_font_provider.h"
 
 #include <QMenuBar>
 #include <QMessageBox>
@@ -395,7 +396,41 @@ void MainWindow::onHoroTyp() {
         
         // Transit-Auswahl-Dialog (Port von DlgTransEin)
         TransSelDialog transSelDialog(this);
-        transSelDialog.setSelection(transitDialog.getTransSel());
+        const QVector<QVector<bool>> transSelInput = transitDialog.getTransSel();
+        transSelDialog.setSelection(transSelInput);
+        
+        // Beschriftungen: Planeten-Symbole für Zeilen/Spalten, Häuser mit ASC/IC/DSC/MC/Nummern
+        QStringList transitLabels;
+        int transitCount = transSelInput.size();
+        const Radix* transitRadixPtr = m_currentRadix.synastrie.get();
+        for (int i = 0; i < transitCount; ++i) {
+            if (transitRadixPtr && i < transitRadixPtr->anzahlPlanet) {
+                transitLabels << AstroFontProvider::instance().planetSymbol(i);
+            } else {
+                transitLabels << QString::number(i + 1);
+            }
+        }
+        
+        QStringList radixLabels;
+        int radixCount = (!transSelInput.isEmpty()) ? transSelInput.first().size() : 0;
+        int radixPlanets = m_currentRadix.anzahlPlanet;
+        for (int c = 0; c < radixCount; ++c) {
+            if (c < radixPlanets) {
+                radixLabels << AstroFontProvider::instance().planetSymbol(c);
+            } else {
+                int h = c - radixPlanets;
+                QString hausLabel;
+                switch (h) {
+                    case 0: hausLabel = "ASC"; break;
+                    case 3: hausLabel = "IC"; break;
+                    case 6: hausLabel = "DSC"; break;
+                    case 9: hausLabel = "MC"; break;
+                    default: hausLabel = QString("H%1").arg(h + 1, 2, 10, QChar('0')); break;
+                }
+                radixLabels << hausLabel;
+            }
+        }
+        transSelDialog.setLabels(transitLabels, radixLabels);
         if (transSelDialog.exec() != QDialog::Accepted) {
             return;
         }
