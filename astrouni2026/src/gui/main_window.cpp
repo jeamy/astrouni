@@ -530,7 +530,9 @@ void MainWindow::onHelpIndex() {
     text += tr("<p><b>4. Anzeige</b><br>" 
                "Im neuen Synastrie-Tab werden innen die Radix-Planeten der ersten Person "
                "und außen die Planeten der zweiten Person gezeigt. "
-               "Die Aspekteliste enthält Radix- und Synastrie-Aspekte.</p>");
+               "Die Aspekteliste enthält Radix- und Synastrie-Aspekte. "
+               "Über einen Klick auf den Personen-Header in der rechten Liste (&quot;-Person 1-&quot; / &quot;-Person 2-&quot;) "
+               "kann zwischen den Positionen der ersten und der zweiten Person umgeschaltet werden.</p>");
 
     // Transit
     text += tr("<h3>Transit</h3>");
@@ -540,14 +542,18 @@ void MainWindow::onHelpIndex() {
     text += tr("<p><b>2. Transit-Dialog</b><br>" 
                "Im Transitdialog Start-/Enddatum bzw. Suchzeitraum einstellen.</p>");
     text += tr("<p><b>3. Transit-Auswahl (Matrix)</b><br>" 
-               "In der Auswahlmatrix festlegen, welche Transit-Planeten auf welche Radix-Planeten "
-               "oder Häuser Aspekte bilden dürfen. Ganze Zeilen/Spalten können gemeinsam ein- oder "
-               "ausgeschaltet werden.</p>");
+               "Die Matrix zeigt Transit-Planeten in den Zeilen und Radix-Planeten, Häuser sowie ggf. Asteroiden "
+               "in den Spalten. Ein Häkchen bedeutet, dass für diese Kombination Aspekte berechnet werden. "
+               "Ganze Zeilen/Spalten können über die Checkboxen am Rand gemeinsam ein- oder ausgeschaltet werden. "
+               "Die Zahlen am oberen und linken Rand entsprechen den ursprünglichen Nummern der Planeten/Häuser "
+               "aus dem Legacy-Programm; unter der Matrix werden zur Kontrolle die verwendeten Orben angezeigt.</p>");
     text += tr("<p><b>4. Ergebnisliste und Grafik</b><br>" 
                "Nach der Berechnung zeigt das Programm eine Liste gefundener Transite. "
                "Über die Schaltfläche &quot;Grafik&quot; kann zu einem Eintrag ein Transit-Radix geöffnet werden. "
                "Innen stehen die Radix-Planeten, außen die Transit-Planeten; es werden nur die "
-               "in der Matrix erlaubten Aspekte gezeichnet.</p>");
+               "in der Matrix erlaubten Aspekte gezeichnet. "
+               "Im rechten Bereich kann über Klick auf die Kopfzeilen (z.B. &quot;-Radix Aspekte-&quot; / &quot;-Transit …-&quot;) "
+               "zwischen Radix- und Transit-Aspektliste umgeschaltet werden.</p>");
 
     // Einstellungen / Orben / Farben / Aspekte
     text += tr("<h3>Einstellungen, Orben, Farben, Aspekte</h3>");

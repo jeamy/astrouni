@@ -488,7 +488,6 @@ void RadixWindow::fillPositionenList() {
             m_listWidget->addItem(item);
         }
     }
-    
     // STRICT LEGACY: Planeten-Header wie im Original (weiße Schrift auf dunkelblau)
     QListWidgetItem* headerItem = new QListWidgetItem("<span style='color:#FFFFFF'>" + tr("-Planeten-") + "</span>");
     headerItem->setBackground(QColor(0, 0, 128));  // Dunkelblau wie Legacy
@@ -526,6 +525,13 @@ void RadixWindow::fillPositionenList() {
         QListWidgetItem* item = new QListWidgetItem(html);
         item->setData(Qt::UserRole, m_showPerson2 ? i + 200 : i);
         item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund pro Eintrag
+        
+        // Wenn AstroUniverse verfügbar ist, verwende diesen Font für die gesamte Zeile
+        if (astroFont().hasAstroFont()) {
+            QFont f = item->font();
+            f.setFamily(astroFont().fontName());
+            item->setFont(f);
+        }
         m_listWidget->addItem(item);
     }
     
@@ -543,7 +549,7 @@ void RadixWindow::fillPositionenList() {
             
             // Sternzeichen-Symbol
             int stz = static_cast<int>(displayRadix->haus[i] / 30.0) % 12;
-            QString stzSymbol = QString::fromUtf8(STERNZEICHEN_SYMBOLS[stz]);
+            QString stzSymbol = astroFont().sternzeichenSymbol(stz);
             
             // Farben - Sternzeichen in Element-Farbe
             QString hausColor = colorToHtml(sColor[COL_HAUSER]);
@@ -570,6 +576,13 @@ void RadixWindow::fillPositionenList() {
             
             QListWidgetItem* item = new QListWidgetItem(html);
             item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund pro Eintrag
+            
+            // Wenn AstroUniverse verfügbar ist, verwende diesen Font für die gesamte Zeile
+            if (astroFont().hasAstroFont()) {
+                QFont f = item->font();
+                f.setFamily(astroFont().fontName());
+                item->setFont(f);
+            }
             m_listWidget->addItem(item);
         }
     }
@@ -687,6 +700,13 @@ void RadixWindow::fillAspekteList() {
                 QListWidgetItem* item = new QListWidgetItem(html);
                 item->setData(Qt::UserRole, QPoint(i, j));
                 item->setBackground(sColor[COL_LBREC_NORM]);
+                
+                // Wenn AstroUniverse verfügbar ist, verwende diesen Font für die gesamte Zeile
+                if (astroFont().hasAstroFont()) {
+                    QFont f = item->font();
+                    f.setFamily(astroFont().fontName());
+                    item->setFont(f);
+                }
                 m_listWidget->addItem(item);
             }
         }
@@ -734,6 +754,13 @@ void RadixWindow::fillAspekteList() {
                 
                 QListWidgetItem* item = new QListWidgetItem(html);
                 item->setBackground(sColor[COL_LBREC_NORM]);
+                
+                // Wenn AstroUniverse verfügbar ist, verwende diesen Font für die gesamte Zeile
+                if (astroFont().hasAstroFont()) {
+                    QFont f = item->font();
+                    f.setFamily(astroFont().fontName());
+                    item->setFont(f);
+                }
                 m_listWidget->addItem(item);
             }
         }
@@ -811,6 +838,13 @@ void RadixWindow::fillAspekteList() {
                 int offset = (m_radix.horoTyp == TYP_SYNASTRIE) ? 2000 : 1000;
                 item->setData(Qt::UserRole, QPoint(i + offset, j));
                 item->setBackground(sColor[COL_LBREC_NORM]);
+                
+                // Wenn AstroUniverse verfügbar ist, verwende diesen Font für die gesamte Zeile
+                if (astroFont().hasAstroFont()) {
+                    QFont f = item->font();
+                    f.setFamily(astroFont().fontName());
+                    item->setFont(f);
+                }
                 m_listWidget->addItem(item);
             }
         }
