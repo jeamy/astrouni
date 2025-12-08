@@ -215,7 +215,13 @@ void TransitResultWindow::buildTransitTexts() {
         QString text = QString("%1 in %2 %3 %4 in %5 von %6 bis %7")
             .arg(transitPlanet, transitZeichen, aspekt, radixObj, radixZeichen, vonDatum, bisDatum);
         
-        m_listBox->addItem(text);
+        QListWidgetItem* item = new QListWidgetItem(text);
+        if (astroFont().hasAstroFont()) {
+            QFont f = item->font();
+            f.setFamily(astroFont().fontName());
+            item->setFont(f);
+        }
+        m_listBox->addItem(item);
     }
     
     if (m_listBox->count() == 0 && !m_transits.isEmpty()) {
@@ -228,7 +234,13 @@ void TransitResultWindow::buildTransitTexts() {
             .arg(static_cast<int>(tr.rFix.zeit), 2, 10, QChar('0'))
             .arg(static_cast<int>(std::round((tr.rFix.zeit - static_cast<int>(tr.rFix.zeit)) * 60.0)), 2, 10, QChar('0'));
         QString text = QString("%1 %2 - Keine Aspekte gefunden").arg(date, time);
-        m_listBox->addItem(text);
+        QListWidgetItem* item = new QListWidgetItem(text);
+        if (astroFont().hasAstroFont()) {
+            QFont f = item->font();
+            f.setFamily(astroFont().fontName());
+            item->setFont(f);
+        }
+        m_listBox->addItem(item);
     }
 }
 
