@@ -148,22 +148,81 @@ fi
    cp -r "$PROJECT_DIR/resources/." "$DIST_DIR/resources/"
  fi
 
- # Release-Zip im dist-Verzeichnis erstellen (optional)
- ZIP_NAME="astrouni2026-linux-release.zip"
- if command -v zip &>/dev/null; then
-   echo ""
-   echo "Erzeuge Release-Zip: $ZIP_NAME"
-   (
-     cd "$PROJECT_DIR/dist" || exit 1
-     rm -f "$ZIP_NAME"
-     zip -r "$ZIP_NAME" "linux" >/dev/null
-   )
-   echo "Release-Zip erstellt: $PROJECT_DIR/dist/$ZIP_NAME"
- else
-   echo ""
-   echo "Hinweis: 'zip' nicht gefunden, Release-Zip wird nicht erstellt."
-   echo "Bitte installiere das Paket 'zip' (z.B. sudo apt install zip)."
- fi
+# Qt-Libs für portable App bündeln (optional, wenn linuxdeployqt vorhanden)
+if command -v linuxdeployqt &>/dev/null; then
+  echo "Bündele Qt-Libs mit linuxdeployqt..."
+  DESKTOP_FILE="$DIST_DIR/astrouni2026.desktop"
+  cat > "$DESKTOP_FILE" <<EOF
+[Desktop Entry]
+Type=Application
+Name=AstroUniverse 2026
+Exec=astrouni2026
+Icon=astrouni
+Categories=Education;
+EOF
+  ICON_SRC="$PROJECT_DIR/resources/icons/astrouni.png"
+  if [ -f "$ICON_SRC" ]; then
+    cp "$ICON_SRC" "$DIST_DIR/astrouni.png"
+  fi
+  linuxdeployqt "$DESKTOP_FILE" -bundle-non-qt-libs -executable="$DIST_DIR/astrouni2026" || {
+    echo "WARNUNG: linuxdeployqt konnte die Qt-Libs nicht bündeln." >&2
+  }
+elif command -v qtpaths6 &>/dev/null && command -v patchelf &>/dev/null; then
+  echo "Bündele Qt-Libs manuell (Fallback ohne linuxdeployqt)..."
+  QT_PLUGIN_DIR="$(qtpaths6 --plugin-dir 2>/dev/null || true)"
+  QT_PREFIX="$(qtpaths6 --install-prefix 2>/dev/null || true)"
+  QT_LIB_DIR="$QT_PREFIX/lib"
+  
+  mkdir -p "$DIST_DIR/lib" "$DIST_DIR/plugins"
+  
+  # Qt-abhängige libs des Binaries kopieren
+  for lib in $(ldd "$DIST_DIR/astrouni2026" | awk '/Qt6/ {print $3}'); do
+    [ -f "$lib" ] && cp -L "$lib" "$DIST_DIR/lib/"
+  done
+  
+  # Wichtige Plugin-Ordner kopieren
+  for sub in platforms styles imageformats xcbglintegrations iconengines; do
+    if [ -d "$QT_PLUGIN_DIR/$sub" ]; then
+      mkdir -p "$DIST_DIR/plugins/$sub"
+      cp -L "$QT_PLUGIN_DIR/$sub"/*.so "$DIST_DIR/plugins/$sub"/ 2>/dev/null || true
+    fi
+  done
+  
+  # qt.conf damit Qt im lokalen plugins-Verzeichnis sucht
+  cat > "$DIST_DIR/qt.conf" <<EOF
+[Paths]
+Prefix=.
+Plugins=plugins
+Imports=imports
+Qml2Imports=qml
+EOF
+  
+  # RPATH auf lokales lib-Verzeichnis setzen
+  patchelf --set-rpath '$ORIGIN/lib' "$DIST_DIR/astrouni2026" || true
+  for lib in "$DIST_DIR/lib/"*.so*; do
+    patchelf --set-rpath '$ORIGIN' "$lib" || true
+  done
+else
+  echo "Hinweis: Weder linuxdeployqt noch (qtpaths6+patchelf) gefunden – Qt-Libs werden nicht mitgeliefert."
+  echo "Installiere entweder linuxdeployqt oder qtpaths6 + patchelf, um eine portable App zu erzeugen."
+fi
+
+# Release-Zip im dist-Verzeichnis erstellen (optional)
+ZIP_NAME="astrouni2026-linux-release.zip"
+if command -v zip &>/dev/null; then
+  echo ""
+  echo "Erzeuge Release-Zip: $ZIP_NAME"
+  (
+    cd "$PROJECT_DIR/dist" || exit 1
+    rm -f "$ZIP_NAME"
+    zip -r "$ZIP_NAME" "linux" >/dev/null
+  )
+  echo "Release-Zip erstellt: $PROJECT_DIR/dist/$ZIP_NAME"
+else
+  echo ""
+  echo "Hinweis: 'zip' nicht gefunden, Release-Zip wird nicht erstellt."
+  echo "Bitte installiere das Paket 'zip' (z.B. sudo apt install zip)."
+fi
 
  echo ""
  echo "========================================"
