@@ -96,6 +96,9 @@ cd astrouni2026/dist/macos
 
 #### Windows
 
+> **Systemanforderung:** Windows 10 oder neuer erforderlich.  
+> Qt 6 unterstützt Windows 7/8 nicht mehr.
+
 ```bat
 cd astrouni
 build_windows_release.bat
@@ -152,6 +155,21 @@ Weitere `.dat`-Dateien (z.B. `astronam.dat`, `astroini.dat`, `astrorad.dat`,
 - Vorhandene `.dat`-Dateien aus der Legacy-Installation (AstroUnivers v0.04Beta)
   können weiterverwendet werden, indem sie in das Verzeichnis
   `astrouni2026/data/` kopiert werden.
+
+### Astrologie-Font (optional, empfohlen)
+
+Für die originalgetreue Darstellung der Astrologie-Symbole (Planeten, Sternzeichen,
+Aspekte) kann der **AstroUniverse-Font** installiert werden:
+
+1. Die Font-Datei `asu_____.ttf` befindet sich unter `resources/fonts/`
+2. **Installation:**
+   - **Windows:** Rechtsklick auf die Datei → "Installieren" oder "Für alle Benutzer installieren"
+   - **Linux:** Kopieren nach `~/.local/share/fonts/` und `fc-cache -fv` ausführen
+   - **macOS:** Doppelklick auf die Datei → "Font installieren"
+
+Wenn der Font **nicht installiert** ist, verwendet das Programm automatisch
+**Unicode-Symbole** als Fallback (☉☽☿♀♂♃♄ etc.), die auf allen modernen
+Systemen verfügbar sind.
 
 ## Tests
 
