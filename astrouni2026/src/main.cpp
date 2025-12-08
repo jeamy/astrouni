@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     
     // Anwendungs-Informationen
     app.setApplicationName("AstroUniverse");
-    app.setApplicationVersion("2026.1.0");
+    app.setApplicationVersion("2026.0.0.5");
     app.setOrganizationName("AstroUniverse");
     
     // Farben initialisieren

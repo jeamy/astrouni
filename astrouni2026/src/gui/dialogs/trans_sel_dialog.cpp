@@ -9,6 +9,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QSignalBlocker>
+#include "../../core/astro_font_provider.h"
 
 namespace astro {
 
@@ -144,16 +145,23 @@ void TransSelDialog::updateChecks() {
     auto* grid = qobject_cast<QGridLayout*>(container->layout());
     if (!grid) return;
 
-    // Bestehende Widgets entfernen
+    // Bestehende Widgets entfernen (sofort löschen, kein deleteLater → vermeidet Überlagerungen)
     while (QLayoutItem* item = grid->takeAt(0)) {
         if (QWidget* w = item->widget()) {
-            w->deleteLater();
+            delete w;
         }
         delete item;
     }
     m_checks.clear();
     m_rowHeaders.clear();
     m_colHeaders.clear();
+
+    // Font für Symbole (nur falls AstroUniverse verfügbar)
+    QFont symFont;
+    bool haveAstroFont = AstroFontProvider::instance().hasAstroFont();
+    if (haveAstroFont) {
+        symFont.setFamily(AstroFontProvider::instance().fontName());
+    }
 
     // Header Zeile: Radix-Targets
     grid->addWidget(new QLabel(tr("Transit \\ Radix"), container), 0, 0);
@@ -163,6 +171,7 @@ void TransSelDialog::updateChecks() {
         QCheckBox* cb = new QCheckBox(container);
         QString text = (actualCol < m_radixLabels.size()) ? m_radixLabels.at(actualCol) : QString::number(actualCol + 1);
         cb->setText(text);
+        if (haveAstroFont) cb->setFont(symFont);
         cb->setTristate(true);
         cb->setCheckState(Qt::Unchecked);
         connect(cb, &QCheckBox::stateChanged, this, [this, actualCol](int state) {
@@ -179,6 +188,7 @@ void TransSelDialog::updateChecks() {
         QCheckBox* rowCb = new QCheckBox(container);
         QString text = (actualRow < m_transitLabels.size()) ? m_transitLabels.at(actualRow) : QString::number(actualRow + 1);
         rowCb->setText(text);
+        if (haveAstroFont) rowCb->setFont(symFont);
         rowCb->setTristate(true);
         rowCb->setCheckState(Qt::Unchecked);
         connect(rowCb, &QCheckBox::stateChanged, this, [this, actualRow](int state) {
