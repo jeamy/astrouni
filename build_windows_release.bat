@@ -174,6 +174,24 @@ if exist "%PROJECT_DIR%\resources" (
   xcopy "%PROJECT_DIR%\resources" "%DIST_DIR%\resources" /E /I /Y >NUL
 )
 
+rem Qt-Runtime (DLLs) und Plugins fuer MinGW deployen
+rem QT_MINGW_BIN zeigt auf den Bin-Pfad; Qt6_DIR zeigt auf ...\\lib\\cmake\\Qt6
+if exist "%QT_MINGW_BIN%\Qt6Core.dll" (
+  echo Kopiere Qt6 Runtime-DLLs...
+  xcopy "%QT_MINGW_BIN%\Qt6*.dll" "%DIST_DIR%" /Y >NUL
+  xcopy "%QT_MINGW_BIN%\lib*.dll" "%DIST_DIR%" /Y >NUL
+  rem Qt-Prefix aus Qt6_DIR ableiten (..\..\..)
+  for %%I in ("%Qt6_DIR%\..\..\..") do set "QT_PREFIX=%%~fI"
+  if exist "%QT_PREFIX%\plugins\platforms" (
+    xcopy "%QT_PREFIX%\plugins\platforms" "%DIST_DIR%\plugins\platforms" /E /I /Y >NUL
+  )
+  if exist "%QT_PREFIX%\plugins\imageformats" (
+    xcopy "%QT_PREFIX%\plugins\imageformats" "%DIST_DIR%\plugins\imageformats" /E /I /Y >NUL
+  )
+) else (
+  echo WARNUNG: Qt6Core.dll nicht unter %QT_MINGW_BIN% gefunden. Bitte Pfad pruefen.
+)
+
 rem Release-Zip im dist-Verzeichnis erstellen (optional, via PowerShell)
 set ZIP_NAME=astrouni2026-windows-release.zip
 where powershell >NUL 2>&1
