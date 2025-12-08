@@ -97,7 +97,6 @@ cd astrouni2026/dist/macos
 #### Windows
 
 > **Systemanforderung:** Windows 10 oder neuer erforderlich.  
-> Qt 6 unterstützt Windows 7/8 nicht mehr.
 
 ```bat
 cd astrouni
@@ -277,34 +276,6 @@ AstroUniverse ist freie Software unter der GPL v2 Lizenz.
 - **GPL v2** oder **LGPL** für Open Source
 - **Kommerzielle Lizenz** verfügbar (~CHF 750)
 - Siehe: https://www.astro.com/swisseph/
-
-## Roadmap
-
-### Phase 1: Core (Abgeschlossen)
-- [x] Projektstruktur erstellt
-- [x] Swiss Ephemeris eingebettet (Cross-Platform)
-- [x] Datenstrukturen portiert (RADIX, ORTE, AU_INIT)
-- [x] Mathematik-Funktionen portiert
-- [x] Berechnungs-Engine portiert
-- [x] Unit Tests
-
-### Phase 2: GUI (In Arbeit)
-- [x] Qt6 Hauptfenster
-- [x] Radix-Fenster
-- [x] Chart-Widget (Radix-Zeichnung)
-- [x] Personen-Dialog
-- [x] Ort-Suche Dialog
-- [ ] Weitere Dialoge vervollständigen
-- [x] Drucken implementieren
-- [ ] Speichern/Laden
-
-### Phase 3: Erweiterte Features (In Arbeit)
-- [x] Transit-Fenster
-- [x] Synastrie
-- [ ] Composit
-- [ ] Export (PNG, PDF)
-
-## Entwicklung
 
 ### Anforderungen
 - GCC 11+ oder Clang 15+ oder MSVC 2022 (C++20)
