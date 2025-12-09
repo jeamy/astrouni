@@ -29,14 +29,14 @@ if ! command -v cmake &>/dev/null; then
   MISSING_DEPS="$MISSING_DEPS cmake"
 fi
 
-# Qt6 (prüfen über qmake6 oder brew --prefix qt@6)
+# Qt6 (prüfen über qmake6 oder brew --prefix qt@6.5)
 QT6_OK=0
 if command -v qmake6 &>/dev/null; then
   QT6_OK=1
-elif [ -d "$(brew --prefix qt@6 2>/dev/null)/lib/cmake/Qt6" ]; then
+elif [ -d "$(brew --prefix qt@6.5 2>/dev/null)/lib/cmake/Qt6" ]; then
   QT6_OK=1
   # Qt6 Pfad für CMake setzen
-  export CMAKE_PREFIX_PATH="$(brew --prefix qt@6)"
+  export CMAKE_PREFIX_PATH="$(brew --prefix qt@6.5)"
 fi
 if [ "$QT6_OK" -eq 0 ]; then
   MISSING_DEPS="$MISSING_DEPS qt6"
@@ -61,9 +61,9 @@ if [ -n "$MISSING_DEPS" ]; then
           brew install cmake
           ;;
         qt6)
-          echo "brew install qt@6"
-          brew install qt@6
-          export CMAKE_PREFIX_PATH="$(brew --prefix qt@6)"
+          echo "brew install qt@6.5"
+          brew install qt@6.5
+          export CMAKE_PREFIX_PATH="$(brew --prefix qt@6.5)"
           ;;
       esac
     done
@@ -78,14 +78,31 @@ if [ -n "$MISSING_DEPS" ]; then
     echo ""
     echo "Danach:"
     echo "  xcode-select --install   # Xcode Command Line Tools"
-    echo "  brew install cmake qt@6"
+    echo "  brew install cmake qt@6.5"
     exit 1
   fi
 fi
 
 # Qt6 Pfad für CMake (falls über Homebrew installiert)
-if [ -z "$CMAKE_PREFIX_PATH" ] && [ -d "$(brew --prefix qt@6 2>/dev/null)/lib/cmake/Qt6" ]; then
-  export CMAKE_PREFIX_PATH="$(brew --prefix qt@6)"
+if [ -z "$CMAKE_PREFIX_PATH" ] && [ -d "$(brew --prefix qt@6.5 2>/dev/null)/lib/cmake/Qt6" ]; then
+  export CMAKE_PREFIX_PATH="$(brew --prefix qt@6.5)"
+fi
+
+# Qt6-Version prüfen (nur 6.5.x zulassen)
+QT_VERSION_STR=""
+if command -v qmake6 &>/dev/null; then
+  QT_VERSION_STR="$(qmake6 -query QT_VERSION 2>/dev/null || echo "")"
+elif command -v qtpaths6 &>/dev/null; then
+  QT_VERSION_STR="$(qtpaths6 --qt-version 2>/dev/null || echo "")"
+fi
+
+if [ -n "$QT_VERSION_STR" ]; then
+  QT_MAJOR="$(echo "$QT_VERSION_STR" | cut -d. -f1)"
+  QT_MINOR="$(echo "$QT_VERSION_STR" | cut -d. -f2)"
+  if [ "$QT_MAJOR" -ne 6 ] || [ "$QT_MINOR" -ne 5 ]; then
+    echo "FEHLER: Qt-Version 6.5.x erwartet, gefunden: $QT_VERSION_STR" >&2
+    exit 1
+  fi
 fi
 
 echo "Alle Abhängigkeiten vorhanden."
