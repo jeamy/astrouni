@@ -30,14 +30,12 @@ if ! command -v cmake &>/dev/null; then
   MISSING_DEPS="$MISSING_DEPS cmake"
 fi
 
-# Qt6 (prüfen über qmake6 oder brew --prefix qt@6.5)
+# Qt6 (prüfen über qmake6 oder qtpaths6)
 QT6_OK=0
 if command -v qmake6 &>/dev/null; then
   QT6_OK=1
-elif [ -d "$(brew --prefix qt@6.5 2>/dev/null)/lib/cmake/Qt6" ]; then
+elif command -v qtpaths6 &>/dev/null; then
   QT6_OK=1
-  # Qt6 Pfad für CMake setzen
-  export CMAKE_PREFIX_PATH="$(brew --prefix qt@6.5)"
 fi
 if [ "$QT6_OK" -eq 0 ]; then
   MISSING_DEPS="$MISSING_DEPS qt6"
@@ -93,12 +91,27 @@ if [ -n "$MISSING_DEPS" ]; then
   fi
 fi
 
-# Qt6 Pfad für CMake (falls über Homebrew installiert)
+# Qt6 Pfad für CMake aus qtpaths6 ermitteln
 if [ -z "$CMAKE_PREFIX_PATH" ] && command -v qtpaths6 &>/dev/null; then
   QT_PREFIX_DETECTED="$(qtpaths6 --install-prefix 2>/dev/null || echo "")"
   if [ -n "$QT_PREFIX_DETECTED" ]; then
     export CMAKE_PREFIX_PATH="$QT_PREFIX_DETECTED"
   fi
+fi
+
+# Fallback: Standard-Qt-Installationspfad unter $HOME/Qt/6.5*/macos
+if [ -z "$CMAKE_PREFIX_PATH" ]; then
+  for cand in "$HOME"/Qt/6.5*/macos; do
+    if [ -d "$cand/lib/cmake/Qt6" ]; then
+      export CMAKE_PREFIX_PATH="$cand"
+      break
+    fi
+  done
+fi
+
+# Qt6_DIR für CMake setzen (analog Windows-Script)
+if [ -z "$Qt6_DIR" ] && [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/lib/cmake/Qt6" ]; then
+  export Qt6_DIR="$CMAKE_PREFIX_PATH/lib/cmake/Qt6"
 fi
 
 # Qt6-Version prüfen (nur 6.5.x zulassen)
