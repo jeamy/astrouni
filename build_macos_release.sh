@@ -61,9 +61,18 @@ if [ -n "$MISSING_DEPS" ]; then
           brew install cmake
           ;;
         qt6)
-          echo "brew install qt@6.5"
-          brew install qt@6.5
-          export CMAKE_PREFIX_PATH="$(brew --prefix qt@6.5)"
+          if [ -n "$QT_MAINTENANCE_TOOL" ] && [ -x "$QT_MAINTENANCE_TOOL" ]; then
+            echo "Installiere Qt 6.5.0 über Qt Maintenance Tool..."
+            "$QT_MAINTENANCE_TOOL" --accept-licenses --default-answer --confirm-command install qt.qt6.650.clang_64 || {
+              echo "FEHLER: Qt Maintenance Tool konnte Qt 6.5 nicht installieren." >&2
+              exit 1
+            }
+          else
+            echo "Qt 6.5 ist nicht installiert und QT_MAINTENANCE_TOOL ist nicht gesetzt."
+            echo "Bitte Qt 6.5 über den Qt Online Installer installieren, z.B.:"
+            echo "  qt-unified-macOS-x64-<version>-online.dmg --root $HOME/Qt --accept-licenses --default-answer --confirm-command install qt.qt6.650.clang_64"
+            exit 1
+          fi
           ;;
       esac
     done
@@ -78,14 +87,17 @@ if [ -n "$MISSING_DEPS" ]; then
     echo ""
     echo "Danach:"
     echo "  xcode-select --install   # Xcode Command Line Tools"
-    echo "  brew install cmake qt@6.5"
+    echo "  brew install cmake"
     exit 1
   fi
 fi
 
 # Qt6 Pfad für CMake (falls über Homebrew installiert)
-if [ -z "$CMAKE_PREFIX_PATH" ] && [ -d "$(brew --prefix qt@6.5 2>/dev/null)/lib/cmake/Qt6" ]; then
-  export CMAKE_PREFIX_PATH="$(brew --prefix qt@6.5)"
+if [ -z "$CMAKE_PREFIX_PATH" ] && command -v qtpaths6 &>/dev/null; then
+  QT_PREFIX_DETECTED="$(qtpaths6 --install-prefix 2>/dev/null || echo "")"
+  if [ -n "$QT_PREFIX_DETECTED" ]; then
+    export CMAKE_PREFIX_PATH="$QT_PREFIX_DETECTED"
+  fi
 fi
 
 # Qt6-Version prüfen (nur 6.5.x zulassen)
