@@ -9,6 +9,7 @@ PROJECT_DIR="$SCRIPT_DIR/astrouni2026"
 BUILD_DIR="$PROJECT_DIR/build-macos-release"
 DIST_DIR="$PROJECT_DIR/dist/macos"
 BUILD_TYPE="Release"
+QT_MAINTENANCE_TOOL="$HOME/Qt/MaintenanceTool.app/Contents/MacOS/MaintenanceTool"
 
 echo "=== AstroUniverse 2026 - macOS Release Build ==="
 echo ""
