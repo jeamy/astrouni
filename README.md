@@ -6,12 +6,10 @@ Cross-Platform-Architektur.
 
 ## Features
 
-- ✅ **Präzise Berechnungen** - Swiss Ephemeris (eingebettet, Cross-Platform)
-- ✅ **Cross-Platform** - Linux, macOS, Windows
-- ✅ **GUI** - Qt6
-- ✅ **Legacy-Kompatibel** - Liest AstroUnivers .dat Dateien
-- ✅ **Unit Tests** - Alle bestanden
-- ✅ **Open Source** - GPL v2
+- **Präzise Berechnungen** - Swiss Ephemeris (eingebettet, Cross-Platform)
+- **Cross-Platform** - Linux, macOS, Windows
+- **Legacy-Kompatibel** - Liest AstroUnivers .dat Dateien
+- **Open Source** - GPL v2
 
 ## Voraussetzungen
 
