@@ -125,8 +125,8 @@ if [ -n "$QT_VERSION_STR" ]; then
   QT_MAJOR="$(echo "$QT_VERSION_STR" | cut -d. -f1)"
   QT_MINOR="$(echo "$QT_VERSION_STR" | cut -d. -f2)"
   if [ "$QT_MAJOR" -ne 6 ] || [ "$QT_MINOR" -ne 5 ]; then
-    echo "FEHLER: Qt-Version 6.5.x erwartet, gefunden: $QT_VERSION_STR" >&2
-    exit 1
+    echo "HINWEIS: Qt-Version 6.5.x empfohlen, gefunden: $QT_VERSION_STR" >&2
+    echo "Das Skript läuft trotzdem weiter und verwendet die gefundene Qt-Installation." >&2
   fi
 fi
 
