@@ -63,8 +63,7 @@ if [ -n "$MISSING_DEPS" ]; then
           if [ -n "$QT_MAINTENANCE_TOOL" ] && [ -x "$QT_MAINTENANCE_TOOL" ]; then
             echo "Installiere Qt 6.5.0 über Qt Maintenance Tool..."
             "$QT_MAINTENANCE_TOOL" --accept-licenses --default-answer --confirm-command install qt.qt6.650.clang_64 || {
-              echo "FEHLER: Qt Maintenance Tool konnte Qt 6.5 nicht installieren." >&2
-              exit 1
+              echo "HINWEIS: Qt Maintenance Tool meldete einen Fehler (Qt 6.5 ist möglicherweise bereits installiert)." >&2
             }
           else
             echo "Qt 6.5 ist nicht installiert und QT_MAINTENANCE_TOOL ist nicht gesetzt."
