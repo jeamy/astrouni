@@ -108,6 +108,11 @@ if [ -z "$CMAKE_PREFIX_PATH" ]; then
   done
 fi
 
+# Qt-Bin-Verzeichnis in PATH aufnehmen, damit qtpaths6/macdeployqt gefunden werden
+if [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/bin" ]; then
+  export PATH="$CMAKE_PREFIX_PATH/bin:$PATH"
+fi
+
 # Qt6_DIR für CMake setzen (analog Windows-Script)
 if [ -z "$Qt6_DIR" ] && [ -n "$CMAKE_PREFIX_PATH" ] && [ -d "$CMAKE_PREFIX_PATH/lib/cmake/Qt6" ]; then
   export Qt6_DIR="$CMAKE_PREFIX_PATH/lib/cmake/Qt6"
