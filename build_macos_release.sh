@@ -285,6 +285,14 @@ echo "========================================"
 echo "  Release-Build fertig!"
 echo "========================================"
 echo ""
+if command -v hdiutil &>/dev/null; then
+  DMG_PATH="$PROJECT_DIR/dist/AstroUniverse2026-macos.dmg"
+  echo "Erzeuge DMG-Image unter $DMG_PATH..."
+  rm -f "$DMG_PATH"
+  hdiutil create -volname "AstroUniverse2026" -srcfolder "$DIST_DIR" -ov -format UDZO "$DMG_PATH" || {
+    echo "WARNUNG: DMG-Image konnte nicht erzeugt werden." >&2
+  }
+fi
 echo "Start:"
 echo "  cd $DIST_DIR"
 echo "  ./astrouni2026"
