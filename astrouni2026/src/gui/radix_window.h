@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QLabel>
+#include <QTextBrowser>
 #include "../core/data_types.h"
 
 namespace astro {
@@ -77,6 +78,8 @@ private:
     void fillDatenList();
     void fillPositionenList();
     void fillAspekteList();
+    void updateLegend();
+    QString buildLegendHtml() const;
     
     // Eigene Kopien der Daten (für parallele Fenster)
     AuInit m_auinit;
@@ -85,6 +88,7 @@ private:
     // Widgets
     ChartWidget* m_chartWidget;
     QListWidget* m_listWidget;
+    QLabel* m_legendLabel;
     QPushButton* m_datenButton;
     QPushButton* m_positionenButton;
     QPushButton* m_aspekteButton;
