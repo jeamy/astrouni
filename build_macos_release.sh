@@ -258,10 +258,24 @@ else
   echo "Bitte DejaVuSans.ttf und asu_____.ttf manuell kopieren."
 fi
 
-# Icon optional kopieren
-ICON_SRC="$PROJECT_DIR/resources/icons/astrouni.icns"
-if [ -f "$ICON_SRC" ]; then
-  cp "$ICON_SRC" "$APP_BUNDLE/Contents/Resources/astrouni.icns"
+# Icons ins Bundle kopieren
+echo "Suche Icons..."
+ICON_DIR="$PROJECT_DIR/resources/icons"
+if [ -d "$ICON_DIR" ]; then
+  mkdir -p "$APP_BUNDLE/Contents/Resources/icons"
+  cp -R "$ICON_DIR/." "$APP_BUNDLE/Contents/Resources/icons/"
+  echo "Icons kopiert: $(ls $APP_BUNDLE/Contents/Resources/icons/)"
+  
+  # macOS App-Icon: .icns bevorzugt, sonst aus .ico konvertieren
+  if [ -f "$ICON_DIR/astrouni.icns" ]; then
+    cp "$ICON_DIR/astrouni.icns" "$APP_BUNDLE/Contents/Resources/astrouni.icns"
+  elif [ -f "$ICON_DIR/astrouni.ico" ] && command -v sips &>/dev/null; then
+    # Versuche .ico zu .icns zu konvertieren (macOS sips)
+    echo "Konvertiere astrouni.ico zu .icns..."
+    sips -s format icns "$ICON_DIR/astrouni.ico" --out "$APP_BUNDLE/Contents/Resources/astrouni.icns" 2>/dev/null || true
+  fi
+else
+  echo "Hinweis: Kein Icon-Verzeichnis gefunden unter $ICON_DIR"
 fi
 
 # Minimal Info.plist
