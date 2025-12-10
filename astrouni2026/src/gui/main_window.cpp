@@ -587,28 +587,54 @@ void MainWindow::onHelpIndex() {
                "zwischen Radix- und Transit-Aspektliste umgeschaltet werden.</p>");
 
     // Symbol-Übersicht (Sternzeichen, Planeten, Asteroiden, Knoten)
-    // Asteroiden-Symbole (U+26B3-U+26B8) benötigen DejaVu Sans Font
-    QString dejaVuFont = astroFont().getPlanetSymbolFont(12).family();
-    auto asteroidSpan = [&](const QString& sym) {
-        return QString("<span style='font-family:\"%1\"'>%2</span>").arg(dejaVuFont, sym);
+    // Sternzeichen aus AstroUniverse-Font, Asteroiden aus DejaVu Sans
+    QString zodiacFont = astroFont().hasAstroFont() ? astroFont().fontName() : astroFont().getPlanetSymbolFont(12).family();
+    QString planetFont = astroFont().getPlanetSymbolFont(12).family();
+    auto zodiacSpan = [&](const QString& sym) {
+        return QString("<span style='font-family:\"%1\"'>%2</span>").arg(zodiacFont, sym);
     };
+    auto planetSpan = [&](const QString& sym) {
+        return QString("<span style='font-family:\"%1\"'>%2</span>").arg(planetFont, sym);
+    };
+    
+    // Sternzeichen-Symbole aus AstroFontProvider (Legacy oder Unicode)
+    QString stz[12];
+    for (int i = 0; i < 12; ++i) {
+        stz[i] = zodiacSpan(astroFont().sternzeichenSymbol(i));
+    }
+    
     text += tr("<h3>Symbole</h3>");
     text += QString("<table border='0' cellspacing='4' cellpadding='2'>"
-               "<tr><td><b>♈</b></td><td>Widder</td><td><b>♉</b></td><td>Stier</td><td><b>♊</b></td><td>Zwillinge</td><td><b>♋</b></td><td>Krebs</td></tr>"
-               "<tr><td><b>♌</b></td><td>Löwe</td><td><b>♍</b></td><td>Jungfrau</td><td><b>♎</b></td><td>Waage</td><td><b>♏</b></td><td>Skorpion</td></tr>"
-               "<tr><td><b>♐</b></td><td>Schütze</td><td><b>♑</b></td><td>Steinbock</td><td><b>♒</b></td><td>Wassermann</td><td><b>♓</b></td><td>Fische</td></tr>"
-               "<tr><td><b>☉</b></td><td>Sonne</td><td><b>☽</b></td><td>Mond</td><td><b>☿</b></td><td>Merkur</td><td><b>♀</b></td><td>Venus</td></tr>"
-               "<tr><td><b>♂</b></td><td>Mars</td><td><b>♃</b></td><td>Jupiter</td><td><b>♄</b></td><td>Saturn</td><td><b>♅</b></td><td>Uranus</td></tr>"
-               "<tr><td><b>♆</b></td><td>Neptun</td><td><b>♇</b></td><td>Pluto</td><td><b>☊</b></td><td>Nordknoten</td><td><b>%1</b></td><td>Lilith</td></tr>"
-               "<tr><td><b>%2</b></td><td>Chiron</td><td><b>%3</b></td><td>Ceres</td><td><b>%4</b></td><td>Pallas</td><td><b>%5</b></td><td>Juno</td></tr>"
-               "<tr><td><b>%6</b></td><td>Vesta</td><td><b>℞</b></td><td>Rückläufig</td><td></td><td></td><td></td><td></td></tr>"
+               "<tr><td><b>%1</b></td><td>Widder</td><td><b>%2</b></td><td>Stier</td><td><b>%3</b></td><td>Zwillinge</td><td><b>%4</b></td><td>Krebs</td></tr>"
+               "<tr><td><b>%5</b></td><td>Löwe</td><td><b>%6</b></td><td>Jungfrau</td><td><b>%7</b></td><td>Waage</td><td><b>%8</b></td><td>Skorpion</td></tr>"
+               "<tr><td><b>%9</b></td><td>Schütze</td><td><b>%10</b></td><td>Steinbock</td><td><b>%11</b></td><td>Wassermann</td><td><b>%12</b></td><td>Fische</td></tr>")
+        .arg(stz[0], stz[1], stz[2], stz[3], stz[4], stz[5], stz[6], stz[7], stz[8])
+        .arg(stz[9], stz[10], stz[11]);
+    text += QString("<tr><td><b>%1</b></td><td>Sonne</td><td><b>%2</b></td><td>Mond</td><td><b>%3</b></td><td>Merkur</td><td><b>%4</b></td><td>Venus</td></tr>"
+               "<tr><td><b>%5</b></td><td>Mars</td><td><b>%6</b></td><td>Jupiter</td><td><b>%7</b></td><td>Saturn</td><td><b>%8</b></td><td>Uranus</td></tr>"
+               "<tr><td><b>%9</b></td><td>Neptun</td><td><b>%10</b></td><td>Pluto</td><td><b>%11</b></td><td>Nordknoten</td><td><b>%12</b></td><td>Lilith</td></tr>"
+               "<tr><td><b>%13</b></td><td>Chiron</td><td><b>%14</b></td><td>Ceres</td><td><b>%15</b></td><td>Pallas</td><td><b>%16</b></td><td>Juno</td></tr>"
+               "<tr><td><b>%17</b></td><td>Vesta</td><td><b>%18</b></td><td>Rückläufig</td><td></td><td></td><td></td><td></td></tr>"
                "</table>")
-        .arg(asteroidSpan("⚸"))   // Lilith
-        .arg(asteroidSpan("⚷"))   // Chiron
-        .arg(asteroidSpan("⚳"))   // Ceres
-        .arg(asteroidSpan("⚴"))   // Pallas
-        .arg(asteroidSpan("⚵"))   // Juno
-        .arg(asteroidSpan("⚶")); // Vesta
+        .arg(planetSpan("☉"), planetSpan("☽"), planetSpan("☿"), planetSpan("♀"))
+        .arg(planetSpan("♂"), planetSpan("♃"), planetSpan("♄"), planetSpan("♅"))
+        .arg(planetSpan("♆"), planetSpan("♇"), planetSpan("☊"), planetSpan("⚸"))
+        .arg(planetSpan("⚷"), planetSpan("⚳"), planetSpan("⚴"), planetSpan("⚵"))
+        .arg(planetSpan("⚶"), planetSpan("℞"));
+    
+    // Aspekt-Symbole
+    text += tr("<h4>Aspekte</h4>");
+    text += QString("<table border='0' cellspacing='4' cellpadding='2'>"
+               "<tr><td><b>%1</b></td><td>Konjunktion (0°)</td><td><b>%2</b></td><td>Halbsextil (30°)</td><td><b>%3</b></td><td>Sextil (60°)</td><td><b>%4</b></td><td>Quadrat (90°)</td></tr>"
+               "<tr><td><b>%5</b></td><td>Trigon (120°)</td><td><b>%6</b></td><td>Quincunx (150°)</td><td><b>%7</b></td><td>Opposition (180°)</td><td></td><td></td></tr>"
+               "</table>")
+        .arg(planetSpan(astroFont().aspektSymbol(0)))   // Konjunktion
+        .arg(planetSpan(astroFont().aspektSymbol(1)))   // Halbsextil
+        .arg(planetSpan(astroFont().aspektSymbol(2)))   // Sextil
+        .arg(planetSpan(astroFont().aspektSymbol(3)))   // Quadrat
+        .arg(planetSpan(astroFont().aspektSymbol(4)))   // Trigon
+        .arg(planetSpan(astroFont().aspektSymbol(5)))   // Quincunx
+        .arg(planetSpan(astroFont().aspektSymbol(6)));  // Opposition
 
     // Einstellungen / Orben / Farben / Aspekte
     text += tr("<h3>Einstellungen, Orben, Farben, Aspekte</h3>");

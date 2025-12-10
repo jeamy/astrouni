@@ -137,6 +137,9 @@ bool PrintManager::printTransits(const Radix& basisRadix,
     QFont textFont("Arial", static_cast<int>(10 * m_factor));
     painter.setFont(textFont);
     QFontMetrics fm(textFont);
+    
+    // Font für Symbole (Planeten, Aspekte, Asteroiden)
+    QFont symbolFont = astroFont().getPlanetSymbolFont(static_cast<int>(10 * m_factor));
     int lineHeight = fm.height() + 4;
     
     int xText = static_cast<int>(20 * m_factor);
@@ -175,15 +178,16 @@ bool PrintManager::printTransits(const Radix& basisRadix,
         int endIdx = qMin(ta.endIndex >= 0 ? ta.endIndex : ta.startIndex, transits.size() - 1);
         const Radix& trEnd = transits.at(endIdx);
         
-        // Transit-Planet
+        // Transit-Planet (mit Symbol-Font)
+        painter.setFont(symbolFont);
         QString transitPlanet = astroFont().planetSymbol(ta.transitPlanet);
         if (trStart.planetTyp.size() > ta.transitPlanet && 
             (trStart.planetTyp[ta.transitPlanet] & P_TYP_RUCK)) {
-            transitPlanet += " R";
+            transitPlanet += QString::fromUtf8("℞");
         }
         painter.drawText(xText, yText, transitPlanet);
         
-        // Aspekt-Symbol
+        // Aspekt-Symbol (mit Symbol-Font)
         int aspIdx = 0;
         switch (ta.aspekt) {
             case KONJUNKTION: aspIdx = 0; break;
@@ -197,14 +201,16 @@ bool PrintManager::printTransits(const Radix& basisRadix,
         painter.drawText(xText + static_cast<int>(150 * m_factor), yText, 
                          astroFont().aspektSymbol(aspIdx));
         
-        // Radix-Objekt
+        // Radix-Objekt (mit Symbol-Font für Planeten, Text-Font für Häuser)
         QString radixObj;
         if (ta.isHaus) {
+            painter.setFont(textFont);
             radixObj = QString("H%1").arg(ta.radixPlanet + 1);
         } else {
             radixObj = astroFont().planetSymbol(ta.radixPlanet);
         }
         painter.drawText(xText + static_cast<int>(220 * m_factor), yText, radixObj);
+        painter.setFont(textFont);  // Zurück zu Text-Font
         
         // Datum von/bis
         QString vonDatum = QString("%1.%2.%3")
