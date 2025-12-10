@@ -569,19 +569,18 @@ void MainWindow::onHelpIndex() {
                "Über einen Klick auf den Personen-Header in der rechten Liste (&quot;-Person 1-&quot; / &quot;-Person 2-&quot;) "
                "kann zwischen den Positionen der ersten und der zweiten Person umgeschaltet werden.</p>");
 
-    // Transit
-    text += tr("<h3>Transit</h3>");
-    text += tr("<p><b>1. Horoskoptyp wählen</b><br>" 
-               "Unter &quot;Horoskop → Horoskoptyp…&quot; den Typ &quot;Transit&quot; wählen. "
-               "Der zugrunde liegende Radix wird aus der aktuellen Person übernommen.</p>");
-    text += tr("<p><b>2. Transit-Dialog</b><br>" 
-               "Im Transitdialog Start-/Enddatum bzw. Suchzeitraum einstellen.</p>");
-    text += tr("<p><b>3. Transit-Auswahl (Matrix)</b><br>" 
-               "Die Matrix zeigt Transit-Planeten in den Zeilen und Radix-Planeten, Häuser sowie ggf. Asteroiden "
-               "in den Spalten. Ein Häkchen bedeutet, dass für diese Kombination Aspekte berechnet werden. "
-               "Ganze Zeilen/Spalten können über die Checkboxen am Rand gemeinsam ein- oder ausgeschaltet werden. "
-               "Die Zahlen am oberen und linken Rand entsprechen den ursprünglichen Nummern der Planeten/Häuser "
-               "aus dem Legacy-Programm; unter der Matrix werden zur Kontrolle die verwendeten Orben angezeigt.</p>");
+    // Symbol-Übersicht (Sternzeichen, Planeten, Asteroiden, Knoten)
+    text += tr("<h3>Symbole</h3>");
+    text += tr("<table border='0' cellspacing='4' cellpadding='2'>"
+               "<tr><td><b>♈</b></td><td>Widder</td><td><b>♉</b></td><td>Stier</td><td><b>♊</b></td><td>Zwillinge</td><td><b>♋</b></td><td>Krebs</td></tr>"
+               "<tr><td><b>♌</b></td><td>Löwe</td><td><b>♍</b></td><td>Jungfrau</td><td><b>♎</b></td><td>Waage</td><td><b>♏</b></td><td>Skorpion</td></tr>"
+               "<tr><td><b>♐</b></td><td>Schütze</td><td><b>♑</b></td><td>Steinbock</td><td><b>♒</b></td><td>Wassermann</td><td><b>♓</b></td><td>Fische</td></tr>"
+               "<tr><td><b>☉</b></td><td>Sonne</td><td><b>☽</b></td><td>Mond</td><td><b>☿</b></td><td>Merkur</td><td><b>♀</b></td><td>Venus</td></tr>"
+               "<tr><td><b>♂</b></td><td>Mars</td><td><b>♃</b></td><td>Jupiter</td><td><b>♄</b></td><td>Saturn</td><td><b>♅</b></td><td>Uranus</td></tr>"
+               "<tr><td><b>♆</b></td><td>Neptun</td><td><b>♇</b></td><td>Pluto</td><td><b>☊</b></td><td>Nordknoten</td><td><b>⚸</b></td><td>Lilith</td></tr>"
+               "<tr><td><b>⚷</b></td><td>Chiron</td><td><b>⚳</b></td><td>Ceres</td><td><b>⚴</b></td><td>Pallas</td><td><b>⚵</b></td><td>Juno</td></tr>"
+               "<tr><td><b>⚶</b></td><td>Vesta</td><td><b>℞</b></td><td>Rückläufig</td><td><b>°</b></td><td>Grad</td><td></td><td></td></tr>"
+               "</table>");
     text += tr("<p><b>4. Ergebnisliste und Grafik</b><br>" 
                "Nach der Berechnung zeigt das Programm eine Liste gefundener Transite. "
                "Über die Schaltfläche &quot;Grafik&quot; kann zu einem Eintrag ein Transit-Radix geöffnet werden. "
