@@ -568,26 +568,37 @@ void MainWindow::onHelpIndex() {
                "Die Aspekteliste enthält Radix- und Synastrie-Aspekte. "
                "Über einen Klick auf den Personen-Header in der rechten Liste (&quot;-Person 1-&quot; / &quot;-Person 2-&quot;) "
                "kann zwischen den Positionen der ersten und der zweiten Person umgeschaltet werden.</p>");
-
-    // Symbol-Übersicht (Sternzeichen, Planeten, Asteroiden, Knoten)
-    text += tr("<h3>Symbole</h3>");
-    text += tr("<table border='0' cellspacing='4' cellpadding='2'>"
-               "<tr><td><b>♈</b></td><td>Widder</td><td><b>♉</b></td><td>Stier</td><td><b>♊</b></td><td>Zwillinge</td><td><b>♋</b></td><td>Krebs</td></tr>"
-               "<tr><td><b>♌</b></td><td>Löwe</td><td><b>♍</b></td><td>Jungfrau</td><td><b>♎</b></td><td>Waage</td><td><b>♏</b></td><td>Skorpion</td></tr>"
-               "<tr><td><b>♐</b></td><td>Schütze</td><td><b>♑</b></td><td>Steinbock</td><td><b>♒</b></td><td>Wassermann</td><td><b>♓</b></td><td>Fische</td></tr>"
-               "<tr><td><b>☉</b></td><td>Sonne</td><td><b>☽</b></td><td>Mond</td><td><b>☿</b></td><td>Merkur</td><td><b>♀</b></td><td>Venus</td></tr>"
-               "<tr><td><b>♂</b></td><td>Mars</td><td><b>♃</b></td><td>Jupiter</td><td><b>♄</b></td><td>Saturn</td><td><b>♅</b></td><td>Uranus</td></tr>"
-               "<tr><td><b>♆</b></td><td>Neptun</td><td><b>♇</b></td><td>Pluto</td><td><b>☊</b></td><td>Nordknoten</td><td><b>⚸</b></td><td>Lilith</td></tr>"
-               "<tr><td><b>⚷</b></td><td>Chiron</td><td><b>⚳</b></td><td>Ceres</td><td><b>⚴</b></td><td>Pallas</td><td><b>⚵</b></td><td>Juno</td></tr>"
-               "<tr><td><b>⚶</b></td><td>Vesta</td><td><b>℞</b></td><td>Rückläufig</td><td></td><td></td><td></td><td></td></tr>"
-               "</table>");
-    text += tr("<p><b>4. Ergebnisliste und Grafik</b><br>" 
+    text += tr("<p><b>5. Ergebnisliste und Grafik</b><br>" 
                "Nach der Berechnung zeigt das Programm eine Liste gefundener Transite. "
                "Über die Schaltfläche &quot;Grafik&quot; kann zu einem Eintrag ein Transit-Radix geöffnet werden. "
                "Innen stehen die Radix-Planeten, außen die Transit-Planeten; es werden nur die "
                "in der Matrix erlaubten Aspekte gezeichnet. "
                "Im rechten Bereich kann über Klick auf die Kopfzeilen (z.B. &quot;-Radix Aspekte-&quot; / &quot;-Transit …-&quot;) "
                "zwischen Radix- und Transit-Aspektliste umgeschaltet werden.</p>");
+
+    // Symbol-Übersicht (Sternzeichen, Planeten, Asteroiden, Knoten)
+    // Asteroiden-Symbole (U+26B3-U+26B8) benötigen DejaVu Sans Font
+    QString dejaVuFont = astroFont().getPlanetSymbolFont(12).family();
+    auto asteroidSpan = [&](const QString& sym) {
+        return QString("<span style='font-family:\"%1\"'>%2</span>").arg(dejaVuFont, sym);
+    };
+    text += tr("<h3>Symbole</h3>");
+    text += QString("<table border='0' cellspacing='4' cellpadding='2'>"
+               "<tr><td><b>♈</b></td><td>Widder</td><td><b>♉</b></td><td>Stier</td><td><b>♊</b></td><td>Zwillinge</td><td><b>♋</b></td><td>Krebs</td></tr>"
+               "<tr><td><b>♌</b></td><td>Löwe</td><td><b>♍</b></td><td>Jungfrau</td><td><b>♎</b></td><td>Waage</td><td><b>♏</b></td><td>Skorpion</td></tr>"
+               "<tr><td><b>♐</b></td><td>Schütze</td><td><b>♑</b></td><td>Steinbock</td><td><b>♒</b></td><td>Wassermann</td><td><b>♓</b></td><td>Fische</td></tr>"
+               "<tr><td><b>☉</b></td><td>Sonne</td><td><b>☽</b></td><td>Mond</td><td><b>☿</b></td><td>Merkur</td><td><b>♀</b></td><td>Venus</td></tr>"
+               "<tr><td><b>♂</b></td><td>Mars</td><td><b>♃</b></td><td>Jupiter</td><td><b>♄</b></td><td>Saturn</td><td><b>♅</b></td><td>Uranus</td></tr>"
+               "<tr><td><b>♆</b></td><td>Neptun</td><td><b>♇</b></td><td>Pluto</td><td><b>☊</b></td><td>Nordknoten</td><td><b>%1</b></td><td>Lilith</td></tr>"
+               "<tr><td><b>%2</b></td><td>Chiron</td><td><b>%3</b></td><td>Ceres</td><td><b>%4</b></td><td>Pallas</td><td><b>%5</b></td><td>Juno</td></tr>"
+               "<tr><td><b>%6</b></td><td>Vesta</td><td><b>℞</b></td><td>Rückläufig</td><td></td><td></td><td></td><td></td></tr>"
+               "</table>")
+        .arg(asteroidSpan("⚸"))   // Lilith
+        .arg(asteroidSpan("⚷"))   // Chiron
+        .arg(asteroidSpan("⚳"))   // Ceres
+        .arg(asteroidSpan("⚴"))   // Pallas
+        .arg(asteroidSpan("⚵"))   // Juno
+        .arg(asteroidSpan("⚶")); // Vesta
 
     // Einstellungen / Orben / Farben / Aspekte
     text += tr("<h3>Einstellungen, Orben, Farben, Aspekte</h3>");

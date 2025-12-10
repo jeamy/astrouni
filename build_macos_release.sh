@@ -225,11 +225,16 @@ if [ -d "$DIST_DIR/swisseph/ephe" ]; then
   mkdir -p "$APP_BUNDLE/Contents/MacOS/swisseph/ephe"
   cp -R "$DIST_DIR/swisseph/ephe/." "$APP_BUNDLE/Contents/MacOS/swisseph/ephe/"
 fi
-# Fonts ins Bundle kopieren (AstroUniverse + Noto Sans Symbols 2)
+# Fonts ins Bundle kopieren (AstroUniverse + DejaVu Sans)
 if [ -d "$PROJECT_DIR/astrouni2026/resources/fonts" ]; then
+  # Fonts in Contents/MacOS/resources/fonts (primärer Pfad)
   mkdir -p "$APP_BUNDLE/Contents/MacOS/resources/fonts"
   cp -R "$PROJECT_DIR/astrouni2026/resources/fonts/." "$APP_BUNDLE/Contents/MacOS/resources/fonts/"
-  echo "Fonts kopiert: $(ls -la $APP_BUNDLE/Contents/MacOS/resources/fonts/)"
+  # Fonts auch in Contents/Resources/fonts (alternativer macOS-Pfad)
+  mkdir -p "$APP_BUNDLE/Contents/Resources/fonts"
+  cp -R "$PROJECT_DIR/astrouni2026/resources/fonts/." "$APP_BUNDLE/Contents/Resources/fonts/"
+  echo "Fonts kopiert nach MacOS/resources/fonts: $(ls -la $APP_BUNDLE/Contents/MacOS/resources/fonts/)"
+  echo "Fonts kopiert nach Resources/fonts: $(ls -la $APP_BUNDLE/Contents/Resources/fonts/)"
 fi
 
 # Icon optional kopieren
