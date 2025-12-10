@@ -187,10 +187,8 @@ QFont AstroFontProvider::getSymbolFont(int pointSize) const {
 QString AstroFontProvider::planetSymbol(int planet) const {
     if (planet < 0) return "";
 
-    if (m_hasAstroFont && planet < m_legacyPlanetSymbols.size()) {
-        return m_legacyPlanetSymbols[planet];
-    }
-
+    // Immer Unicode-Symbole für Planeten (System-Font),
+    // nie Glyphen aus dem AstroUniverse-Font
     if (planet < m_unicodePlanetSymbols.size()) {
         return m_unicodePlanetSymbols[planet];
     }
