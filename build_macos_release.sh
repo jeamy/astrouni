@@ -214,6 +214,18 @@ if [ -f "$DIST_DIR/astrouni2026" ]; then
   mv "$DIST_DIR/astrouni2026" "$APP_BUNDLE/Contents/MacOS/astrouni2026"
 fi
 
+# Daten-Verzeichnis ins Bundle kopieren (erwartet: <appDir>/data)
+if [ -d "$DIST_DIR/data" ]; then
+  mkdir -p "$APP_BUNDLE/Contents/MacOS/data"
+  cp -R "$DIST_DIR/data/." "$APP_BUNDLE/Contents/MacOS/data/"
+fi
+
+# Swiss Ephemeris-Verzeichnis ins Bundle kopieren (erwartet: <appDir>/swisseph/ephe)
+if [ -d "$DIST_DIR/swisseph/ephe" ]; then
+  mkdir -p "$APP_BUNDLE/Contents/MacOS/swisseph/ephe"
+  cp -R "$DIST_DIR/swisseph/ephe/." "$APP_BUNDLE/Contents/MacOS/swisseph/ephe/"
+fi
+
 # Icon optional kopieren
 ICON_SRC="$PROJECT_DIR/resources/icons/astrouni.icns"
 if [ -f "$ICON_SRC" ]; then
