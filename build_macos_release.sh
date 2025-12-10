@@ -303,6 +303,20 @@ else
   echo "Installiere entweder macdeployqt (Qt@6) oder qtpaths6, um eine portable App zu erzeugen."
 fi
 
+# Überflüssige temporäre Verzeichnisse außerhalb des Bundles entfernen
+echo "Räume temporäre Verzeichnisse auf..."
+rm -rf "$DIST_DIR/data" 2>/dev/null || true
+rm -rf "$DIST_DIR/resources" 2>/dev/null || true
+rm -rf "$DIST_DIR/swisseph" 2>/dev/null || true
+
+# Prüfe ob Fonts im Bundle vorhanden sind
+echo "Prüfe Fonts im Bundle..."
+if [ -d "$APP_BUNDLE/Contents/MacOS/resources/fonts" ]; then
+  echo "Fonts in MacOS/resources/fonts: $(ls $APP_BUNDLE/Contents/MacOS/resources/fonts/)"
+else
+  echo "WARNUNG: Keine Fonts in MacOS/resources/fonts gefunden!"
+fi
+
 echo ""
 echo "========================================"
 echo "  Release-Build fertig!"
@@ -312,7 +326,8 @@ if command -v hdiutil &>/dev/null; then
   DMG_PATH="$PROJECT_DIR/dist/AstroUniverse2026-macos.dmg"
   echo "Erzeuge DMG-Image unter $DMG_PATH..."
   rm -f "$DMG_PATH"
-  hdiutil create -volname "AstroUniverse2026" -srcfolder "$DIST_DIR" -ov -format UDZO "$DMG_PATH" || {
+  # DMG nur aus dem App-Bundle erstellen, nicht aus dem gesamten DIST_DIR
+  hdiutil create -volname "AstroUniverse2026" -srcfolder "$APP_BUNDLE" -ov -format UDZO "$DMG_PATH" || {
     echo "WARNUNG: DMG-Image konnte nicht erzeugt werden." >&2
   }
 fi
