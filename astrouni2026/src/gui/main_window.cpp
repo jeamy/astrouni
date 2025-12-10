@@ -579,7 +579,7 @@ void MainWindow::onHelpIndex() {
                "<tr><td><b>♂</b></td><td>Mars</td><td><b>♃</b></td><td>Jupiter</td><td><b>♄</b></td><td>Saturn</td><td><b>♅</b></td><td>Uranus</td></tr>"
                "<tr><td><b>♆</b></td><td>Neptun</td><td><b>♇</b></td><td>Pluto</td><td><b>☊</b></td><td>Nordknoten</td><td><b>⚸</b></td><td>Lilith</td></tr>"
                "<tr><td><b>⚷</b></td><td>Chiron</td><td><b>⚳</b></td><td>Ceres</td><td><b>⚴</b></td><td>Pallas</td><td><b>⚵</b></td><td>Juno</td></tr>"
-               "<tr><td><b>⚶</b></td><td>Vesta</td><td><b>℞</b></td><td>Rückläufig</td><td><b>°</b></td><td>Grad</td><td></td><td></td></tr>"
+               "<tr><td><b>⚶</b></td><td>Vesta</td><td><b>℞</b></td><td>Rückläufig</td><td></td><td></td><td></td><td></td></tr>"
                "</table>");
     text += tr("<p><b>4. Ergebnisliste und Grafik</b><br>" 
                "Nach der Berechnung zeigt das Programm eine Liste gefundener Transite. "

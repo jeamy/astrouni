@@ -97,14 +97,28 @@ void RadixWindow::setupUI() {
     QSplitter* splitter = new QSplitter(Qt::Horizontal, this);
     mainLayout->addWidget(splitter);
     
+    // Linke Seite: Legende + Chart
+    QWidget* leftPanel = new QWidget(splitter);
+    QVBoxLayout* leftLayout = new QVBoxLayout(leftPanel);
+    leftLayout->setContentsMargins(4, 4, 4, 4);
+    leftLayout->setSpacing(4);
+    
+    m_legendLabel = new QLabel(leftPanel);
+    m_legendLabel->setWordWrap(true);
+    m_legendLabel->setTextFormat(Qt::RichText);
+    m_legendLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+    leftLayout->addWidget(m_legendLabel);
+    
     // Chart-Widget
-    m_chartWidget = new ChartWidget(splitter);
+    m_chartWidget = new ChartWidget(leftPanel);
     m_chartWidget->setSettings(m_auinit);
     // Maus-Signale verbinden (Planet/Haus-Klick)
     connect(m_chartWidget, &ChartWidget::planetClicked, this, &RadixWindow::onPlanetClicked);
     connect(m_chartWidget, &ChartWidget::houseClicked, this, &RadixWindow::onHouseClicked);
     connect(m_chartWidget, &ChartWidget::aspectClicked, this, &RadixWindow::onAspectClicked);
-    splitter->addWidget(m_chartWidget);
+    leftLayout->addWidget(m_chartWidget, /*stretch*/ 1);
+    
+    splitter->addWidget(leftPanel);
     
     // Rechte Seite: Liste und Buttons
     QWidget* rightWidget = new QWidget(splitter);
@@ -251,6 +265,9 @@ void RadixWindow::updateDisplay() {
             fillAspekteList();
             break;
     }
+    
+    // Legende aktualisieren
+    updateLegend();
     
     // Fenster-Titel
     QString title = tr("AstroUniverse - ");
@@ -494,6 +511,7 @@ void RadixWindow::fillPositionenList() {
             QListWidgetItem* item = new QListWidgetItem(html);
             item->setData(Qt::UserRole, i + 100);  // Transit-Planeten ab 100
             item->setBackground(sColor[COL_LBREC_NORM]);
+            item->setFont(astroFont().getPlanetSymbolFont(item->font().pointSize()));
             m_listWidget->addItem(item);
         }
     }
@@ -534,6 +552,12 @@ void RadixWindow::fillPositionenList() {
         QListWidgetItem* item = new QListWidgetItem(html);
         item->setData(Qt::UserRole, m_showPerson2 ? i + 200 : i);
         item->setBackground(sColor[COL_LBREC_NORM]);  // Grauer Hintergrund pro Eintrag
+        // Planetensymbol-Font nur für die Glyphen setzen, Rest bleibt System-Font
+        {
+            QFont f = item->font();
+            f.setFamily(astroFont().getPlanetSymbolFont(f.pointSize()).family());
+            item->setFont(f);
+        }
         m_listWidget->addItem(item);
     }
     
@@ -586,6 +610,21 @@ void RadixWindow::fillPositionenList() {
 
 void RadixWindow::fillAspekteList() {
     m_listWidget->clear();
+    
+    QString planetFontFamily = astroFont().getPlanetSymbolFont(m_listWidget->font().pointSize()).family();
+    QString zodiacFontFamily = astroFont().hasAstroFont() ? astroFont().fontName() : planetFontFamily;
+    
+    auto spanColored = [](const QString& text, const QString& color, const QString& family) {
+        return QString("<span style='color:%1; font-family:\"%2\"'>%3</span>").arg(color, family, text);
+    };
+    
+    auto zodiacSpan = [&](const QString& text, const QString& color) {
+        return spanColored(text, color, zodiacFontFamily);
+    };
+    
+    auto planetSpan = [&](const QString& text, const QString& color) {
+        return spanColored(text, color, planetFontFamily);
+    };
     
     // Aspekt-Index zu Farb-Index Mapping
     auto getAspektColorIndex = [](int asp) -> int {
@@ -683,25 +722,16 @@ void RadixWindow::fillAspekteList() {
                 QString stzColor2 = colorToHtml(sColor[COL_FEUER + element2]);
                 QString aspColor = colorToHtml(sColor[getAspektColorIndex(asp)]);
                 
-                QString html = QString("<span style='color:%1'>%2</span> in <span style='color:%3'>%4</span> "
-                                       "<span style='color:%5'>%6</span> "
-                                       "<span style='color:%7'>%8</span> in <span style='color:%9'>%10</span>")
-                    .arg(planetColor).arg(symbol1)
-                    .arg(stzColor1).arg(stzSymbol1)
-                    .arg(aspColor).arg(aspSymbol)
-                    .arg(planetColor).arg(symbol2)
-                    .arg(stzColor2).arg(stzSymbol2);
+                QString html = QString("%1 in %2 %3 %4 in %5")
+                    .arg(planetSpan(symbol1, planetColor))
+                    .arg(zodiacSpan(stzSymbol1, stzColor1))
+                    .arg(spanColored(aspSymbol, aspColor, planetFontFamily))
+                    .arg(planetSpan(symbol2, planetColor))
+                    .arg(zodiacSpan(stzSymbol2, stzColor2));
                 
                 QListWidgetItem* item = new QListWidgetItem(html);
                 item->setData(Qt::UserRole, QPoint(i, j));
                 item->setBackground(sColor[COL_LBREC_NORM]);
-                
-                // Wenn AstroUniverse verfügbar ist, verwende diesen Font für die gesamte Zeile
-                if (astroFont().hasAstroFont()) {
-                    QFont f = item->font();
-                    f.setFamily(astroFont().fontName());
-                    item->setFont(f);
-                }
                 m_listWidget->addItem(item);
             }
         }
@@ -737,25 +767,17 @@ void RadixWindow::fillAspekteList() {
                 QString stzColor1 = colorToHtml(sColor[COL_FEUER + element1]);
                 QString stzColor2 = colorToHtml(sColor[COL_FEUER + element2]);
                 QString aspColor = colorToHtml(sColor[getAspektColorIndex(asp)]);
+                QString listFontFamily = m_listWidget->font().family();
                 
-                QString html = QString("<span style='color:%1'>%2</span> in <span style='color:%3'>%4</span> "
-                                       "<span style='color:%5'>%6</span> "
-                                       "<span style='color:%7'>H%8</span> in <span style='color:%9'>%10</span>")
-                    .arg(planetColor).arg(symbol)
-                    .arg(stzColor1).arg(stzSymbol1)
-                    .arg(aspColor).arg(aspSymbol)
-                    .arg(hausColor).arg(h + 1, 2, 10, QChar('0'))
-                    .arg(stzColor2).arg(stzSymbol2);
+                QString html = QString("%1 in %2 %3 %4 in %5")
+                    .arg(planetSpan(symbol, planetColor))
+                    .arg(zodiacSpan(stzSymbol1, stzColor1))
+                    .arg(spanColored(aspSymbol, aspColor, planetFontFamily))
+                    .arg(spanColored(QString("H%1").arg(h + 1, 2, 10, QChar('0')), hausColor, listFontFamily))
+                    .arg(zodiacSpan(stzSymbol2, stzColor2));
                 
                 QListWidgetItem* item = new QListWidgetItem(html);
                 item->setBackground(sColor[COL_LBREC_NORM]);
-                
-                // Wenn AstroUniverse verfügbar ist, verwende diesen Font für die gesamte Zeile
-                if (astroFont().hasAstroFont()) {
-                    QFont f = item->font();
-                    f.setFamily(astroFont().fontName());
-                    item->setFont(f);
-                }
                 m_listWidget->addItem(item);
             }
         }
@@ -819,27 +841,18 @@ void RadixWindow::fillAspekteList() {
                 QString stzColor2 = colorToHtml(sColor[COL_FEUER + element2]);
                 QString aspColor = colorToHtml(sColor[getAspektColorIndex(asp)]);
                 
-                QString html = QString("<span style='color:%1'>%2</span> in <span style='color:%3'>%4</span> "
-                                       "<span style='color:%5'>%6</span> "
-                                       "<span style='color:%7'>%8</span> in <span style='color:%9'>%10</span>")
-                    .arg(p1Color).arg(symbol1)
-                    .arg(stzColor1).arg(stzSymbol1)
-                    .arg(aspColor).arg(aspSymbol)
-                    .arg(p2Color).arg(symbol2)
-                    .arg(stzColor2).arg(stzSymbol2);
+                QString html = QString("%1 in %2 %3 %4 in %5")
+                    .arg(planetSpan(symbol1, p1Color))
+                    .arg(zodiacSpan(stzSymbol1, stzColor1))
+                    .arg(spanColored(aspSymbol, aspColor, planetFontFamily))
+                    .arg(planetSpan(symbol2, p2Color))
+                    .arg(zodiacSpan(stzSymbol2, stzColor2));
                 
                 QListWidgetItem* item = new QListWidgetItem(html);
                 // Synastrie/Transit-Aspekt: i+1000/2000 und j
                 int offset = (m_radix.horoTyp == TYP_SYNASTRIE) ? 2000 : 1000;
                 item->setData(Qt::UserRole, QPoint(i + offset, j));
                 item->setBackground(sColor[COL_LBREC_NORM]);
-                
-                // Wenn AstroUniverse verfügbar ist, verwende diesen Font für die gesamte Zeile
-                if (astroFont().hasAstroFont()) {
-                    QFont f = item->font();
-                    f.setFamily(astroFont().fontName());
-                    item->setFont(f);
-                }
                 m_listWidget->addItem(item);
             }
         }
@@ -847,6 +860,99 @@ void RadixWindow::fillAspekteList() {
     
     // Grafik-Aspekt-Modus synchronisieren
     m_chartWidget->setShowSynastrieAspects(m_showSynastrieAspects && hasSynastrie);
+}
+
+//==============================================================================
+// Legende
+//==============================================================================
+
+QString RadixWindow::buildLegendHtml() const {
+    auto colorToHtml = [](const QColor& c) {
+        return QString("#%1%2%3")
+            .arg(c.red(), 2, 16, QChar('0'))
+            .arg(c.green(), 2, 16, QChar('0'))
+            .arg(c.blue(), 2, 16, QChar('0'));
+    };
+    
+    QString planetFontFamily = astroFont().getPlanetSymbolFont(12).family();
+    QString zodiacFontFamily = astroFont().hasAstroFont() ? astroFont().fontName() : planetFontFamily;
+    
+    auto span = [](const QString& text, const QString& color, const QString& family) {
+        return QString("<span style='color:%1; font-family:\"%2\"'>%3</span>").arg(color, family, text);
+    };
+    
+    // Element-Farben für Sternzeichen
+    auto zodiacCell = [&](int idx) {
+        QString sym = astroFont().sternzeichenSymbol(idx);
+        int element = idx % 4;
+        QString col = colorToHtml(sColor[COL_FEUER + element]);
+        return span(sym, col, zodiacFontFamily);
+    };
+    
+    auto planetCell = [&](const QString& sym, const QColor& col) {
+        return span(sym, colorToHtml(col), planetFontFamily);
+    };
+    
+    QString html;
+    html += "<table border='0' cellspacing='4' cellpadding='2'>";
+    // Sternzeichen
+    html += "<tr>";
+    html += "<td><b>" + zodiacCell(0) + "</b></td><td>Widder</td>";
+    html += "<td><b>" + zodiacCell(1) + "</b></td><td>Stier</td>";
+    html += "<td><b>" + zodiacCell(2) + "</b></td><td>Zwillinge</td>";
+    html += "<td><b>" + zodiacCell(3) + "</b></td><td>Krebs</td>";
+    html += "</tr>";
+    html += "<tr>";
+    html += "<td><b>" + zodiacCell(4) + "</b></td><td>Löwe</td>";
+    html += "<td><b>" + zodiacCell(5) + "</b></td><td>Jungfrau</td>";
+    html += "<td><b>" + zodiacCell(6) + "</b></td><td>Waage</td>";
+    html += "<td><b>" + zodiacCell(7) + "</b></td><td>Skorpion</td>";
+    html += "</tr>";
+    html += "<tr>";
+    html += "<td><b>" + zodiacCell(8) + "</b></td><td>Schütze</td>";
+    html += "<td><b>" + zodiacCell(9) + "</b></td><td>Steinbock</td>";
+    html += "<td><b>" + zodiacCell(10) + "</b></td><td>Wassermann</td>";
+    html += "<td><b>" + zodiacCell(11) + "</b></td><td>Fische</td>";
+    html += "</tr>";
+    
+    // Planeten / Knoten / Asteroiden
+    html += "<tr>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(0), sColor[COL_PLAN]) + "</b></td><td>Sonne</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(1), sColor[COL_PLAN]) + "</b></td><td>Mond</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(2), sColor[COL_PLAN]) + "</b></td><td>Merkur</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(3), sColor[COL_PLAN]) + "</b></td><td>Venus</td>";
+    html += "</tr>";
+    html += "<tr>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(4), sColor[COL_PLAN]) + "</b></td><td>Mars</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(5), sColor[COL_PLAN]) + "</b></td><td>Jupiter</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(6), sColor[COL_PLAN]) + "</b></td><td>Saturn</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(7), sColor[COL_PLAN]) + "</b></td><td>Uranus</td>";
+    html += "</tr>";
+    html += "<tr>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(8), sColor[COL_PLAN]) + "</b></td><td>Neptun</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(9), sColor[COL_PLAN]) + "</b></td><td>Pluto</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(10), sColor[COL_PLAN]) + "</b></td><td>Nordknoten</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(11), sColor[COL_PLAN]) + "</b></td><td>Lilith</td>";
+    html += "</tr>";
+    html += "<tr>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(12), sColor[COL_PLAN]) + "</b></td><td>Chiron</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(13), sColor[COL_PLAN]) + "</b></td><td>Ceres</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(14), sColor[COL_PLAN]) + "</b></td><td>Pallas</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(15), sColor[COL_PLAN]) + "</b></td><td>Juno</td>";
+    html += "</tr>";
+    html += "<tr>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(16), sColor[COL_PLAN]) + "</b></td><td>Vesta</td>";
+    html += "<td><b>" + span("℞", colorToHtml(sColor[COL_PLAN]), planetFontFamily) + "</b></td><td>Rückläufig</td>";
+    html += "<td></td><td></td><td></td><td></td>";
+    html += "</tr>";
+    
+    html += "</table>";
+    return html;
+}
+
+void RadixWindow::updateLegend() {
+    if (!m_legendLabel) return;
+    m_legendLabel->setText(buildLegendHtml());
 }
 
 // LEGACY REMOVED: Alte Synastrie/Transit-Aspekte Blöcke wurden entfernt
