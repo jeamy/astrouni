@@ -225,9 +225,11 @@ if [ -d "$DIST_DIR/swisseph/ephe" ]; then
   mkdir -p "$APP_BUNDLE/Contents/MacOS/swisseph/ephe"
   cp -R "$DIST_DIR/swisseph/ephe/." "$APP_BUNDLE/Contents/MacOS/swisseph/ephe/"
 fi
-if [ -d "$PROJECT_DIR/resources/fonts" ]; then
+# Fonts ins Bundle kopieren (AstroUniverse + Noto Sans Symbols 2)
+if [ -d "$PROJECT_DIR/astrouni2026/resources/fonts" ]; then
   mkdir -p "$APP_BUNDLE/Contents/MacOS/resources/fonts"
-  cp -R "$PROJECT_DIR/resources/fonts/." "$APP_BUNDLE/Contents/MacOS/resources/fonts/"
+  cp -R "$PROJECT_DIR/astrouni2026/resources/fonts/." "$APP_BUNDLE/Contents/MacOS/resources/fonts/"
+  echo "Fonts kopiert: $(ls -la $APP_BUNDLE/Contents/MacOS/resources/fonts/)"
 fi
 
 # Icon optional kopieren
