@@ -55,11 +55,11 @@ static const QColor ASPEKT_COLORS[] = {
     QColor(255, 0, 255)     // Opposition - Magenta
 };
 
-// Volle Planeten-Namen für Dropdown
-static const char* PLANET_FULL_NAMES[] = {
-    "☉ Sonne", "☽ Mond", "☿ Merkur", "♀ Venus", "♂ Mars",
-    "♃ Jupiter", "♄ Saturn", "♅ Uranus", "♆ Neptun", "♇ Pluto",
-    "☊ Mondknoten", "⚸ Lilith", "⚷ Chiron"
+// Volle Planeten-Namen für Dropdown (nur Text, Symbole werden dynamisch hinzugefügt)
+static const char* PLANET_TEXT_NAMES[] = {
+    "Sonne", "Mond", "Merkur", "Venus", "Mars",
+    "Jupiter", "Saturn", "Uranus", "Neptun", "Pluto",
+    "Mondknoten", "Lilith", "Chiron"
 };
 
 OrbenDialog::OrbenDialog(AuInit& auinit, QWidget* parent)
@@ -108,8 +108,11 @@ void OrbenDialog::setupUI() {
     QHBoxLayout* selectLayout = new QHBoxLayout();
     selectLayout->addWidget(new QLabel(tr("Planet 1:"), this));
     m_planet1Combo = new QComboBox(this);
+    // Planeten-Symbole mit korrektem Font (DejaVu Sans für Asteroiden)
+    m_planet1Combo->setFont(astroFont().getPlanetSymbolFont(m_planet1Combo->font().pointSize()));
     for (int i = 0; i < NUM_PLANETS; ++i) {
-        m_planet1Combo->addItem(tr(PLANET_FULL_NAMES[i]), i);
+        QString symbol = astroFont().planetSymbol(i);
+        m_planet1Combo->addItem(QString("%1 %2").arg(symbol, tr(PLANET_TEXT_NAMES[i])), i);
     }
     connect(m_planet1Combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &OrbenDialog::onPlanet1Changed);
@@ -127,23 +130,17 @@ void OrbenDialog::setupUI() {
     
     for (int i = 0; i < ASPEKTE; ++i) {
         QTableWidgetItem* item = new QTableWidgetItem(astroFont().aspektSymbol(i));
-        if (astroFont().hasAstroFont()) {
-            item->setFont(astroFont().getSymbolFont(headerFont.pointSize()));
-        } else {
-            item->setFont(headerFont);
-        }
+        // Aspekt-Symbole auch mit getPlanetSymbolFont (DejaVu Sans hat alle Unicode-Symbole)
+        item->setFont(astroFont().getPlanetSymbolFont(headerFont.pointSize()));
         item->setForeground(ASPEKT_COLORS[i]);
         m_orbenTable->setHorizontalHeaderItem(i, item);
     }
     
     // Zeilen-Header (Planeten-Symbole - Y-Achse) mit Farben
+    // Verwende getPlanetSymbolFont für korrekte Asteroiden-Darstellung (DejaVu Sans)
     for (int i = 0; i < NUM_PLANETS; ++i) {
         QTableWidgetItem* item = new QTableWidgetItem(astroFont().planetSymbol(i));
-        if (astroFont().hasAstroFont()) {
-            item->setFont(astroFont().getSymbolFont(headerFont.pointSize()));
-        } else {
-            item->setFont(headerFont);
-        }
+        item->setFont(astroFont().getPlanetSymbolFont(headerFont.pointSize()));
         item->setForeground(PLANET_COLORS[i]);
         m_orbenTable->setVerticalHeaderItem(i, item);
     }
