@@ -556,7 +556,8 @@ void ChartWidget::drawZodiacSigns(QPainter& painter) {
     if (astroFont().hasAstroFont()) {
         zodiacFont = astroFont().getSymbolFont(18);
     } else {
-        QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+        // Apple Symbols primär für macOS
+        QStringList symbolFonts = {"Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols2", "DejaVu Sans"};
         for (const QString& fontName : symbolFonts) {
             zodiacFont = QFont(fontName, 18);
             if (QFontInfo(zodiacFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
@@ -961,8 +962,9 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
 
     // Planeten- und Asteroiden-Symbole NIE aus dem AstroUniverse-Font zeichnen,
     // sondern immer mit System-/Symbolfonts (Unicode-Glyphen aus planetSymbol)
+    // Apple Symbols primär für macOS (enthält alle Planeten- und Asteroiden-Symbole U+2600-U+26FF)
     QFont symbolFont;
-    QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+    QStringList symbolFonts = {"Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols2", "DejaVu Sans"};
     for (const QString& fontName : symbolFonts) {
         symbolFont = QFont(fontName, fontSize);
         if (QFontInfo(symbolFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {

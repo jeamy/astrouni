@@ -245,11 +245,11 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
     // Port von: sPrintText()
     
     QFont textFont("Arial", static_cast<int>(10 * factor));
-    // System-/Symbolfont für Planeten-Symbole
+    // Apple Symbols primär für macOS (enthält alle Planeten- und Asteroiden-Symbole U+2600-U+26FF)
     QFont planetFont;
     {
         int size = static_cast<int>(12 * factor);
-        QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+        QStringList symbolFonts = {"Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols2", "DejaVu Sans"};
         for (const QString& fontName : symbolFonts) {
             planetFont = QFont(fontName, size);
             if (QFontInfo(planetFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
@@ -370,10 +370,11 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
 void PrintManager::printAspects(QPainter& painter, const Radix& radix, double factor) {
     // Port von: sPrintAsp()
     
+    // Apple Symbols primär für macOS
     QFont symbolFont;
     {
         int size = static_cast<int>(10 * factor);
-        QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+        QStringList symbolFonts = {"Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols2", "DejaVu Sans"};
         for (const QString& fontName : symbolFonts) {
             symbolFont = QFont(fontName, size);
             if (QFontInfo(symbolFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
@@ -466,7 +467,8 @@ void PrintManager::printHouseAspects(QPainter& painter, const Radix& radix, int 
     
     if (radix.aspHaus.isEmpty()) return;
     
-    QFont symbolFont("Segoe UI Symbol", static_cast<int>(10 * factor));
+    // Apple Symbols primär für macOS
+    QFont symbolFont("Apple Symbols", static_cast<int>(10 * factor));
     painter.setFont(symbolFont);
     QFontMetrics fm(symbolFont);
     
@@ -698,8 +700,9 @@ void PrintManager::drawRadixForPrint(QPainter& painter, const Radix& radix, cons
     if (astroFont().hasAstroFont()) {
         zodiacFont = astroFont().getSymbolFont(static_cast<int>(14 * factor));
     } else {
+        // Apple Symbols primär für macOS
         int size = static_cast<int>(14 * factor);
-        QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+        QStringList symbolFonts = {"Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols2", "DejaVu Sans"};
         for (const QString& fontName : symbolFonts) {
             zodiacFont = QFont(fontName, size);
             if (QFontInfo(zodiacFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
@@ -738,10 +741,11 @@ void PrintManager::drawRadixForPrint(QPainter& painter, const Radix& radix, cons
     }
     
     // Planeten zeichnen (immer mit System-/Symbolfont, nie AstroUniverse-Font)
+    // Apple Symbols primär für macOS (enthält alle Planeten- und Asteroiden-Symbole U+2600-U+26FF)
     QFont planetFont;
     {
         int size = static_cast<int>(12 * factor);
-        QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+        QStringList symbolFonts = {"Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols2", "DejaVu Sans"};
         for (const QString& fontName : symbolFonts) {
             planetFont = QFont(fontName, size);
             if (QFontInfo(planetFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
