@@ -958,20 +958,24 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
     
     // STRICT LEGACY: Kleinerer Font wenn versetzt
     int fontSize = isHighlighted ? 24 : (offsetLevel > 0 ? 16 : 20);
-    
-    // Plattformübergreifende Symbol-Font Fallback-Kette:
-    // Windows: Segoe UI Symbol
-    // macOS: Apple Symbols
-    // Linux: Noto Sans Symbols2, DejaVu Sans
+
     QFont symbolFont;
-    QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
-    for (const QString& fontName : symbolFonts) {
-        symbolFont = QFont(fontName, fontSize);
-        if (QFontInfo(symbolFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
-            break;  // Font gefunden
+    if (astroFont().hasAstroFont()) {
+        symbolFont = astroFont().getSymbolFont(fontSize);
+    } else {
+        // Plattformübergreifende Symbol-Font Fallback-Kette:
+        // Windows: Segoe UI Symbol
+        // macOS: Apple Symbols
+        // Linux: Noto Sans Symbols2, DejaVu Sans
+        QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+        for (const QString& fontName : symbolFonts) {
+            symbolFont = QFont(fontName, fontSize);
+            if (QFontInfo(symbolFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
+                break;  // Font gefunden
+            }
         }
+        symbolFont.setPointSize(fontSize);
     }
-    symbolFont.setPointSize(fontSize);
     painter.setFont(symbolFont);
     
     // Position im Inneren des Planeten-Kreises, mit Versatz für Kollisionsvermeidung
