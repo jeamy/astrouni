@@ -6,6 +6,7 @@
 #include "astro_font_provider.h"
 #include <QFontDatabase>
 #include <QFontInfo>
+#include <QFontMetrics>
 #include <QDir>
 #include <QFileInfo>
 #include <QFile>
@@ -25,6 +26,8 @@ AstroFontProvider::AstroFontProvider()
     , m_fontName("Sans Serif")
     , m_hasSymbolFont(false)
     , m_symbolFontName("Sans Serif")
+    , m_hasDejaVuFont(false)
+    , m_dejaVuFontName("Sans Serif")
 {
     initSymbols();
     detectFont();
@@ -78,16 +81,12 @@ void AstroFontProvider::detectFont() {
     }
     
     // ========== 2. Noto Sans Symbols 2 für Planeten/Asteroiden laden ==========
-    // Dieser Font enthält ALLE Unicode-Symbole für Planeten und Asteroiden (U+2600-U+26FF)
-    // und wird IMMER geladen, unabhängig vom AstroUniverse-Font
-    
     QStringList symbolFontPaths = {
         appPath + "/resources/fonts/NotoSansSymbols2-Regular.ttf",
         appPath + "/fonts/NotoSansSymbols2-Regular.ttf",
         appPath + "/../resources/fonts/NotoSansSymbols2-Regular.ttf",
         ":/fonts/NotoSansSymbols2-Regular.ttf"
     };
-    
     for (const QString& path : symbolFontPaths) {
         QFileInfo fi(path);
         if (fi.exists() && fi.isFile()) {
@@ -103,8 +102,6 @@ void AstroFontProvider::detectFont() {
             }
         }
     }
-    
-    // Fallback: Prüfe ob Noto Sans Symbols 2 im System installiert ist
     if (!m_hasSymbolFont) {
         for (const QString& family : families) {
             if (family.contains("Noto Sans Symbols 2", Qt::CaseInsensitive) ||
@@ -116,9 +113,44 @@ void AstroFontProvider::detectFont() {
             }
         }
     }
-    
     if (!m_hasSymbolFont) {
-        qInfo() << "AstroFontProvider: Noto Sans Symbols 2 nicht gefunden, verwende System-Fallback";
+        qInfo() << "AstroFontProvider: Noto Sans Symbols 2 nicht gefunden";
+    }
+
+    // ========== 3. DejaVu Sans laden (enthält Asteroiden-Glyphen U+26B3-U+26B8) ==========
+    QStringList dejaVuFontPaths = {
+        appPath + "/resources/fonts/DejaVuSans.ttf",
+        appPath + "/fonts/DejaVuSans.ttf",
+        appPath + "/../resources/fonts/DejaVuSans.ttf",
+        ":/fonts/DejaVuSans.ttf"
+    };
+    for (const QString& path : dejaVuFontPaths) {
+        QFileInfo fi(path);
+        if (fi.exists() && fi.isFile()) {
+            int fontId = QFontDatabase::addApplicationFont(path);
+            if (fontId != -1) {
+                QStringList loadedFamilies = QFontDatabase::applicationFontFamilies(fontId);
+                if (!loadedFamilies.isEmpty()) {
+                    m_dejaVuFontName = loadedFamilies.first();
+                    m_hasDejaVuFont = true;
+                    qInfo() << "AstroFontProvider: DejaVu Sans geladen aus:" << path;
+                    break;
+                }
+            }
+        }
+    }
+    if (!m_hasDejaVuFont) {
+        for (const QString& family : families) {
+            if (family.contains("DejaVu Sans", Qt::CaseInsensitive)) {
+                m_dejaVuFontName = family;
+                m_hasDejaVuFont = true;
+                qInfo() << "AstroFontProvider: DejaVu Sans im System gefunden:" << family;
+                break;
+            }
+        }
+    }
+    if (!m_hasDejaVuFont) {
+        qInfo() << "AstroFontProvider: DejaVu Sans nicht gefunden";
     }
 }
 
@@ -236,27 +268,35 @@ QFont AstroFontProvider::getSymbolFont(int pointSize) const {
 }
 
 QFont AstroFontProvider::getPlanetSymbolFont(int pointSize) const {
-    // Noto Sans Symbols 2 für Planeten/Asteroiden (enthält alle Unicode-Symbole U+2600-U+26FF)
-    if (m_hasSymbolFont) {
-        QFont font(m_symbolFontName, pointSize);
-        // PreferMatch: Qt soll den angeforderten Font bevorzugen
+    // Prüfe Fonts nach Glyph-Abdeckung für Asteroiden (U+26B3 bis U+26B8)
+    const QVector<uint> asteroidGlyphs = {0x26B3, 0x26B4, 0x26B5, 0x26B6, 0x26B7, 0x26B8};
+
+    struct Candidate {
+        QString name;
+        bool available;
+    };
+    QList<Candidate> candidates;
+    candidates.append({m_symbolFontName, m_hasSymbolFont});
+    candidates.append({m_dejaVuFontName, m_hasDejaVuFont});
+    candidates.append({"DejaVu Sans", true});
+    candidates.append({"Apple Symbols", true});
+    candidates.append({"Segoe UI Symbol", true});
+
+    for (const Candidate& c : candidates) {
+        if (!c.available || c.name.isEmpty()) continue;
+        QFont font(c.name, pointSize);
         font.setStyleStrategy(QFont::PreferMatch);
-        qDebug() << "getPlanetSymbolFont: using" << m_symbolFontName << "size" << pointSize
-                 << "-> actual family:" << QFontInfo(font).family()
-                 << "exactMatch:" << QFontInfo(font).exactMatch();
-        return font;
-    }
-    // Fallback: Versuche bekannte Symbol-Fonts
-    QStringList fallbackFonts = {"Noto Sans Symbols 2", "Noto Sans Symbols2", "Apple Symbols", 
-                                  "Segoe UI Symbol", "DejaVu Sans"};
-    for (const QString& fontName : fallbackFonts) {
-        QFont font(fontName, pointSize);
-        if (QFontInfo(font).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
-            qDebug() << "getPlanetSymbolFont: FALLBACK using" << fontName;
-            return font;
+        QFontMetrics fm(font);
+        bool ok = true;
+        for (uint cp : asteroidGlyphs) {
+            if (!fm.inFontUcs4(cp)) {
+                ok = false;
+                break;
+            }
         }
     }
-    qDebug() << "getPlanetSymbolFont: FALLBACK to Sans Serif (no symbol font found)";
+
+    qDebug() << "getPlanetSymbolFont: FALLBACK to Sans Serif (no full glyph coverage)";
     return QFont("Sans Serif", pointSize);
 }
 
