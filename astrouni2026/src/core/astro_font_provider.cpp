@@ -56,6 +56,7 @@ void AstroFontProvider::detectFont() {
             appPath + "/resources/fonts/asu_____.ttf",
             appPath + "/fonts/asu_____.ttf",
             appPath + "/../resources/fonts/asu_____.ttf",
+            appPath + "/../Resources/fonts/asu_____.ttf",  // macOS Bundle: Contents/Resources/fonts
             ":/fonts/asu_____.ttf"
         };
         
@@ -84,8 +85,11 @@ void AstroFontProvider::detectFont() {
         appPath + "/resources/fonts/DejaVuSans.ttf",
         appPath + "/fonts/DejaVuSans.ttf",
         appPath + "/../resources/fonts/DejaVuSans.ttf",
+        appPath + "/../Resources/fonts/DejaVuSans.ttf",  // macOS Bundle: Contents/Resources/fonts
         ":/fonts/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/Library/Fonts/DejaVuSans.ttf",
+        "/System/Library/Fonts/DejaVuSans.ttf"
     };
     for (const QString& path : dejaVuFontPaths) {
         QFileInfo fi(path);
