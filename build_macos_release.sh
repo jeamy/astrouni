@@ -226,15 +226,36 @@ if [ -d "$DIST_DIR/swisseph/ephe" ]; then
   cp -R "$DIST_DIR/swisseph/ephe/." "$APP_BUNDLE/Contents/MacOS/swisseph/ephe/"
 fi
 # Fonts ins Bundle kopieren (AstroUniverse + DejaVu Sans)
-if [ -d "$PROJECT_DIR/astrouni2026/resources/fonts" ]; then
+echo "Suche Fonts..."
+FONT_SRC=""
+# Mögliche Font-Quellverzeichnisse prüfen
+for fontdir in "$PROJECT_DIR/resources/fonts" \
+               "$SCRIPT_DIR/astrouni2026/resources/fonts" \
+               "$SCRIPT_DIR/resources/fonts" \
+               "$BUILD_DIR/resources/fonts"; do
+  echo "  Prüfe: $fontdir"
+  if [ -d "$fontdir" ]; then
+    FONT_SRC="$fontdir"
+    echo "  -> Gefunden!"
+    break
+  fi
+done
+
+if [ -n "$FONT_SRC" ]; then
   # Fonts in Contents/MacOS/resources/fonts (primärer Pfad)
   mkdir -p "$APP_BUNDLE/Contents/MacOS/resources/fonts"
-  cp -R "$PROJECT_DIR/astrouni2026/resources/fonts/." "$APP_BUNDLE/Contents/MacOS/resources/fonts/"
+  cp -R "$FONT_SRC/." "$APP_BUNDLE/Contents/MacOS/resources/fonts/"
   # Fonts auch in Contents/Resources/fonts (alternativer macOS-Pfad)
   mkdir -p "$APP_BUNDLE/Contents/Resources/fonts"
-  cp -R "$PROJECT_DIR/astrouni2026/resources/fonts/." "$APP_BUNDLE/Contents/Resources/fonts/"
-  echo "Fonts kopiert nach MacOS/resources/fonts: $(ls -la $APP_BUNDLE/Contents/MacOS/resources/fonts/)"
-  echo "Fonts kopiert nach Resources/fonts: $(ls -la $APP_BUNDLE/Contents/Resources/fonts/)"
+  cp -R "$FONT_SRC/." "$APP_BUNDLE/Contents/Resources/fonts/"
+  echo "Fonts kopiert nach MacOS/resources/fonts: $(ls $APP_BUNDLE/Contents/MacOS/resources/fonts/)"
+  echo "Fonts kopiert nach Resources/fonts: $(ls $APP_BUNDLE/Contents/Resources/fonts/)"
+else
+  echo "FEHLER: Font-Verzeichnis nicht gefunden!"
+  echo "Erwartete Pfade:"
+  echo "  $PROJECT_DIR/astrouni2026/resources/fonts"
+  echo "  $PROJECT_DIR/resources/fonts"
+  echo "Bitte DejaVuSans.ttf und asu_____.ttf manuell kopieren."
 fi
 
 # Icon optional kopieren
