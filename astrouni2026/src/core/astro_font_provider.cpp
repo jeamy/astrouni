@@ -5,6 +5,7 @@
 
 #include "astro_font_provider.h"
 #include <QFontDatabase>
+#include <QFontInfo>
 #include <QDir>
 #include <QFileInfo>
 #include <QFile>
@@ -237,9 +238,25 @@ QFont AstroFontProvider::getSymbolFont(int pointSize) const {
 QFont AstroFontProvider::getPlanetSymbolFont(int pointSize) const {
     // Noto Sans Symbols 2 für Planeten/Asteroiden (enthält alle Unicode-Symbole U+2600-U+26FF)
     if (m_hasSymbolFont) {
-        return QFont(m_symbolFontName, pointSize);
+        QFont font(m_symbolFontName, pointSize);
+        // PreferMatch: Qt soll den angeforderten Font bevorzugen
+        font.setStyleStrategy(QFont::PreferMatch);
+        qDebug() << "getPlanetSymbolFont: using" << m_symbolFontName << "size" << pointSize
+                 << "-> actual family:" << QFontInfo(font).family()
+                 << "exactMatch:" << QFontInfo(font).exactMatch();
+        return font;
     }
-    // Fallback auf System-Fonts
+    // Fallback: Versuche bekannte Symbol-Fonts
+    QStringList fallbackFonts = {"Noto Sans Symbols 2", "Noto Sans Symbols2", "Apple Symbols", 
+                                  "Segoe UI Symbol", "DejaVu Sans"};
+    for (const QString& fontName : fallbackFonts) {
+        QFont font(fontName, pointSize);
+        if (QFontInfo(font).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
+            qDebug() << "getPlanetSymbolFont: FALLBACK using" << fontName;
+            return font;
+        }
+    }
+    qDebug() << "getPlanetSymbolFont: FALLBACK to Sans Serif (no symbol font found)";
     return QFont("Sans Serif", pointSize);
 }
 
