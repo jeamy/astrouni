@@ -22,6 +22,8 @@ AstroFontProvider& AstroFontProvider::instance() {
 AstroFontProvider::AstroFontProvider()
     : m_hasAstroFont(false)
     , m_fontName("Sans Serif")
+    , m_hasSymbolFont(false)
+    , m_symbolFontName("Sans Serif")
 {
     initSymbols();
     detectFont();
@@ -29,46 +31,94 @@ AstroFontProvider::AstroFontProvider()
 
 void AstroFontProvider::detectFont() {
     QString appPath = QCoreApplication::applicationDirPath();
-    
-    // ZUERST: Prüfe ob der Font bereits im System installiert ist
-    // Case-insensitive Suche, da Windows den Font-Namen anders registrieren kann
     QStringList families = QFontDatabase::families();
     
+    // ========== 1. AstroUniverse-Font für Sternzeichen laden ==========
+    
+    // Prüfe ob der Font bereits im System installiert ist
     for (const QString& family : families) {
         if (family.compare("AstroUniverse", Qt::CaseInsensitive) == 0 ||
             family.contains("AstroUniverse", Qt::CaseInsensitive)) {
-            m_fontName = family;  // Verwende den exakten Namen aus der DB
+            m_fontName = family;
             m_hasAstroFont = true;
-            return;
+            qInfo() << "AstroFontProvider: AstroUniverse-Font im System gefunden:" << family;
+            break;
         }
     }
     
+    // Falls nicht im System, versuche aus Ressourcen zu laden
+    if (!m_hasAstroFont) {
+        QStringList fontPaths = {
+            appPath + "/resources/fonts/asu_____.ttf",
+            appPath + "/fonts/asu_____.ttf",
+            appPath + "/../resources/fonts/asu_____.ttf",
+            ":/fonts/asu_____.ttf"
+        };
+        
+        for (const QString& path : fontPaths) {
+            QFileInfo fi(path);
+            if (fi.exists() && fi.isFile()) {
+                int fontId = QFontDatabase::addApplicationFont(path);
+                if (fontId != -1) {
+                    QStringList loadedFamilies = QFontDatabase::applicationFontFamilies(fontId);
+                    if (!loadedFamilies.isEmpty()) {
+                        m_fontName = loadedFamilies.first();
+                        m_hasAstroFont = true;
+                        qInfo() << "AstroFontProvider: AstroUniverse-Font geladen aus:" << path;
+                        break;
+                    }
+                }
+            }
+        }
+    }
     
-    // Versuche den Font aus dem Ressourcen-Verzeichnis zu laden
-    QStringList fontPaths = {
-        appPath + "/resources/fonts/asu_____.ttf",
-        appPath + "/fonts/asu_____.ttf",
-        appPath + "/../resources/fonts/asu_____.ttf",
-        ":/fonts/asu_____.ttf"  // Qt Resource
+    if (!m_hasAstroFont) {
+        qInfo() << "AstroFontProvider: AstroUniverse-Font nicht gefunden, verwende Unicode-Symbole für Sternzeichen";
+    }
+    
+    // ========== 2. Noto Sans Symbols 2 für Planeten/Asteroiden laden ==========
+    // Dieser Font enthält ALLE Unicode-Symbole für Planeten und Asteroiden (U+2600-U+26FF)
+    // und wird IMMER geladen, unabhängig vom AstroUniverse-Font
+    
+    QStringList symbolFontPaths = {
+        appPath + "/resources/fonts/NotoSansSymbols2-Regular.ttf",
+        appPath + "/fonts/NotoSansSymbols2-Regular.ttf",
+        appPath + "/../resources/fonts/NotoSansSymbols2-Regular.ttf",
+        ":/fonts/NotoSansSymbols2-Regular.ttf"
     };
     
-    for (const QString& path : fontPaths) {
+    for (const QString& path : symbolFontPaths) {
         QFileInfo fi(path);
         if (fi.exists() && fi.isFile()) {
             int fontId = QFontDatabase::addApplicationFont(path);
             if (fontId != -1) {
                 QStringList loadedFamilies = QFontDatabase::applicationFontFamilies(fontId);
                 if (!loadedFamilies.isEmpty()) {
-                    m_fontName = loadedFamilies.first();
-                    m_hasAstroFont = true;
-                    qInfo() << "AstroFontProvider: AstroUniverse-Font geladen aus:" << path;
-                    return;
+                    m_symbolFontName = loadedFamilies.first();
+                    m_hasSymbolFont = true;
+                    qInfo() << "AstroFontProvider: Noto Sans Symbols 2 geladen aus:" << path;
+                    break;
                 }
             }
         }
     }
     
-    qInfo() << "AstroFontProvider: AstroUniverse-Font nicht gefunden, verwende Unicode-Symbole";
+    // Fallback: Prüfe ob Noto Sans Symbols 2 im System installiert ist
+    if (!m_hasSymbolFont) {
+        for (const QString& family : families) {
+            if (family.contains("Noto Sans Symbols 2", Qt::CaseInsensitive) ||
+                family.contains("NotoSansSymbols2", Qt::CaseInsensitive)) {
+                m_symbolFontName = family;
+                m_hasSymbolFont = true;
+                qInfo() << "AstroFontProvider: Noto Sans Symbols 2 im System gefunden:" << family;
+                break;
+            }
+        }
+    }
+    
+    if (!m_hasSymbolFont) {
+        qInfo() << "AstroFontProvider: Noto Sans Symbols 2 nicht gefunden, verwende System-Fallback";
+    }
 }
 
 void AstroFontProvider::initSymbols() {
@@ -182,6 +232,15 @@ QFont AstroFontProvider::getSymbolFont(int pointSize) const {
     int adjustedSize = m_hasAstroFont ? pointSize + 3 : pointSize;
     QFont font(m_fontName, adjustedSize);
     return font;
+}
+
+QFont AstroFontProvider::getPlanetSymbolFont(int pointSize) const {
+    // Noto Sans Symbols 2 für Planeten/Asteroiden (enthält alle Unicode-Symbole U+2600-U+26FF)
+    if (m_hasSymbolFont) {
+        return QFont(m_symbolFontName, pointSize);
+    }
+    // Fallback auf System-Fonts
+    return QFont("Sans Serif", pointSize);
 }
 
 QString AstroFontProvider::planetSymbol(int planet) const {

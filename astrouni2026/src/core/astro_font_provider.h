@@ -45,6 +45,16 @@ public:
      */
     QString fontName() const { return m_fontName; }
     
+    /**
+     * @brief Gibt den Font für Planeten/Asteroiden-Symbole zurück (Noto Sans Symbols 2)
+     */
+    QFont getPlanetSymbolFont(int pointSize = 12) const;
+    
+    /**
+     * @brief Prüft ob Noto Sans Symbols 2 verfügbar ist
+     */
+    bool hasSymbolFont() const { return m_hasSymbolFont; }
+    
     // Planeten-Symbole (Index entspricht P_SONNE, P_MOND, etc.)
     QString planetSymbol(int planet) const;
     
@@ -69,6 +79,9 @@ private:
     
     bool m_hasAstroFont;
     QString m_fontName;
+    
+    bool m_hasSymbolFont;
+    QString m_symbolFontName;
     
     // Legacy-Font Zeichen (wenn AstroUniverse installiert)
     // Diese entsprechen den Zeichen aus legacy/auwurzel.h szLNANamen[]

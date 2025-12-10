@@ -142,11 +142,18 @@ else
   echo "WARNUNG: Swiss Ephemeris Dateien nicht gefunden unter $PROJECT_DIR/swisseph/ephe"
 fi
 
- # Ressourcen (Icons etc.) - optional aber empfohlen
- if [ -d "$PROJECT_DIR/resources" ]; then
-   mkdir -p "$DIST_DIR/resources"
-   cp -r "$PROJECT_DIR/resources/." "$DIST_DIR/resources/"
- fi
+# Ressourcen (Icons etc.) - optional aber empfohlen
+if [ -d "$PROJECT_DIR/resources" ]; then
+  mkdir -p "$DIST_DIR/resources"
+  cp -r "$PROJECT_DIR/resources/." "$DIST_DIR/resources/"
+fi
+
+# Fonts (AstroUniverse + Noto Sans Symbols 2) kopieren
+if [ -d "$PROJECT_DIR/astrouni2026/resources/fonts" ]; then
+  echo "Kopiere Fonts..."
+  mkdir -p "$DIST_DIR/resources/fonts"
+  cp -r "$PROJECT_DIR/astrouni2026/resources/fonts/." "$DIST_DIR/resources/fonts/"
+fi
 
 # Qt-Libs für portable App bündeln (optional, wenn linuxdeployqt vorhanden)
 if command -v linuxdeployqt &>/dev/null; then

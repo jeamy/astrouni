@@ -960,18 +960,9 @@ void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, 
     // STRICT LEGACY: Kleinerer Font wenn versetzt
     int fontSize = isHighlighted ? 24 : (offsetLevel > 0 ? 16 : 20);
 
-    // Planeten- und Asteroiden-Symbole NIE aus dem AstroUniverse-Font zeichnen,
-    // sondern immer mit System-/Symbolfonts (Unicode-Glyphen aus planetSymbol)
-    // Apple Symbols primär für macOS (enthält alle Planeten- und Asteroiden-Symbole U+2600-U+26FF)
-    QFont symbolFont;
-    QStringList symbolFonts = {"Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols2", "DejaVu Sans"};
-    for (const QString& fontName : symbolFonts) {
-        symbolFont = QFont(fontName, fontSize);
-        if (QFontInfo(symbolFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
-            break;  // Font gefunden
-        }
-    }
-    symbolFont.setPointSize(fontSize);
+    // Planeten- und Asteroiden-Symbole mit Noto Sans Symbols 2 (mitgeliefert)
+    // Dieser Font enthält garantiert alle Unicode-Symbole U+2600-U+26FF
+    QFont symbolFont = astroFont().getPlanetSymbolFont(fontSize);
     painter.setFont(symbolFont);
     
     // Position im Inneren des Planeten-Kreises, mit Versatz für Kollisionsvermeidung

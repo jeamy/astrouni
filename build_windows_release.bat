@@ -186,6 +186,13 @@ if exist "%PROJECT_DIR%\resources" (
   xcopy "%PROJECT_DIR%\resources" "%DIST_DIR%\resources" /E /I /Y >NUL
 )
 
+rem Fonts (AstroUniverse + Noto Sans Symbols 2) kopieren
+if exist "%PROJECT_DIR%\astrouni2026\resources\fonts" (
+  echo Kopiere Fonts...
+  mkdir "%DIST_DIR%\resources\fonts" 2>NUL
+  xcopy "%PROJECT_DIR%\astrouni2026\resources\fonts\*.*" "%DIST_DIR%\resources\fonts" /Y >NUL
+)
+
 rem Qt-Runtime (DLLs) und Plugins fuer MinGW deployen
 rem CMAKE_PREFIX_PATH = Qt-Root (z.B. C:\Qt\6.10.1\mingw_64)
 set "QT_PREFIX=%CMAKE_PREFIX_PATH%"
