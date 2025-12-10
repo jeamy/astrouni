@@ -82,6 +82,8 @@ private:
     
     bool m_hasSymbolFont;
     QString m_symbolFontName;
+    bool m_hasDejaVuFont;
+    QString m_dejaVuFontName;
     
     // Legacy-Font Zeichen (wenn AstroUniverse installiert)
     // Diese entsprechen den Zeichen aus legacy/auwurzel.h szLNANamen[]
