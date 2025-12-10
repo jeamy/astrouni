@@ -533,7 +533,6 @@ void MainWindow::onAspekte() {
 //==============================================================================
 
 void MainWindow::onHelpIndex() {
-    // TODO: Hilfe-System implementieren
     QString text;
 
     // Radix
@@ -568,7 +567,18 @@ void MainWindow::onHelpIndex() {
                "Die Aspekteliste enthält Radix- und Synastrie-Aspekte. "
                "Über einen Klick auf den Personen-Header in der rechten Liste (&quot;-Person 1-&quot; / &quot;-Person 2-&quot;) "
                "kann zwischen den Positionen der ersten und der zweiten Person umgeschaltet werden.</p>");
-    text += tr("<p><b>5. Ergebnisliste und Grafik</b><br>" 
+
+    // Transit
+    text += tr("<h3>Transit</h3>");
+    text += tr("<p><b>1. Horoskoptyp wählen</b><br>" 
+               "Unter &quot;Horoskop → Horoskoptyp…&quot; den Typ &quot;Transit&quot; wählen.</p>");
+    text += tr("<p><b>2. Radix-Person erfassen</b><br>" 
+               "Über &quot;Erfassen → Person…&quot; die Person erfassen oder aus der Datenbank laden "
+               "und berechnen lassen.</p>");
+    text += tr("<p><b>3. Transit-Zeitraum festlegen</b><br>" 
+               "Nach &quot;OK&quot; im Personendialog öffnet sich der Transit-Dialog. "
+               "Hier den Zeitraum (Von/Bis) und die zu berücksichtigenden Aspekte in der Matrix auswählen.</p>");
+    text += tr("<p><b>4. Ergebnisliste und Grafik</b><br>" 
                "Nach der Berechnung zeigt das Programm eine Liste gefundener Transite. "
                "Über die Schaltfläche &quot;Grafik&quot; kann zu einem Eintrag ein Transit-Radix geöffnet werden. "
                "Innen stehen die Radix-Planeten, außen die Transit-Planeten; es werden nur die "
