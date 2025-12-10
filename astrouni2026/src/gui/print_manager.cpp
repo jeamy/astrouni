@@ -245,7 +245,12 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
     // Port von: sPrintText()
     
     QFont textFont("Arial", static_cast<int>(10 * factor));
-    QFont symbolFont("Segoe UI Symbol", static_cast<int>(12 * factor));
+    QFont symbolFont;
+    if (astroFont().hasAstroFont()) {
+        symbolFont = astroFont().getSymbolFont(static_cast<int>(12 * factor));
+    } else {
+        symbolFont = QFont("Segoe UI Symbol", static_cast<int>(12 * factor));
+    }
     painter.setFont(textFont);
     QFontMetrics fm(textFont);
     
@@ -352,7 +357,12 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
 void PrintManager::printAspects(QPainter& painter, const Radix& radix, double factor) {
     // Port von: sPrintAsp()
     
-    QFont symbolFont("Segoe UI Symbol", static_cast<int>(10 * factor));
+    QFont symbolFont;
+    if (astroFont().hasAstroFont()) {
+        symbolFont = astroFont().getSymbolFont(static_cast<int>(10 * factor));
+    } else {
+        symbolFont = QFont("Segoe UI Symbol", static_cast<int>(10 * factor));
+    }
     painter.setFont(symbolFont);
     QFontMetrics fm(symbolFont);
     
@@ -665,7 +675,12 @@ void PrintManager::drawRadixForPrint(QPainter& painter, const Radix& radix, cons
     }
     
     // Sternzeichen-Symbole
-    QFont symbolFont("Segoe UI Symbol", static_cast<int>(14 * factor));
+    QFont symbolFont;
+    if (astroFont().hasAstroFont()) {
+        symbolFont = astroFont().getSymbolFont(static_cast<int>(14 * factor));
+    } else {
+        symbolFont = QFont("Segoe UI Symbol", static_cast<int>(14 * factor));
+    }
     painter.setFont(symbolFont);
     for (int i = 0; i < 12; ++i) {
         double degree = i * 30.0 + 15.0;
@@ -696,7 +711,12 @@ void PrintManager::drawRadixForPrint(QPainter& painter, const Radix& radix, cons
     }
     
     // Planeten zeichnen
-    QFont planetFont("Segoe UI Symbol", static_cast<int>(12 * factor));
+    QFont planetFont;
+    if (astroFont().hasAstroFont()) {
+        planetFont = astroFont().getSymbolFont(static_cast<int>(12 * factor));
+    } else {
+        planetFont = QFont("Segoe UI Symbol", static_cast<int>(12 * factor));
+    }
     painter.setFont(planetFont);
     
     // Kollisions-Versatz berechnen
