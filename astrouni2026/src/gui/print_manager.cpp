@@ -245,11 +245,23 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
     // Port von: sPrintText()
     
     QFont textFont("Arial", static_cast<int>(10 * factor));
-    QFont symbolFont;
+    // System-/Symbolfont für Planeten-Symbole
+    QFont planetFont;
+    {
+        int size = static_cast<int>(12 * factor);
+        QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+        for (const QString& fontName : symbolFonts) {
+            planetFont = QFont(fontName, size);
+            if (QFontInfo(planetFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
+                break;
+            }
+        }
+        planetFont.setPointSize(size);
+    }
+    // Astro-Font für Sternzeichen (Fallback: gleicher Systemfont)
+    QFont zodiacFont = planetFont;
     if (astroFont().hasAstroFont()) {
-        symbolFont = astroFont().getSymbolFont(static_cast<int>(12 * factor));
-    } else {
-        symbolFont = QFont("Segoe UI Symbol", static_cast<int>(12 * factor));
+        zodiacFont = astroFont().getSymbolFont(static_cast<int>(12 * factor));
     }
     painter.setFont(textFont);
     QFontMetrics fm(textFont);
@@ -300,7 +312,7 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
     painter.drawText(xText, yText, tr("Planetenpositionen"));
     yText += lineHeight / 2;
     
-    painter.setFont(symbolFont);
+    painter.setFont(planetFont);
     for (int i = 0; i < radix.anzahlPlanet && i < radix.planet.size(); ++i) {
         yText += lineHeight;
         
@@ -317,10 +329,12 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
         QString pos = formatPosition(radix.planet[i]);
         painter.drawText(xText + xAdd, yText, pos);
         
-        // Sternzeichen
+        // Sternzeichen (immer zuerst AstroUniverse-Font, Fallback Systemfont)
         int stz = static_cast<int>(radix.planet[i] / 30.0) % 12;
         QString stzSymbol = astroFont().sternzeichenSymbol(stz);
+        painter.setFont(zodiacFont);
         painter.drawText(xText + xAdd * 4, yText, stzSymbol);
+        painter.setFont(planetFont);
         
         // In Haus
         if (radix.inHaus.size() > i) {
@@ -336,20 +350,19 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
     painter.drawText(xHaus, yText, tr("Häuserpositionen"));
     yText += lineHeight / 2;
     
-    painter.setFont(symbolFont);
     for (int i = 0; i < MAX_HAUS && i < radix.haus.size(); ++i) {
         yText += lineHeight;
         
-        // Haus-Nummer
+        // Haus-Nummer und Position im normalen Text-Font
+        painter.setFont(textFont);
         painter.drawText(xHaus, yText, QString("H%1").arg(i + 1, 2, 10, QChar('0')));
-        
-        // Position
         QString pos = formatPosition(radix.haus[i]);
         painter.drawText(xHaus + xAdd, yText, pos);
         
-        // Sternzeichen
+        // Sternzeichen (immer zuerst AstroUniverse-Font, Fallback Systemfont)
         int stz = static_cast<int>(radix.haus[i] / 30.0) % 12;
         QString stzSymbol = astroFont().sternzeichenSymbol(stz);
+        painter.setFont(zodiacFont);
         painter.drawText(xHaus + xAdd * 4, yText, stzSymbol);
     }
 }
@@ -358,10 +371,16 @@ void PrintManager::printAspects(QPainter& painter, const Radix& radix, double fa
     // Port von: sPrintAsp()
     
     QFont symbolFont;
-    if (astroFont().hasAstroFont()) {
-        symbolFont = astroFont().getSymbolFont(static_cast<int>(10 * factor));
-    } else {
-        symbolFont = QFont("Segoe UI Symbol", static_cast<int>(10 * factor));
+    {
+        int size = static_cast<int>(10 * factor);
+        QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+        for (const QString& fontName : symbolFonts) {
+            symbolFont = QFont(fontName, size);
+            if (QFontInfo(symbolFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
+                break;
+            }
+        }
+        symbolFont.setPointSize(size);
     }
     painter.setFont(symbolFont);
     QFontMetrics fm(symbolFont);
@@ -674,14 +693,22 @@ void PrintManager::drawRadixForPrint(QPainter& painter, const Radix& radix, cons
         painter.drawLine(outer, inner);
     }
     
-    // Sternzeichen-Symbole
-    QFont symbolFont;
+    // Sternzeichen-Symbole: immer zuerst AstroUniverse-Font, Fallback System-/Symbolfont
+    QFont zodiacFont;
     if (astroFont().hasAstroFont()) {
-        symbolFont = astroFont().getSymbolFont(static_cast<int>(14 * factor));
+        zodiacFont = astroFont().getSymbolFont(static_cast<int>(14 * factor));
     } else {
-        symbolFont = QFont("Segoe UI Symbol", static_cast<int>(14 * factor));
+        int size = static_cast<int>(14 * factor);
+        QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+        for (const QString& fontName : symbolFonts) {
+            zodiacFont = QFont(fontName, size);
+            if (QFontInfo(zodiacFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
+                break;
+            }
+        }
+        zodiacFont.setPointSize(size);
     }
-    painter.setFont(symbolFont);
+    painter.setFont(zodiacFont);
     for (int i = 0; i < 12; ++i) {
         double degree = i * 30.0 + 15.0;
         double symbolRadius = (radius + radiusStz) / 2.0;
@@ -710,12 +737,18 @@ void PrintManager::drawRadixForPrint(QPainter& painter, const Radix& radix, cons
         }
     }
     
-    // Planeten zeichnen
+    // Planeten zeichnen (immer mit System-/Symbolfont, nie AstroUniverse-Font)
     QFont planetFont;
-    if (astroFont().hasAstroFont()) {
-        planetFont = astroFont().getSymbolFont(static_cast<int>(12 * factor));
-    } else {
-        planetFont = QFont("Segoe UI Symbol", static_cast<int>(12 * factor));
+    {
+        int size = static_cast<int>(12 * factor);
+        QStringList symbolFonts = {"Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols2", "DejaVu Sans"};
+        for (const QString& fontName : symbolFonts) {
+            planetFont = QFont(fontName, size);
+            if (QFontInfo(planetFont).family().contains(fontName.left(5), Qt::CaseInsensitive)) {
+                break;
+            }
+        }
+        planetFont.setPointSize(size);
     }
     painter.setFont(planetFont);
     
