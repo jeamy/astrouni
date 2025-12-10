@@ -6,6 +6,7 @@
  */
 
 #include "transit_result_window.h"
+#include "html_item_delegate.h"
 #include "dialogs/retrograde_dialog.h"
 #include "../core/constants.h"
 #include "../core/astro_font_provider.h"
@@ -65,6 +66,7 @@ void TransitResultWindow::setupUI() {
     // Listbox (STRICT LEGACY: hWndLBG mit LBS_OWNERDRAWFIXED)
     m_listBox = new QListWidget(this);
     m_listBox->setMinimumHeight(200);
+    m_listBox->setItemDelegate(new HtmlItemDelegate(m_listBox));
     connect(m_listBox, &QListWidget::itemDoubleClicked, 
             this, &TransitResultWindow::onListItemDoubleClicked);
     mainLayout->addWidget(m_listBox);
@@ -128,6 +130,17 @@ void TransitResultWindow::buildTransitTexts() {
     
     m_listBox->clear();
     
+    // Font-Families für HTML
+    QString planetFontFamily = astroFont().getPlanetSymbolFont(12).family();
+    QString zodiacFontFamily = astroFont().hasAstroFont() ? astroFont().fontName() : planetFontFamily;
+    
+    auto planetSpan = [&](const QString& text) {
+        return QString("<span style='font-family:\"%1\"'>%2</span>").arg(planetFontFamily, text);
+    };
+    auto zodiacSpan = [&](const QString& text) {
+        return QString("<span style='font-family:\"%1\"'>%2</span>").arg(zodiacFontFamily, text);
+    };
+    
     for (const auto& ta : m_aspekte) {
         if (ta.startIndex < 0 || ta.startIndex >= m_transits.size()) continue;
         int endIdx = qMin(ta.endIndex >= 0 ? ta.endIndex : ta.startIndex, m_transits.size() - 1);
@@ -135,36 +148,38 @@ void TransitResultWindow::buildTransitTexts() {
         const Radix& trEnd   = m_transits.at(endIdx);
         
         // Transit-Planet mit Retrograde-Symbol
-        QString transitPlanet = astroFont().planetSymbol(ta.transitPlanet);
+        QString transitPlanetSym = astroFont().planetSymbol(ta.transitPlanet);
         bool isRetro = (trStart.planetTyp.size() > ta.transitPlanet) && 
                        (trStart.planetTyp[ta.transitPlanet] & P_TYP_RUCK);
         if (isRetro) {
-            transitPlanet += QString::fromUtf8("℞");  // Retrograde-Symbol
+            transitPlanetSym += QString::fromUtf8("℞");  // Retrograde-Symbol
         }
+        QString transitPlanet = planetSpan(transitPlanetSym);
         
         // Sternzeichen während der Periode sammeln (STRICT LEGACY: alle durchlaufenen Zeichen)
-        QString transitZeichen;
+        QString transitZeichenRaw;
         int8_t lastStz = -1;
         for (int i = ta.startIndex; i <= endIdx && i < m_transits.size(); ++i) {
             const Radix& tr = m_transits.at(i);
             if (tr.stzPlanet.size() > ta.transitPlanet) {
                 int8_t stz = tr.stzPlanet[ta.transitPlanet];
                 if (stz != lastStz && stz >= 0 && stz < 12) {
-                    transitZeichen += astroFont().sternzeichenSymbol(stz);
+                    transitZeichenRaw += astroFont().sternzeichenSymbol(stz);
                     lastStz = stz;
                 }
             }
         }
-        if (transitZeichen.isEmpty()) {
-            transitZeichen = "?";
+        if (transitZeichenRaw.isEmpty()) {
+            transitZeichenRaw = "?";
         }
+        QString transitZeichen = zodiacSpan(transitZeichenRaw);
         
         // Aspekt-Symbol
-        QString aspekt = astroFont().aspektSymbol(aspektToIndex(ta.aspekt));
+        QString aspekt = planetSpan(astroFont().aspektSymbol(aspektToIndex(ta.aspekt)));
         
         // Radix-Planet oder Haus
         QString radixObj;
-        QString radixZeichen;
+        QString radixZeichenRaw;
         if (ta.isHaus) {
             // Haus (STRICT LEGACY: ⌂1 - ⌂12)
             radixObj = QString::fromUtf8("⌂%1").arg(ta.radixPlanet + 1);
@@ -172,28 +187,30 @@ void TransitResultWindow::buildTransitTexts() {
             if (m_basisRadix.stzHaus.size() > ta.radixPlanet) {
                 int8_t stz = m_basisRadix.stzHaus[ta.radixPlanet];
                 if (stz >= 0 && stz < 12) {
-                    radixZeichen = astroFont().sternzeichenSymbol(stz);
+                    radixZeichenRaw = astroFont().sternzeichenSymbol(stz);
                 }
             }
         } else {
             // Planet
-            radixObj = astroFont().planetSymbol(ta.radixPlanet);
+            QString radixPlanetSym = astroFont().planetSymbol(ta.radixPlanet);
             // Retrograde-Symbol für Radix-Planet
             if (m_basisRadix.planetTyp.size() > ta.radixPlanet &&
                 (m_basisRadix.planetTyp[ta.radixPlanet] & P_TYP_RUCK)) {
-                radixObj += QString::fromUtf8("℞");
+                radixPlanetSym += QString::fromUtf8("℞");
             }
+            radixObj = planetSpan(radixPlanetSym);
             // Sternzeichen des Radix-Planeten
             if (m_basisRadix.stzPlanet.size() > ta.radixPlanet) {
                 int8_t stz = m_basisRadix.stzPlanet[ta.radixPlanet];
                 if (stz >= 0 && stz < 12) {
-                    radixZeichen = astroFont().sternzeichenSymbol(stz);
+                    radixZeichenRaw = astroFont().sternzeichenSymbol(stz);
                 }
             }
         }
-        if (radixZeichen.isEmpty()) {
-            radixZeichen = "?";
+        if (radixZeichenRaw.isEmpty()) {
+            radixZeichenRaw = "?";
         }
+        QString radixZeichen = zodiacSpan(radixZeichenRaw);
         
         // Datum von/bis
         QString vonDatum = QString("%1.%2.%3")
@@ -212,15 +229,10 @@ void TransitResultWindow::buildTransitTexts() {
         }
         
         // STRICT LEGACY Format: [Planet][℞] in [Zeichen] [Aspekt] [Radix] in [Zeichen] von [Datum] bis [Datum]
-        QString text = QString("%1 in %2 %3 %4 in %5 von %6 bis %7")
+        QString html = QString("%1 in %2 %3 %4 in %5 von %6 bis %7")
             .arg(transitPlanet, transitZeichen, aspekt, radixObj, radixZeichen, vonDatum, bisDatum);
         
-        QListWidgetItem* item = new QListWidgetItem(text);
-        if (astroFont().hasAstroFont()) {
-            QFont f = item->font();
-            f.setFamily(astroFont().fontName());
-            item->setFont(f);
-        }
+        QListWidgetItem* item = new QListWidgetItem(html);
         m_listBox->addItem(item);
     }
     
@@ -235,11 +247,6 @@ void TransitResultWindow::buildTransitTexts() {
             .arg(static_cast<int>(std::round((tr.rFix.zeit - static_cast<int>(tr.rFix.zeit)) * 60.0)), 2, 10, QChar('0'));
         QString text = QString("%1 %2 - Keine Aspekte gefunden").arg(date, time);
         QListWidgetItem* item = new QListWidgetItem(text);
-        if (astroFont().hasAstroFont()) {
-            QFont f = item->font();
-            f.setFamily(astroFont().fontName());
-            item->setFont(f);
-        }
         m_listBox->addItem(item);
     }
 }
