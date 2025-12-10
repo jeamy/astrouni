@@ -79,7 +79,6 @@ void AstroFontProvider::detectFont() {
     if (!m_hasAstroFont) {
         qInfo() << "AstroFontProvider: AstroUniverse-Font nicht gefunden, verwende Unicode-Symbole für Sternzeichen";
     }
-    
     // ========== 2. DejaVu Sans laden (enthält Asteroiden-Glyphen U+26B3-U+26B8) ==========
     QStringList dejaVuFontPaths = {
         appPath + "/resources/fonts/DejaVuSans.ttf",
