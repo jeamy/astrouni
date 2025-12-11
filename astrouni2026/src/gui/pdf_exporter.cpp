@@ -246,13 +246,14 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
         int chartSizeMm = 120;
         int chartSize = static_cast<int>(chartSizeMm * mmToPixel);
         int chartX = (pageWidth - chartSize) / 2;
+        
+        // Bild ist bereits quadratisch (1200x1200) aus renderForPrint
         QImage chartImage = chartWidget->renderForPrint(1200);
-        // Quadratisch skalieren - verwende kleinere Dimension
-        int srcSize = qMin(chartImage.width(), chartImage.height());
-        int srcX = (chartImage.width() - srcSize) / 2;
-        int srcY = (chartImage.height() - srcSize) / 2;
-        QImage squareImage = chartImage.copy(srcX, srcY, srcSize, srcSize);
-        painter.drawImage(QRect(chartX, y, chartSize, chartSize), squareImage);
+        
+        // Zeichne in ein quadratisches Ziel-Rechteck (erzwingt korrektes Seitenverhältnis)
+        QRect targetRect(chartX, y, chartSize, chartSize);
+        painter.drawImage(targetRect, chartImage);
+        
         y += chartSize + static_cast<int>(3 * mmToPixel);
     }
     
@@ -617,13 +618,13 @@ void PdfExporter::renderSynastriePage(QPainter& painter, QPrinter& printer,
         int chartSize = static_cast<int>(chartSizeMm * mmToPixel);
         int chartX = (pageWidth - chartSize) / 2;
         
+        // Bild ist bereits quadratisch (1200x1200) aus renderForPrint
         QImage chartImage = chartWidget->renderForPrint(1200);
-        // Quadratisch zuschneiden
-        int srcSize = qMin(chartImage.width(), chartImage.height());
-        int srcX = (chartImage.width() - srcSize) / 2;
-        int srcY = (chartImage.height() - srcSize) / 2;
-        QImage squareImage = chartImage.copy(srcX, srcY, srcSize, srcSize);
-        painter.drawImage(QRect(chartX, y, chartSize, chartSize), squareImage);
+        
+        // Zeichne in ein quadratisches Ziel-Rechteck (erzwingt korrektes Seitenverhältnis)
+        QRect targetRect(chartX, y, chartSize, chartSize);
+        painter.drawImage(targetRect, chartImage);
+        
         y += chartSize + static_cast<int>(3 * mmToPixel);
     }
     
@@ -965,13 +966,13 @@ void PdfExporter::renderTransitPage(QPainter& painter, QPrinter& printer,
         int chartSize = static_cast<int>(chartSizeMm * mmToPixel);
         int chartX = (pageWidth - chartSize) / 2;
         
+        // Bild ist bereits quadratisch (1200x1200) aus renderForPrint
         QImage chartImage = chartWidget->renderForPrint(1200);
-        // Quadratisch zuschneiden
-        int srcSize = qMin(chartImage.width(), chartImage.height());
-        int srcX = (chartImage.width() - srcSize) / 2;
-        int srcY = (chartImage.height() - srcSize) / 2;
-        QImage squareImage = chartImage.copy(srcX, srcY, srcSize, srcSize);
-        painter.drawImage(QRect(chartX, y, chartSize, chartSize), squareImage);
+        
+        // Zeichne in ein quadratisches Ziel-Rechteck (erzwingt korrektes Seitenverhältnis)
+        QRect targetRect(chartX, y, chartSize, chartSize);
+        painter.drawImage(targetRect, chartImage);
+        
         y += chartSize + static_cast<int>(3 * mmToPixel);
     }
     

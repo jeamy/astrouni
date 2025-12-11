@@ -255,7 +255,6 @@ QFont AstroFontProvider::getPlanetSymbolFont(int pointSize) const {
 
     for (const Candidate& c : candidates) {
         if (!c.available || c.name.isEmpty()) {
-            qDebug() << "getPlanetSymbolFont: skip" << c.name << "(not available)";
             continue;
         }
         QFont font(c.name, pointSize);
@@ -268,17 +267,8 @@ QFont AstroFontProvider::getPlanetSymbolFont(int pointSize) const {
                 break;
             }
         }
-        if (ok) {
-            qDebug() << "getPlanetSymbolFont: using" << c.name
-                     << "actual family:" << QFontInfo(font).family()
-                     << "exactMatch:" << QFontInfo(font).exactMatch();
-            return font;
-        } else {
-            qDebug() << "getPlanetSymbolFont: skip" << c.name << "-> missing asteroid glyphs";
-        }
     }
 
-    qDebug() << "getPlanetSymbolFont: FALLBACK to Sans Serif (no full glyph coverage)";
     return QFont("Sans Serif", pointSize);
 }
 
