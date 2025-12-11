@@ -267,6 +267,9 @@ QFont AstroFontProvider::getPlanetSymbolFont(int pointSize) const {
                 break;
             }
         }
+        if (ok) {
+            return font;
+        }
     }
 
     return QFont("Sans Serif", pointSize);
