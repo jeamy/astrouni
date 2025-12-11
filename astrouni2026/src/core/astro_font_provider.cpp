@@ -235,11 +235,10 @@ QFont AstroFontProvider::getSymbolFont(int pointSize) const {
 }
 
 QFont AstroFontProvider::getPlanetSymbolFont(int pointSize) const {
-    // Prüfe Fonts nach Glyph-Abdeckung für Asteroiden (U+26B3 bis U+26B8) und Aspekte (U+26B9, U+26BA, U+26BB)
+    // Prüfe Fonts nach Glyph-Abdeckung für Asteroiden (U+26B3 bis U+26B8)
+    // DejaVu Sans hat auch die Aspekt-Glyphen (U+26B9, U+26BA, U+26BB, U+260C, U+260D)
     const QVector<uint> asteroidGlyphs = {
-        0x26B3, 0x26B4, 0x26B5, 0x26B6, 0x26B7, 0x26B8,  // Asteroiden: Ceres, Pallas, Juno, Vesta, Chiron, Lilith
-        0x26B9, 0x26BA, 0x26BB,                          // Aspekte: Sextil, Halbsextil, Quincunx
-        0x260C, 0x260D                                   // Aspekte: Konjunktion, Opposition
+        0x26B3, 0x26B4, 0x26B5, 0x26B6, 0x26B7, 0x26B8  // Asteroiden: Ceres, Pallas, Juno, Vesta, Chiron, Lilith
     };
 
     struct Candidate {
