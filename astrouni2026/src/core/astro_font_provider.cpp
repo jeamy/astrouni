@@ -213,14 +213,15 @@ void AstroFontProvider::initSymbols() {
         "♓"    // Fische (U+2653)
     };
     
+    // Aspekt-Symbole: Verwende weit verbreitete Unicode-Zeichen die in den meisten Fonts vorhanden sind
     m_unicodeAspektSymbols = {
-        "☌",   // Konjunktion (U+260C)
-        "⚺",   // Halbsextil (U+26BA)
-        "⚹",   // Sextil (U+26B9)
-        "□",   // Quadratur (U+25A1)
-        "△",   // Trigon (U+25B3)
-        "⚻",   // Quincunx (U+26BB)
-        "☍"    // Opposition (U+260D)
+        "☌",   // Konjunktion (U+260C) - in vielen Fonts
+        "∠",   // Halbsextil (U+2220 ANGLE) - Ersatz für U+26BA, weit verbreitet
+        "✱",   // Sextil (U+2731 HEAVY ASTERISK) - Ersatz für U+26B9, weit verbreitet  
+        "□",   // Quadratur (U+25A1) - in vielen Fonts
+        "△",   // Trigon (U+25B3) - in vielen Fonts
+        "⌐",   // Quincunx (U+2310 REVERSED NOT SIGN) - Ersatz für U+26BB, weit verbreitet
+        "☍"    // Opposition (U+260D) - in vielen Fonts
     };
     
     m_unicodeRetrograde = "℞";  // Rx-Symbol (U+211E)
@@ -323,10 +324,8 @@ QString AstroFontProvider::aspektSymbol(int aspekt) const {
     
     if (idx < 0) return "";
     
-    // AstroUniverse-Font hat die Aspekt-Symbole, Unicode-Fallback hat Probleme auf macOS
-    if (m_hasAstroFont && idx < m_legacyAspektSymbols.size()) {
-        return m_legacyAspektSymbols[idx];
-    }
+    // Immer Unicode-Symbole für Aspekte verwenden
+    // Die Legacy-Symbole (0x91-0x97) sind Steuerzeichen und werden nicht korrekt angezeigt
     if (idx < m_unicodeAspektSymbols.size()) {
         return m_unicodeAspektSymbols[idx];
     }
@@ -334,11 +333,7 @@ QString AstroFontProvider::aspektSymbol(int aspekt) const {
 }
 
 QFont AstroFontProvider::getAspektSymbolFont(int pointSize) const {
-    // Wenn AstroUniverse verfügbar ist, verwende diesen für Aspekt-Symbole
-    if (m_hasAstroFont) {
-        return getSymbolFont(pointSize);
-    }
-    // Sonst DejaVu Sans / System-Font
+    // Aspekt-Symbole verwenden Unicode, daher gleicher Font wie Planeten (DejaVu Sans)
     return getPlanetSymbolFont(pointSize);
 }
 
