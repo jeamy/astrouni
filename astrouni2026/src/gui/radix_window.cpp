@@ -946,6 +946,20 @@ QString RadixWindow::buildLegendHtml() const {
     html += "<td></td><td></td><td></td><td></td>";
     html += "</tr>";
     
+    // Aspekte
+    html += "<tr>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(0), colorToHtml(sColor[CKONJUNKTION]), planetFontFamily) + "</b></td><td>Konjunktion</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(1), colorToHtml(sColor[CHALBSEX]), planetFontFamily) + "</b></td><td>Halbsextil</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(2), colorToHtml(sColor[CSEXTIL]), planetFontFamily) + "</b></td><td>Sextil</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(3), colorToHtml(sColor[CQUADRATUR]), planetFontFamily) + "</b></td><td>Quadrat</td>";
+    html += "</tr>";
+    html += "<tr>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(4), colorToHtml(sColor[CTRIGON]), planetFontFamily) + "</b></td><td>Trigon</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(5), colorToHtml(sColor[CQUINCUNX]), planetFontFamily) + "</b></td><td>Quincunx</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(6), colorToHtml(sColor[COPOSITION]), planetFontFamily) + "</b></td><td>Opposition</td>";
+    html += "<td></td><td></td>";
+    html += "</tr>";
+    
     html += "</table>";
     return html;
 }
