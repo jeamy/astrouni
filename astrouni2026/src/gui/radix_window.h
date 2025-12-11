@@ -41,6 +41,11 @@ public:
     const Radix& getRadix() const { return m_radix; }
     
     /**
+     * @brief Gibt das Chart-Widget zurück (für PDF-Export)
+     */
+    ChartWidget* getChartWidget() const { return m_chartWidget; }
+    
+    /**
      * @brief Setzt die Radix-Daten
      */
     void setRadix(const Radix& radix);

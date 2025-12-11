@@ -17,6 +17,7 @@ namespace astro {
 
 class RadixWindow;
 class PrintManager;
+class PdfExporter;
 
 /**
  * @brief Hauptfenster der Anwendung
@@ -48,8 +49,8 @@ signals:
     
 private slots:
     // Datei-Menü
+    void onFileExportPdf();
     void onFilePrint();
-    void onFilePrinterSetup();
     void onFileExit();
     
     // Erfassen-Menü
@@ -82,8 +83,8 @@ private:
     QMenu* m_hilfeMenu;
     
     // Aktionen
+    QAction* m_exportPdfAction;
     QAction* m_printAction;
-    QAction* m_printerSetupAction;
     QAction* m_exitAction;
     QAction* m_personAction;
     QAction* m_ortAction;
@@ -103,6 +104,9 @@ private:
     
     // Druck-Manager
     PrintManager* m_printManager;
+    
+    // PDF-Exporter
+    PdfExporter* m_pdfExporter;
 };
 
 } // namespace astro

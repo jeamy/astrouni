@@ -270,16 +270,26 @@ void AuInit::initColors() {
     // Planeten-Farben initialisieren
     planetColor.resize(MAX_PLANET);
     planetColor[P_SONNE]   = QColor(255, 200, 0);    // Gold
-    planetColor[P_MOND]    = QColor(255, 255, 255);  // Weiß (sichtbar auf grauem Hintergrund)
+    planetColor[P_MOND]    = QColor(170, 255, 255);  // Cyan (besser sichtbar als weiß)
     planetColor[P_MERKUR]  = QColor(255, 255, 0);    // Gelb
-    planetColor[P_VENUS]   = QColor(0, 255, 0);      // Grün
+    planetColor[P_VENUS]   = QColor(0, 200, 0);      // Grün
     planetColor[P_MARS]    = QColor(255, 0, 0);      // Rot
     planetColor[P_JUPITER] = QColor(128, 0, 255);    // Violett
     planetColor[P_SATURN]  = QColor(128, 64, 0);     // Braun
     planetColor[P_URANUS]  = QColor(0, 255, 255);    // Cyan
     planetColor[P_NEPTUN]  = QColor(0, 128, 255);    // Blau
     planetColor[P_PLUTO]   = QColor(128, 0, 0);      // Dunkelrot
-    for (int i = 10; i < MAX_PLANET; ++i) {
+    // Mondknoten und Lilith
+    planetColor[P_NKNOTEN] = QColor(128, 128, 128);  // Grau
+    planetColor[P_LILITH]  = QColor(64, 64, 64);     // Dunkelgrau
+    // Asteroiden
+    planetColor[P_CHIRON]  = QColor(255, 128, 0);    // Orange
+    planetColor[P_CERES]   = QColor(139, 69, 19);    // Braun (SaddleBrown)
+    planetColor[P_PALLAS]  = QColor(70, 130, 180);   // Stahlblau
+    planetColor[P_JUNO]    = QColor(255, 20, 147);   // Pink
+    planetColor[P_VESTA]   = QColor(255, 165, 0);    // Orange
+    // Rest
+    for (int i = 17; i < MAX_PLANET; ++i) {
         planetColor[i] = QColor(128, 128, 128);      // Grau für Rest
     }
     

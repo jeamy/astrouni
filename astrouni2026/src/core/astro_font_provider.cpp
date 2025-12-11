@@ -303,6 +303,11 @@ QString AstroFontProvider::sternzeichenSymbol(int zeichen) const {
     }
 }
 
+QString AstroFontProvider::sternzeichenSymbolUnicode(int zeichen) const {
+    if (zeichen < 0 || zeichen >= 12) return "";
+    return m_unicodeSternzeichenSymbols[zeichen];
+}
+
 QString AstroFontProvider::aspektSymbol(int aspekt) const {
     if (aspekt < 0) return "";
     
