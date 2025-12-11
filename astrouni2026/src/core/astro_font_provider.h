@@ -64,6 +64,12 @@ public:
     // Aspekt-Symbole (Index entspricht Aspekt-Typ)
     QString aspektSymbol(int aspekt) const;
     
+    /**
+     * @brief Gibt den Font für Aspekt-Symbole zurück
+     * Verwendet AstroUniverse wenn verfügbar, sonst getPlanetSymbolFont
+     */
+    QFont getAspektSymbolFont(int pointSize = 12) const;
+    
     // Retrograde-Symbol
     QString retrogradeSymbol() const;
     

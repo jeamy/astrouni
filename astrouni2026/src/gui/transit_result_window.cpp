@@ -133,12 +133,16 @@ void TransitResultWindow::buildTransitTexts() {
     // Font-Families für HTML
     QString planetFontFamily = astroFont().getPlanetSymbolFont(12).family();
     QString zodiacFontFamily = astroFont().hasAstroFont() ? astroFont().fontName() : planetFontFamily;
+    QString aspektFontFamily = astroFont().getAspektSymbolFont(12).family();
     
     auto planetSpan = [&](const QString& text) {
         return QString("<span style='font-family:\"%1\"'>%2</span>").arg(planetFontFamily, text);
     };
     auto zodiacSpan = [&](const QString& text) {
         return QString("<span style='font-family:\"%1\"'>%2</span>").arg(zodiacFontFamily, text);
+    };
+    auto aspektSpan = [&](const QString& text) {
+        return QString("<span style='font-family:\"%1\"'>%2</span>").arg(aspektFontFamily, text);
     };
     
     for (const auto& ta : m_aspekte) {
@@ -175,7 +179,7 @@ void TransitResultWindow::buildTransitTexts() {
         QString transitZeichen = zodiacSpan(transitZeichenRaw);
         
         // Aspekt-Symbol
-        QString aspekt = planetSpan(astroFont().aspektSymbol(aspektToIndex(ta.aspekt)));
+        QString aspekt = aspektSpan(astroFont().aspektSymbol(aspektToIndex(ta.aspekt)));
         
         // Radix-Planet oder Haus
         QString radixObj;
