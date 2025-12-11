@@ -193,8 +193,10 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
     int pageWidth = pageRect.width();
     int pageHeight = pageRect.height();
     
-    double dpi = printer.resolution();
-    double mmToPixel = dpi / 25.4;
+    double dpiX = printer.logicalDpiX();
+    double dpiY = printer.logicalDpiY();
+    double mmToPixelX = dpiX / 25.4;
+    double mmToPixelY = dpiY / 25.4;
     
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::TextAntialiasing);
@@ -211,8 +213,9 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
     // Sternzeichen: getPlanetSymbolFont für Unicode-Symbole (DejaVu Sans hat ♈♉♊ etc.)
     QFont zodiacFont = astroFont().getPlanetSymbolFont(10);
     
-    int margin = static_cast<int>(10 * mmToPixel);
-    int y = margin;
+    int marginX = static_cast<int>(10 * mmToPixelX);
+    int marginY = static_cast<int>(10 * mmToPixelY);
+    int y = marginY;
     
     // Helper: Farbe anpassen (weiß -> schwarz)
     auto adjustColor = [](QColor c) -> QColor {
@@ -224,8 +227,8 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
     painter.setFont(titleFont);
     painter.setPen(Qt::black);
     QString fullName = QString("%1 %2").arg(radix.rFix.vorname, radix.rFix.name);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), fullName);
-    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixel);
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), fullName);
+    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixelY);
     
     // Geburtsdaten
     painter.setFont(normalFont);
@@ -238,30 +241,32 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
         .arg(stunde, 2, 10, QChar('0'))
         .arg(minute, 2, 10, QChar('0'))
         .arg(radix.rFix.ort);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), gebInfo);
-    y += painter.fontMetrics().height() + static_cast<int>(3 * mmToPixel);
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), gebInfo);
+    y += painter.fontMetrics().height() + static_cast<int>(3 * mmToPixelY);
     
+    // === RADIX-GRAFIK (quadratisch!) ===
     // === RADIX-GRAFIK (quadratisch!) ===
     if (chartWidget) {
         int chartSizeMm = 120;
-        int chartSize = static_cast<int>(chartSizeMm * mmToPixel);
-        int chartX = (pageWidth - chartSize) / 2;
+        int chartWidth = static_cast<int>(chartSizeMm * mmToPixelX);
+        int chartHeight = static_cast<int>(chartSizeMm * mmToPixelY);
+        int chartX = (pageWidth - chartWidth) / 2;
         
         // Bild ist bereits quadratisch (1200x1200) aus renderForPrint
         QImage chartImage = chartWidget->renderForPrint(1200);
         
-        // Zeichne in ein quadratisches Ziel-Rechteck (erzwingt korrektes Seitenverhältnis)
-        QRect targetRect(chartX, y, chartSize, chartSize);
+        // Zeichne in ein Ziel-Rechteck mit korrekten physischen Dimensionen
+        QRect targetRect(chartX, y, chartWidth, chartHeight);
         painter.drawImage(targetRect, chartImage);
         
-        y += chartSize + static_cast<int>(3 * mmToPixel);
+        y += chartHeight + static_cast<int>(3 * mmToPixelY);
     }
     
     // === DREI-SPALTEN-LAYOUT: Positionen | Häuser | Legende ===
-    int colWidth = (pageWidth - 4 * margin) / 3;
-    int col1X = margin;
-    int col2X = margin + colWidth + margin;
-    int col3X = margin + 2 * (colWidth + margin);
+    int colWidth = (pageWidth - 4 * marginX) / 3;
+    int col1X = marginX;
+    int col2X = marginX + colWidth + marginX;
+    int col3X = marginX + 2 * (colWidth + marginX);
     int tableY = y;
     
     // === POSITIONEN (linke Spalte) ===
@@ -275,9 +280,9 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
     // === LEGENDE (rechte Spalte) ===
     painter.drawText(col3X, tableY + painter.fontMetrics().ascent(), "Legende");
     
-    tableY += painter.fontMetrics().height() + static_cast<int>(1 * mmToPixel);
+    tableY += painter.fontMetrics().height() + static_cast<int>(1 * mmToPixelY);
     
-    int lineHeight = static_cast<int>(3.5 * mmToPixel);
+    int lineHeight = static_cast<int>(3.5 * mmToPixelY);
     int numPlanets = qMin(static_cast<int>(radix.anzahlPlanet), 17);
     int posY = tableY;
     
@@ -297,21 +302,21 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
         
         // Rückläufig?
         if (i < radix.planetTyp.size() && (radix.planetTyp[i] & P_TYP_RUCK)) {
-            painter.drawText(col1X + static_cast<int>(4 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+            painter.drawText(col1X + static_cast<int>(4 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                              astroFont().retrogradeSymbol());
         }
         
         // Position (Grad/Minuten)
         painter.setFont(normalFont);
         painter.setPen(Qt::black);
-        painter.drawText(col1X + static_cast<int>(8 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+        painter.drawText(col1X + static_cast<int>(8 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                          formatDegree(radix.planet[i], false));  // ohne Sternzeichen
         
         // Sternzeichen-Symbol separat mit zodiacFont und Element-Farbe
         painter.setFont(zodiacFont);
         int zeichen = getZeichen(radix.planet[i]);
         painter.setPen(adjustColor(getZeichenColor(zeichen)));
-        painter.drawText(col1X + static_cast<int>(20 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+        painter.drawText(col1X + static_cast<int>(20 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                          astroFont().sternzeichenSymbolUnicode(zeichen));
         
         // Legende: Symbol = Name
@@ -319,7 +324,7 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
         painter.drawText(col3X, posY + painter.fontMetrics().ascent(), symbol);
         painter.setFont(smallFont);
         painter.setPen(Qt::black);
-        painter.drawText(col3X + static_cast<int>(5 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+        painter.drawText(col3X + static_cast<int>(5 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                          (i < 17) ? planetNames[i] : QString("Planet %1").arg(i));
         
         posY += lineHeight;
@@ -333,23 +338,23 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
         painter.setFont(normalFont);
         painter.setPen(Qt::black);
         painter.drawText(col2X, hausY + painter.fontMetrics().ascent(), hausNames[i]);
-        painter.drawText(col2X + static_cast<int>(8 * mmToPixel), hausY + painter.fontMetrics().ascent(), 
+        painter.drawText(col2X + static_cast<int>(8 * mmToPixelX), hausY + painter.fontMetrics().ascent(), 
                          formatDegree(radix.haus[i], false));  // ohne Sternzeichen
         // Sternzeichen-Symbol separat mit Element-Farbe
         painter.setFont(zodiacFont);
         int zeichen = getZeichen(radix.haus[i]);
         painter.setPen(adjustColor(getZeichenColor(zeichen)));
-        painter.drawText(col2X + static_cast<int>(20 * mmToPixel), hausY + painter.fontMetrics().ascent(), 
+        painter.drawText(col2X + static_cast<int>(20 * mmToPixelX), hausY + painter.fontMetrics().ascent(), 
                          astroFont().sternzeichenSymbolUnicode(zeichen));
         hausY += lineHeight;
     }
     
     // Sternzeichen-Legende (nach Planeten)
-    posY += static_cast<int>(2 * mmToPixel);
+    posY += static_cast<int>(2 * mmToPixelY);
     painter.setFont(headerFont);
     painter.setPen(Qt::black);
     painter.drawText(col3X, posY + painter.fontMetrics().ascent(), "Zeichen");
-    posY += painter.fontMetrics().height() + static_cast<int>(1 * mmToPixel);
+    posY += painter.fontMetrics().height() + static_cast<int>(1 * mmToPixelY);
     
     static const char* zeichenNames[] = {
         "Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau",
@@ -361,33 +366,33 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
         painter.setPen(adjustColor(getZeichenColor(i)));
         painter.drawText(col3X, posY + painter.fontMetrics().ascent(), astroFont().sternzeichenSymbolUnicode(i));
         painter.setFont(smallFont);
-        painter.drawText(col3X + static_cast<int>(5 * mmToPixel), posY + painter.fontMetrics().ascent(), zeichenNames[i]);
+        painter.drawText(col3X + static_cast<int>(5 * mmToPixelX), posY + painter.fontMetrics().ascent(), zeichenNames[i]);
         posY += lineHeight;
     }
     
     // === FOOTER Seite 1 ===
     painter.setFont(smallFont);
     painter.setPen(Qt::gray);
-    painter.drawText(margin, pageHeight - margin, 
+    painter.drawText(marginX, pageHeight - marginY, 
                      QString("Erstellt mit AstroUniverse 2026 am %1 - Seite 1")
                      .arg(QDate::currentDate().toString("dd.MM.yyyy")));
     
     // === SEITE 2+: ASPEKTE ===
     printer.newPage();
     int pageNum = 2;
-    y = margin;
+    y = marginY;
     
     painter.setFont(titleFont);
     painter.setPen(Qt::black);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                      QString("Aspekte - %1 %2").arg(radix.rFix.vorname, radix.rFix.name));
-    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixel);
+    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixelY);
     
     int aspStartY = y;
-    lineHeight = static_cast<int>(4 * mmToPixel);
-    int aspColWidth = (pageWidth - 2 * margin) / 3;  // 3 Spalten für mehr Platz
+    lineHeight = static_cast<int>(4 * mmToPixelY);
+    int aspColWidth = (pageWidth - 2 * marginX) / 3;  // 3 Spalten für mehr Platz
     int aspCol = 0;
-    int aspX = margin;
+    int aspX = marginX;
     int aspY = y;
     
     for (int i = 0; i < numPlanets; ++i) {
@@ -425,53 +430,53 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
             // Zeichen1
             painter.setFont(zodiacFont);
             painter.setPen(adjustColor(getZeichenColor(zeichen1)));
-            painter.drawText(aspX + static_cast<int>(4 * mmToPixel), aspY + painter.fontMetrics().ascent(), sign1);
+            painter.drawText(aspX + static_cast<int>(4 * mmToPixelX), aspY + painter.fontMetrics().ascent(), sign1);
             
             // Aspekt
             painter.setFont(symbolFont);
             painter.setPen(adjustColor(getAspektColor(asp)));
-            painter.drawText(aspX + static_cast<int>(8 * mmToPixel), aspY + painter.fontMetrics().ascent(), aspSym);
+            painter.drawText(aspX + static_cast<int>(8 * mmToPixelX), aspY + painter.fontMetrics().ascent(), aspSym);
             
             // Planet2
             painter.setPen(adjustColor(getPlanetColor(j, auinit)));
-            painter.drawText(aspX + static_cast<int>(12 * mmToPixel), aspY + painter.fontMetrics().ascent(), sym2);
+            painter.drawText(aspX + static_cast<int>(12 * mmToPixelX), aspY + painter.fontMetrics().ascent(), sym2);
             
             // Zeichen2
             painter.setFont(zodiacFont);
             painter.setPen(adjustColor(getZeichenColor(zeichen2)));
-            painter.drawText(aspX + static_cast<int>(16 * mmToPixel), aspY + painter.fontMetrics().ascent(), sign2);
+            painter.drawText(aspX + static_cast<int>(16 * mmToPixelX), aspY + painter.fontMetrics().ascent(), sign2);
             
             // Orb
             painter.setFont(smallFont);
             painter.setPen(Qt::black);
-            painter.drawText(aspX + static_cast<int>(20 * mmToPixel), aspY + painter.fontMetrics().ascent(), 
+            painter.drawText(aspX + static_cast<int>(20 * mmToPixelX), aspY + painter.fontMetrics().ascent(), 
                              QString("%1°").arg(orb, 0, 'f', 1));
             
             aspY += lineHeight;
             
             // Neue Spalte wenn zu weit unten (Radix)
-            if (aspY > pageHeight - margin - lineHeight * 2) {
+            if (aspY > pageHeight - marginY - lineHeight * 2) {
                 aspCol++;
                 if (aspCol >= 3) {
                     // Neue Seite
                     painter.setFont(smallFont);
                     painter.setPen(Qt::gray);
-                    painter.drawText(margin, pageHeight - margin, 
+                    painter.drawText(marginX, pageHeight - marginY, 
                                      QString("Erstellt mit AstroUniverse 2026 - Seite %1").arg(pageNum));
                     
                     printer.newPage();
                     pageNum++;
                     aspCol = 0;
-                    y = margin;
+                    y = marginY;
                     
                     painter.setFont(titleFont);
                     painter.setPen(Qt::black);
-                    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+                    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                                      QString("Aspekte - %1 %2 (Fortsetzung)").arg(radix.rFix.vorname, radix.rFix.name));
-                    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixel);
+                    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixelY);
                     aspStartY = y;
                 }
-                aspX = margin + aspCol * aspColWidth;
+                aspX = marginX + aspCol * aspColWidth;
                 aspY = aspStartY;
             }
         }
@@ -480,7 +485,7 @@ void PdfExporter::renderPage(QPainter& painter, QPrinter& printer,
     // === FOOTER letzte Seite ===
     painter.setFont(smallFont);
     painter.setPen(Qt::gray);
-    painter.drawText(margin, pageHeight - margin, 
+    painter.drawText(marginX, pageHeight - marginY, 
                      QString("Erstellt mit AstroUniverse 2026 am %1 - Seite %2")
                      .arg(QDate::currentDate().toString("dd.MM.yyyy")).arg(pageNum));
 }
@@ -595,44 +600,53 @@ void PdfExporter::renderSynastriePage(QPainter& painter, QPrinter& printer,
     
     // ========== SEITE 1: Beide Personen, Grafik, Positionen Person 1 ==========
     
-    // Header: Beide Personen
+    // Helper variables for this scope
+    double dpiX = printer.logicalDpiX();
+    double dpiY = printer.logicalDpiY();
+    double mmToPixelX = dpiX / 25.4;
+    double mmToPixelY = dpiY / 25.4;
+    int marginX = static_cast<int>(10 * mmToPixelX);
+    int marginY = static_cast<int>(10 * mmToPixelY);
+    
+    // Header
     painter.setFont(titleFont);
     painter.setPen(Qt::black);
     QString title = QString("Synastrie: %1 %2  ↔  %3 %4")
         .arg(radix1.rFix.vorname, radix1.rFix.name, radix2.rFix.vorname, radix2.rFix.name);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), title);
-    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixel);
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), title);
+    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixelY);
     
     // Geburtsdaten beider Personen
     painter.setFont(normalFont);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                      QString("%1 %2: %3").arg(radix1.rFix.vorname, radix1.rFix.name, formatDate(radix1.rFix)));
     y += painter.fontMetrics().height();
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                      QString("%1 %2: %3").arg(radix2.rFix.vorname, radix2.rFix.name, formatDate(radix2.rFix)));
-    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixel);
+    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixelY);
     
     // Synastrie-Grafik (quadratisch!)
     if (chartWidget) {
         int chartSizeMm = 110;
-        int chartSize = static_cast<int>(chartSizeMm * mmToPixel);
-        int chartX = (pageWidth - chartSize) / 2;
+        int chartWidth = static_cast<int>(chartSizeMm * mmToPixelX);
+        int chartHeight = static_cast<int>(chartSizeMm * mmToPixelY);
+        int chartX = (pageWidth - chartWidth) / 2;
         
         // Bild ist bereits quadratisch (1200x1200) aus renderForPrint
         QImage chartImage = chartWidget->renderForPrint(1200);
         
-        // Zeichne in ein quadratisches Ziel-Rechteck (erzwingt korrektes Seitenverhältnis)
-        QRect targetRect(chartX, y, chartSize, chartSize);
+        // Zeichne in ein Ziel-Rechteck mit korrekten physischen Dimensionen
+        QRect targetRect(chartX, y, chartWidth, chartHeight);
         painter.drawImage(targetRect, chartImage);
         
-        y += chartSize + static_cast<int>(3 * mmToPixel);
+        y += chartHeight + static_cast<int>(3 * mmToPixelY);
     }
     
     // Positionen Person 1 + Häuser + Legende (3 Spalten)
-    int colWidth = (pageWidth - 4 * margin) / 3;
-    int col1X = margin;
-    int col2X = margin + colWidth + margin;
-    int col3X = margin + 2 * (colWidth + margin);
+    int colWidth = (pageWidth - 4 * marginX) / 3;
+    int col1X = marginX;
+    int col2X = marginX + colWidth + marginX;
+    int col3X = marginX + 2 * (colWidth + marginX);
     int tableY = y;
     
     painter.setFont(headerFont);
@@ -641,9 +655,9 @@ void PdfExporter::renderSynastriePage(QPainter& painter, QPrinter& printer,
                      QString("Positionen %1").arg(radix1.rFix.vorname));
     painter.drawText(col2X, tableY + painter.fontMetrics().ascent(), "Häuser");
     painter.drawText(col3X, tableY + painter.fontMetrics().ascent(), "Legende");
-    tableY += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixel);
+    tableY += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixelY);
     
-    int lineHeight = static_cast<int>(4 * mmToPixel);
+    int lineHeight = static_cast<int>(4 * mmToPixelY);
     int numPlanets1 = qMin(static_cast<int>(radix1.anzahlPlanet), 17);
     int posY = tableY;
     
@@ -666,20 +680,20 @@ void PdfExporter::renderSynastriePage(QPainter& painter, QPrinter& printer,
         
         // Rückläufig?
         if (i < radix1.planetTyp.size() && (radix1.planetTyp[i] & P_TYP_RUCK)) {
-            painter.drawText(col1X + static_cast<int>(4 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+            painter.drawText(col1X + static_cast<int>(4 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                              astroFont().retrogradeSymbol());
         }
         
         // Position (ohne Sternzeichen)
         painter.setFont(normalFont);
         painter.setPen(Qt::black);
-        painter.drawText(col1X + static_cast<int>(8 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+        painter.drawText(col1X + static_cast<int>(8 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                          formatDegree(radix1.planet[i], false));
         // Sternzeichen separat mit Element-Farbe
         painter.setFont(zodiacFont);
         int zeichen = getZeichen(radix1.planet[i]);
         painter.setPen(adjustColor(getZeichenColor(zeichen)));
-        painter.drawText(col1X + static_cast<int>(20 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+        painter.drawText(col1X + static_cast<int>(20 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                          astroFont().sternzeichenSymbolUnicode(zeichen));
         
         // Legende: Symbol = Name
@@ -688,7 +702,7 @@ void PdfExporter::renderSynastriePage(QPainter& painter, QPrinter& printer,
         painter.drawText(col3X, posY + painter.fontMetrics().ascent(), symbol);
         painter.setFont(smallFont);
         painter.setPen(Qt::black);
-        painter.drawText(col3X + static_cast<int>(5 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+        painter.drawText(col3X + static_cast<int>(5 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                          (i < 17) ? planetNames[i] : QString("Planet %1").arg(i));
         
         posY += lineHeight;
@@ -699,13 +713,13 @@ void PdfExporter::renderSynastriePage(QPainter& painter, QPrinter& printer,
         painter.setFont(normalFont);
         painter.setPen(Qt::black);
         painter.drawText(col2X, hausY + painter.fontMetrics().ascent(), hausNames[i]);
-        painter.drawText(col2X + static_cast<int>(8 * mmToPixel), hausY + painter.fontMetrics().ascent(), 
+        painter.drawText(col2X + static_cast<int>(8 * mmToPixelX), hausY + painter.fontMetrics().ascent(), 
                          formatDegree(radix1.haus[i], false));
         // Sternzeichen separat mit Element-Farbe
         painter.setFont(zodiacFont);
         int zeichen = getZeichen(radix1.haus[i]);
         painter.setPen(adjustColor(getZeichenColor(zeichen)));
-        painter.drawText(col2X + static_cast<int>(20 * mmToPixel), hausY + painter.fontMetrics().ascent(), 
+        painter.drawText(col2X + static_cast<int>(20 * mmToPixelX), hausY + painter.fontMetrics().ascent(), 
                          astroFont().sternzeichenSymbolUnicode(zeichen));
         hausY += lineHeight;
     }
@@ -729,28 +743,28 @@ void PdfExporter::renderSynastriePage(QPainter& painter, QPrinter& printer,
     // Footer Seite 1
     painter.setFont(smallFont);
     painter.setPen(Qt::gray);
-    painter.drawText(margin, pageHeight - margin, 
+    painter.drawText(marginX, pageHeight - marginY, 
                      QString("Erstellt mit AstroUniverse 2026 am %1 - Seite 1/2")
                      .arg(QDate::currentDate().toString("dd.MM.yyyy")));
     
     // ========== SEITE 2: Positionen Person 2 + Aspekte ==========
     printer.newPage();
-    y = margin;
+    y = marginY;
     
     // Header Seite 2
     painter.setFont(titleFont);
     painter.setPen(Qt::black);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                      QString("Synastrie: %1 %2  ↔  %3 %4 (Fortsetzung)")
                      .arg(radix1.rFix.vorname, radix1.rFix.name, radix2.rFix.vorname, radix2.rFix.name));
-    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixel);
+    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixelY);
     
     // Positionen Person 2
     painter.setFont(headerFont);
     painter.setPen(Qt::black);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                      QString("Positionen %1 %2").arg(radix2.rFix.vorname, radix2.rFix.name));
-    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixel);
+    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixelY);
     
     int numPlanets2 = qMin(static_cast<int>(radix2.anzahlPlanet), 17);
     for (int i = 0; i < numPlanets2 && i < radix2.planet.size(); ++i) {
@@ -758,41 +772,41 @@ void PdfExporter::renderSynastriePage(QPainter& painter, QPrinter& printer,
         painter.setFont(symbolFont);
         QString symbol = astroFont().planetSymbol(i);
         painter.setPen(adjustColor(getPlanetColor(i, auinit)));
-        painter.drawText(margin, y + painter.fontMetrics().ascent(), symbol);
+        painter.drawText(marginX, y + painter.fontMetrics().ascent(), symbol);
         
         // Rückläufig?
         if (i < radix2.planetTyp.size() && (radix2.planetTyp[i] & P_TYP_RUCK)) {
-            painter.drawText(margin + static_cast<int>(4 * mmToPixel), y + painter.fontMetrics().ascent(), 
+            painter.drawText(marginX + static_cast<int>(4 * mmToPixelX), y + painter.fontMetrics().ascent(), 
                              astroFont().retrogradeSymbol());
         }
         
         // Position (ohne Sternzeichen)
         painter.setFont(normalFont);
         painter.setPen(Qt::black);
-        painter.drawText(margin + static_cast<int>(8 * mmToPixel), y + painter.fontMetrics().ascent(), 
+        painter.drawText(marginX + static_cast<int>(8 * mmToPixelX), y + painter.fontMetrics().ascent(), 
                          formatDegree(radix2.planet[i], false));
         // Sternzeichen separat mit Element-Farbe
         painter.setFont(zodiacFont);
         int zeichen = getZeichen(radix2.planet[i]);
         painter.setPen(adjustColor(getZeichenColor(zeichen)));
-        painter.drawText(margin + static_cast<int>(20 * mmToPixel), y + painter.fontMetrics().ascent(), 
+        painter.drawText(marginX + static_cast<int>(20 * mmToPixelX), y + painter.fontMetrics().ascent(), 
                          astroFont().sternzeichenSymbolUnicode(zeichen));
         y += lineHeight;
     }
     
-    y += static_cast<int>(5 * mmToPixel);
+    y += static_cast<int>(5 * mmToPixelY);
     
     // Synastrie-Aspekte
     painter.setFont(headerFont);
     painter.setPen(Qt::black);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), "Synastrie-Aspekte");
-    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixel);
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), "Synastrie-Aspekte");
+    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixelY);
     
     int aspStartY = y;
-    lineHeight = static_cast<int>(4 * mmToPixel);
-    int aspColWidth = (pageWidth - 2 * margin) / 3;  // 3 Spalten für mehr Platz
+    lineHeight = static_cast<int>(4 * mmToPixelY);
+    int aspColWidth = (pageWidth - 2 * marginX) / 3;  // 3 Spalten für mehr Platz
     int aspCol = 0;
-    int aspX = margin;
+    int aspX = marginX;
     int aspY = y;
     int pageNum = 2;
     
@@ -834,53 +848,53 @@ void PdfExporter::renderSynastriePage(QPainter& painter, QPrinter& printer,
             // Zeichen1
             painter.setFont(zodiacFont);
             painter.setPen(adjustColor(getZeichenColor(zeichen1)));
-            painter.drawText(aspX + static_cast<int>(4 * mmToPixel), aspY + painter.fontMetrics().ascent(), sign1);
+            painter.drawText(aspX + static_cast<int>(4 * mmToPixelX), aspY + painter.fontMetrics().ascent(), sign1);
             
             // Aspekt
             painter.setFont(symbolFont);
             painter.setPen(adjustColor(getAspektColor(asp)));
-            painter.drawText(aspX + static_cast<int>(8 * mmToPixel), aspY + painter.fontMetrics().ascent(), aspSym);
+            painter.drawText(aspX + static_cast<int>(8 * mmToPixelX), aspY + painter.fontMetrics().ascent(), aspSym);
             
             // Planet2
             painter.setPen(adjustColor(getPlanetColor(j, auinit)));
-            painter.drawText(aspX + static_cast<int>(12 * mmToPixel), aspY + painter.fontMetrics().ascent(), sym2);
+            painter.drawText(aspX + static_cast<int>(12 * mmToPixelX), aspY + painter.fontMetrics().ascent(), sym2);
             
             // Zeichen2
             painter.setFont(zodiacFont);
             painter.setPen(adjustColor(getZeichenColor(zeichen2)));
-            painter.drawText(aspX + static_cast<int>(16 * mmToPixel), aspY + painter.fontMetrics().ascent(), sign2);
+            painter.drawText(aspX + static_cast<int>(16 * mmToPixelX), aspY + painter.fontMetrics().ascent(), sign2);
             
             // Orb
             painter.setFont(smallFont);
             painter.setPen(Qt::black);
-            painter.drawText(aspX + static_cast<int>(20 * mmToPixel), aspY + painter.fontMetrics().ascent(), 
+            painter.drawText(aspX + static_cast<int>(20 * mmToPixelX), aspY + painter.fontMetrics().ascent(), 
                              QString("%1°").arg(orb, 0, 'f', 1));
             
             aspY += lineHeight;
             
             // Neue Spalte wenn zu weit unten (Synastrie)
-            if (aspY > pageHeight - margin - lineHeight * 2) {
+            if (aspY > pageHeight - marginY - lineHeight * 2) {
                 aspCol++;
                 if (aspCol >= 3) {  // 3 Spalten wegen mehr Platz für Zeichen
                     // Neue Seite
                     painter.setFont(smallFont);
                     painter.setPen(Qt::gray);
-                    painter.drawText(margin, pageHeight - margin, 
+                    painter.drawText(marginX, pageHeight - marginY, 
                                      QString("Erstellt mit AstroUniverse 2026 - Seite %1").arg(pageNum));
                     
                     printer.newPage();
                     pageNum++;
                     aspCol = 0;
-                    y = margin;
+                    y = marginY;
                     
                     painter.setFont(titleFont);
                     painter.setPen(Qt::black);
-                    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+                    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                                      QString("Synastrie-Aspekte (Fortsetzung)"));
-                    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixel);
+                    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixelY);
                     aspStartY = y;
                 }
-                aspX = margin + aspCol * aspColWidth;
+                aspX = marginX + aspCol * aspColWidth;
                 aspY = aspStartY;
             }
         }
@@ -889,7 +903,7 @@ void PdfExporter::renderSynastriePage(QPainter& painter, QPrinter& printer,
     // Footer letzte Seite
     painter.setFont(smallFont);
     painter.setPen(Qt::gray);
-    painter.drawText(margin, pageHeight - margin, 
+    painter.drawText(marginX, pageHeight - marginY, 
                      QString("Erstellt mit AstroUniverse 2026 am %1 - Seite %2")
                      .arg(QDate::currentDate().toString("dd.MM.yyyy")).arg(pageNum));
 }
@@ -901,8 +915,10 @@ void PdfExporter::renderTransitPage(QPainter& painter, QPrinter& printer,
     int pageWidth = pageRect.width();
     int pageHeight = pageRect.height();
     
-    double dpi = printer.resolution();
-    double mmToPixel = dpi / 25.4;
+    double dpiX = printer.logicalDpiX();
+    double dpiY = printer.logicalDpiY();
+    double mmToPixelX = dpiX / 25.4;
+    double mmToPixelY = dpiY / 25.4;
     
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::TextAntialiasing);
@@ -916,8 +932,9 @@ void PdfExporter::renderTransitPage(QPainter& painter, QPrinter& printer,
     QFont symbolFont = astroFont().getPlanetSymbolFont(10);
     QFont zodiacFont = astroFont().getPlanetSymbolFont(10);
     
-    int margin = static_cast<int>(10 * mmToPixel);
-    int y = margin;
+    int marginX = static_cast<int>(10 * mmToPixelX);
+    int marginY = static_cast<int>(10 * mmToPixelY);
+    int y = marginY;
     
     // Helper: Farbe anpassen (weiß -> schwarz)
     auto adjustColor = [](QColor c) -> QColor {
@@ -946,41 +963,42 @@ void PdfExporter::renderTransitPage(QPainter& painter, QPrinter& printer,
     painter.setFont(titleFont);
     painter.setPen(Qt::black);
     QString title = QString("Transit für %1 %2").arg(radix.rFix.vorname, radix.rFix.name);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), title);
-    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixel);
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), title);
+    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixelY);
     
     // Geburtsdaten Person
     painter.setFont(normalFont);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                      QString("Geburt: %1").arg(formatDate(radix.rFix)));
     y += painter.fontMetrics().height();
     
     // Transit-Datum
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                      QString("Transit: %1").arg(formatDate(transit.rFix)));
-    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixel);
+    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixelY);
     
     // Transit-Grafik (quadratisch!)
     if (chartWidget) {
         int chartSizeMm = 110;
-        int chartSize = static_cast<int>(chartSizeMm * mmToPixel);
-        int chartX = (pageWidth - chartSize) / 2;
+        int chartWidth = static_cast<int>(chartSizeMm * mmToPixelX);
+        int chartHeight = static_cast<int>(chartSizeMm * mmToPixelY);
+        int chartX = (pageWidth - chartWidth) / 2;
         
         // Bild ist bereits quadratisch (1200x1200) aus renderForPrint
         QImage chartImage = chartWidget->renderForPrint(1200);
         
-        // Zeichne in ein quadratisches Ziel-Rechteck (erzwingt korrektes Seitenverhältnis)
-        QRect targetRect(chartX, y, chartSize, chartSize);
+        // Zeichne in ein Ziel-Rechteck mit korrekten physischen Dimensionen
+        QRect targetRect(chartX, y, chartWidth, chartHeight);
         painter.drawImage(targetRect, chartImage);
         
-        y += chartSize + static_cast<int>(3 * mmToPixel);
+        y += chartHeight + static_cast<int>(3 * mmToPixelY);
     }
     
     // Positionen Person + Häuser + Legende (3 Spalten)
-    int colWidth = (pageWidth - 4 * margin) / 3;
-    int col1X = margin;
-    int col2X = margin + colWidth + margin;
-    int col3X = margin + 2 * (colWidth + margin);
+    int colWidth = (pageWidth - 4 * marginX) / 3;
+    int col1X = marginX;
+    int col2X = marginX + colWidth + marginX;
+    int col3X = marginX + 2 * (colWidth + marginX);
     int tableY = y;
     
     painter.setFont(headerFont);
@@ -989,9 +1007,9 @@ void PdfExporter::renderTransitPage(QPainter& painter, QPrinter& printer,
                      QString("Radix-Positionen %1").arg(radix.rFix.vorname));
     painter.drawText(col2X, tableY + painter.fontMetrics().ascent(), "Häuser");
     painter.drawText(col3X, tableY + painter.fontMetrics().ascent(), "Legende");
-    tableY += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixel);
+    tableY += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixelY);
     
-    int lineHeight = static_cast<int>(4 * mmToPixel);
+    int lineHeight = static_cast<int>(4 * mmToPixelY);
     int numPlanetsRadix = qMin(static_cast<int>(radix.anzahlPlanet), 17);
     int posY = tableY;
     
@@ -1014,20 +1032,20 @@ void PdfExporter::renderTransitPage(QPainter& painter, QPrinter& printer,
         
         // Rückläufig?
         if (i < radix.planetTyp.size() && (radix.planetTyp[i] & P_TYP_RUCK)) {
-            painter.drawText(col1X + static_cast<int>(4 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+            painter.drawText(col1X + static_cast<int>(4 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                              astroFont().retrogradeSymbol());
         }
         
         // Position (ohne Sternzeichen)
         painter.setFont(normalFont);
         painter.setPen(Qt::black);
-        painter.drawText(col1X + static_cast<int>(8 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+        painter.drawText(col1X + static_cast<int>(8 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                          formatDegree(radix.planet[i], false));
         // Sternzeichen separat mit Element-Farbe
         painter.setFont(zodiacFont);
         int zeichen = getZeichen(radix.planet[i]);
         painter.setPen(adjustColor(getZeichenColor(zeichen)));
-        painter.drawText(col1X + static_cast<int>(20 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+        painter.drawText(col1X + static_cast<int>(20 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                          astroFont().sternzeichenSymbolUnicode(zeichen));
         
         // Legende: Symbol = Name
@@ -1036,7 +1054,7 @@ void PdfExporter::renderTransitPage(QPainter& painter, QPrinter& printer,
         painter.drawText(col3X, posY + painter.fontMetrics().ascent(), symbol);
         painter.setFont(smallFont);
         painter.setPen(Qt::black);
-        painter.drawText(col3X + static_cast<int>(5 * mmToPixel), posY + painter.fontMetrics().ascent(), 
+        painter.drawText(col3X + static_cast<int>(5 * mmToPixelX), posY + painter.fontMetrics().ascent(), 
                          (i < 17) ? planetNames[i] : QString("Planet %1").arg(i));
         
         posY += lineHeight;
@@ -1047,107 +1065,108 @@ void PdfExporter::renderTransitPage(QPainter& painter, QPrinter& printer,
         painter.setFont(normalFont);
         painter.setPen(Qt::black);
         painter.drawText(col2X, hausY + painter.fontMetrics().ascent(), hausNames[i]);
-        painter.drawText(col2X + static_cast<int>(8 * mmToPixel), hausY + painter.fontMetrics().ascent(), 
+        painter.drawText(col2X + static_cast<int>(8 * mmToPixelX), hausY + painter.fontMetrics().ascent(), 
                          formatDegree(radix.haus[i], false));
         // Sternzeichen separat mit Element-Farbe
         painter.setFont(zodiacFont);
         int zeichen = getZeichen(radix.haus[i]);
         painter.setPen(adjustColor(getZeichenColor(zeichen)));
-        painter.drawText(col2X + static_cast<int>(20 * mmToPixel), hausY + painter.fontMetrics().ascent(), 
+        painter.drawText(col2X + static_cast<int>(20 * mmToPixelX), hausY + painter.fontMetrics().ascent(), 
                          astroFont().sternzeichenSymbolUnicode(zeichen));
         hausY += lineHeight;
     }
     
     // Sternzeichen-Legende (nach Planeten)
-    posY += static_cast<int>(2 * mmToPixel);
+    // Sternzeichen-Legende (nach Planeten)
+    posY += static_cast<int>(2 * mmToPixelY);
     painter.setFont(headerFont);
     painter.setPen(Qt::black);
     painter.drawText(col3X, posY + painter.fontMetrics().ascent(), "Zeichen");
-    posY += painter.fontMetrics().height() + static_cast<int>(1 * mmToPixel);
+    posY += painter.fontMetrics().height() + static_cast<int>(1 * mmToPixelY);
     
     for (int i = 0; i < 12; ++i) {
         painter.setFont(zodiacFont);
         painter.setPen(adjustColor(getZeichenColor(i)));
         painter.drawText(col3X, posY + painter.fontMetrics().ascent(), astroFont().sternzeichenSymbolUnicode(i));
         painter.setFont(smallFont);
-        painter.drawText(col3X + static_cast<int>(5 * mmToPixel), posY + painter.fontMetrics().ascent(), zeichenNames[i]);
+        painter.drawText(col3X + static_cast<int>(5 * mmToPixelX), posY + painter.fontMetrics().ascent(), zeichenNames[i]);
         posY += lineHeight;
     }
     
     // Footer Seite 1
     painter.setFont(smallFont);
     painter.setPen(Qt::gray);
-    painter.drawText(margin, pageHeight - margin, 
+    painter.drawText(marginX, pageHeight - marginY, 
                      QString("Erstellt mit AstroUniverse 2026 am %1 - Seite 1")
                      .arg(QDate::currentDate().toString("dd.MM.yyyy")));
     
     // ========== SEITE 2: Transit-Positionen + Aspekte ==========
     printer.newPage();
     int pageNum = 2;
-    y = margin;
+    y = marginY;
     
     // Header Seite 2
     painter.setFont(titleFont);
     painter.setPen(Qt::black);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                      QString("Transit für %1 %2 (Fortsetzung)").arg(radix.rFix.vorname, radix.rFix.name));
-    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixel);
+    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixelY);
     
     // Transit-Positionen
     painter.setFont(headerFont);
     painter.setPen(Qt::black);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                      QString("Transit-Positionen (%1.%2.%3)")
                      .arg(transit.rFix.tag, 2, 10, QChar('0'))
                      .arg(transit.rFix.monat, 2, 10, QChar('0'))
                      .arg(transit.rFix.jahr));
-    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixel);
+    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixelY);
     
     int numPlanetsTransit = qMin(static_cast<int>(transit.anzahlPlanet), 17);
     for (int i = 0; i < numPlanetsTransit && i < transit.planet.size(); ++i) {
         // Symbol mit T- Prefix
         painter.setFont(normalFont);
         painter.setPen(Qt::black);
-        painter.drawText(margin, y + painter.fontMetrics().ascent(), "T-");
+        painter.drawText(marginX, y + painter.fontMetrics().ascent(), "T-");
         
         painter.setFont(symbolFont);
         QString symbol = astroFont().planetSymbol(i);
         painter.setPen(adjustColor(getPlanetColor(i, auinit)));
-        painter.drawText(margin + static_cast<int>(4 * mmToPixel), y + painter.fontMetrics().ascent(), symbol);
+        painter.drawText(marginX + static_cast<int>(4 * mmToPixelX), y + painter.fontMetrics().ascent(), symbol);
         
         // Rückläufig?
         if (i < transit.planetTyp.size() && (transit.planetTyp[i] & P_TYP_RUCK)) {
-            painter.drawText(margin + static_cast<int>(8 * mmToPixel), y + painter.fontMetrics().ascent(), 
+            painter.drawText(marginX + static_cast<int>(8 * mmToPixelX), y + painter.fontMetrics().ascent(), 
                              astroFont().retrogradeSymbol());
         }
         
         // Position (ohne Sternzeichen)
         painter.setFont(normalFont);
         painter.setPen(Qt::black);
-        painter.drawText(margin + static_cast<int>(12 * mmToPixel), y + painter.fontMetrics().ascent(), 
+        painter.drawText(marginX + static_cast<int>(12 * mmToPixelX), y + painter.fontMetrics().ascent(), 
                          formatDegree(transit.planet[i], false));
         // Sternzeichen separat mit Element-Farbe
         painter.setFont(zodiacFont);
         int zeichen = getZeichen(transit.planet[i]);
         painter.setPen(adjustColor(getZeichenColor(zeichen)));
-        painter.drawText(margin + static_cast<int>(24 * mmToPixel), y + painter.fontMetrics().ascent(), 
+        painter.drawText(marginX + static_cast<int>(24 * mmToPixelX), y + painter.fontMetrics().ascent(), 
                          astroFont().sternzeichenSymbolUnicode(zeichen));
         y += lineHeight;
     }
     
-    y += static_cast<int>(5 * mmToPixel);
+    y += static_cast<int>(5 * mmToPixelY);
     
     // Transit-Aspekte
     painter.setFont(headerFont);
     painter.setPen(Qt::black);
-    painter.drawText(margin, y + painter.fontMetrics().ascent(), "Transit-Aspekte");
-    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixel);
+    painter.drawText(marginX, y + painter.fontMetrics().ascent(), "Transit-Aspekte");
+    y += painter.fontMetrics().height() + static_cast<int>(2 * mmToPixelY);
     
     int aspStartY = y;
-    lineHeight = static_cast<int>(4 * mmToPixel);
-    int aspColWidth = (pageWidth - 2 * margin) / 3;  // 3 Spalten für mehr Platz
+    lineHeight = static_cast<int>(4 * mmToPixelY);
+    int aspColWidth = (pageWidth - 2 * marginX) / 3;  // 3 Spalten für mehr Platz
     int aspCol = 0;
-    int aspX = margin;
+    int aspX = marginX;
     int aspY = y;
     
     // Transit-Aspekte: Transit-Planeten zu Radix-Planeten
@@ -1189,73 +1208,75 @@ void PdfExporter::renderTransitPage(QPainter& painter, QPrinter& printer,
             // Planet1
             painter.setFont(symbolFont);
             painter.setPen(adjustColor(getPlanetColor(i, auinit)));
-            painter.drawText(aspX + static_cast<int>(2 * mmToPixel), aspY + painter.fontMetrics().ascent(), sym1);
+            painter.drawText(aspX + static_cast<int>(2 * mmToPixelX), aspY + painter.fontMetrics().ascent(), sym1);
             
             // Zeichen1
             painter.setFont(zodiacFont);
             painter.setPen(adjustColor(getZeichenColor(zeichen1)));
-            painter.drawText(aspX + static_cast<int>(6 * mmToPixel), aspY + painter.fontMetrics().ascent(), sign1);
+            painter.drawText(aspX + static_cast<int>(6 * mmToPixelX), aspY + painter.fontMetrics().ascent(), sign1);
             
             // Aspekt
             painter.setFont(symbolFont);
             painter.setPen(adjustColor(getAspektColor(asp)));
-            painter.drawText(aspX + static_cast<int>(10 * mmToPixel), aspY + painter.fontMetrics().ascent(), aspSym);
+            painter.drawText(aspX + static_cast<int>(10 * mmToPixelX), aspY + painter.fontMetrics().ascent(), aspSym);
             
             // R- prefix
             painter.setFont(smallFont);
             painter.setPen(Qt::black);
-            painter.drawText(aspX + static_cast<int>(14 * mmToPixel), aspY + painter.fontMetrics().ascent(), "R");
+            painter.drawText(aspX + static_cast<int>(14 * mmToPixelX), aspY + painter.fontMetrics().ascent(), "R");
             
             // Planet2
             painter.setFont(symbolFont);
             painter.setPen(adjustColor(getPlanetColor(j, auinit)));
-            painter.drawText(aspX + static_cast<int>(16 * mmToPixel), aspY + painter.fontMetrics().ascent(), sym2);
+            painter.drawText(aspX + static_cast<int>(16 * mmToPixelX), aspY + painter.fontMetrics().ascent(), sym2);
             
             // Zeichen2
             painter.setFont(zodiacFont);
             painter.setPen(adjustColor(getZeichenColor(zeichen2)));
-            painter.drawText(aspX + static_cast<int>(20 * mmToPixel), aspY + painter.fontMetrics().ascent(), sign2);
+            painter.drawText(aspX + static_cast<int>(20 * mmToPixelX), aspY + painter.fontMetrics().ascent(), sign2);
             
             // Orb
             painter.setFont(smallFont);
             painter.setPen(Qt::black);
-            painter.drawText(aspX + static_cast<int>(24 * mmToPixel), aspY + painter.fontMetrics().ascent(), 
+            painter.drawText(aspX + static_cast<int>(24 * mmToPixelX), aspY + painter.fontMetrics().ascent(), 
                              QString("%1°").arg(orb, 0, 'f', 1));
             
             aspY += lineHeight;
             
             // Neue Spalte wenn zu weit unten
-            if (aspY > pageHeight - margin - lineHeight * 2) {
+            if (aspY > pageHeight - marginY - lineHeight * 2) {
                 aspCol++;
                 if (aspCol >= 3) {
                     // Neue Seite
                     painter.setFont(smallFont);
                     painter.setPen(Qt::gray);
-                    painter.drawText(margin, pageHeight - margin, 
+                    painter.drawText(marginX, pageHeight - marginY, 
                                      QString("Erstellt mit AstroUniverse 2026 - Seite %1").arg(pageNum));
                     
                     printer.newPage();
                     pageNum++;
                     aspCol = 0;
-                    y = margin;
+                    y = marginY;
                     
                     painter.setFont(titleFont);
                     painter.setPen(Qt::black);
-                    painter.drawText(margin, y + painter.fontMetrics().ascent(), 
+                    painter.drawText(marginX, y + painter.fontMetrics().ascent(), 
                                      QString("Transit-Aspekte (Fortsetzung)"));
-                    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixel);
+                    y += painter.fontMetrics().height() + static_cast<int>(5 * mmToPixelY);
                     aspStartY = y;
                 }
-                aspX = margin + aspCol * aspColWidth;
+                aspX = marginX + aspCol * aspColWidth;
                 aspY = aspStartY;
             }
         }
     }
     
+
+
     // Footer letzte Seite
     painter.setFont(smallFont);
     painter.setPen(Qt::gray);
-    painter.drawText(margin, pageHeight - margin, 
+    painter.drawText(marginX, pageHeight - marginY, 
                      QString("Erstellt mit AstroUniverse 2026 am %1 - Seite %2")
                      .arg(QDate::currentDate().toString("dd.MM.yyyy")).arg(pageNum));
 }

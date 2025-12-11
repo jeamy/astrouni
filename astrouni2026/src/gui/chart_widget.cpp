@@ -268,23 +268,14 @@ bool ChartWidget::findPlanetAtPoint(const QPointF& p, int& planetIdx, bool& isTr
     double bestDist = std::numeric_limits<double>::max();
     
     // Kollisions-Versatz wie in drawPlanets (Radix)
-    QVector<int> offsetLevel(m_radix.anzahlPlanet, 0);
-    for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
-        for (int j = 0; j < i; ++j) {
-            double diff = std::fabs(m_radix.planet[i] - m_radix.planet[j]);
-            if (diff > 180.0) diff = 360.0 - diff;
-            if (diff < 6.0) {
-                offsetLevel[i] = std::max(offsetLevel[i], offsetLevel[j] + 1);
-            }
-        }
-    }
-    
+    // Radix-Planeten
+    QVector<int> offsetLevel = calculateCollisionOffsets(m_radix);
     for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
         double offset = offsetLevel[i] * 25.0;
         double symbolRadius = m_radiusPlanet - 30 - offset;
         QPointF pos = degreeToPoint(m_radix.planet[i], symbolRadius);
         double dist = std::hypot(p.x() - pos.x(), p.y() - pos.y());
-        if (dist <= 16.0 && dist < bestDist) {  // Nähe zum Symbol
+        if (dist <= 16.0 && dist < bestDist) {
             bestDist = dist;
             planetIdx = i;
             isTransit = false;
@@ -293,16 +284,7 @@ bool ChartWidget::findPlanetAtPoint(const QPointF& p, int& planetIdx, bool& isTr
     
     // Transit-/Synastrie-Planeten (wenn vorhanden)
     if (m_transit != nullptr) {
-        QVector<int> transitOffsetLevel(m_transit->anzahlPlanet, 0);
-        for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
-            for (int j = 0; j < i; ++j) {
-                double diff = std::fabs(m_transit->planet[i] - m_transit->planet[j]);
-                if (diff > 180.0) diff = 360.0 - diff;
-                if (diff < 6.0) {
-                    transitOffsetLevel[i] = std::max(transitOffsetLevel[i], transitOffsetLevel[j] + 1);
-                }
-            }
-        }
+        QVector<int> transitOffsetLevel = calculateCollisionOffsets(*m_transit);
         for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
             double offset = transitOffsetLevel[i] * 25.0;
             double symbolRadius = m_radiusPlanet - 30 - offset;
@@ -848,66 +830,15 @@ void ChartWidget::drawPlanets(QPainter& painter) {
     if (m_radix.planet.isEmpty()) return;
     
     // STRICT LEGACY: Berechne Versatz-Level für jeden Planeten (Kollisionsvermeidung)
-    // Planeten innerhalb von 6° werden nach innen versetzt
-    QVector<int> offsetLevel(m_radix.anzahlPlanet, 0);
-    
-    for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
-        for (int j = 0; j < i; ++j) {
-            double diff = std::fabs(m_radix.planet[i] - m_radix.planet[j]);
-            if (diff > 180.0) diff = 360.0 - diff;
-            
-            if (diff < 6.0) {
-                // Kollision gefunden - höheren Level zuweisen
-                offsetLevel[i] = qMax(offsetLevel[i], offsetLevel[j] + 1);
-            }
-        }
-    }
+    QVector<int> offsetLevel = calculateCollisionOffsets(m_radix);
     
     // STRICT LEGACY: Erst ALLE Linien zeichnen, dann ALLE Symbole
-    // Damit Symbole immer über den Linien liegen
+    drawPlanetSet(painter, m_radix, offsetLevel, false);
     
-    // 1. Alle Linien (Tics) zeichnen
-    for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
-        double degree = m_radix.planet[i];
-        bool isTransit = (m_radix.planetTyp[i] & P_TYP_TRANSIT) != 0;
-        drawPlanetTic(painter, degree, isTransit, offsetLevel[i]);
-    }
-    
-    // Transit-Planeten Linien (falls vorhanden)
-    QVector<int> transitOffsetLevel;
+    // Transit-Planeten (falls vorhanden)
     if (m_transit != nullptr) {
-        transitOffsetLevel.resize(m_transit->anzahlPlanet, 0);
-        
-        for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
-            for (int j = 0; j < i; ++j) {
-                double diff = std::fabs(m_transit->planet[i] - m_transit->planet[j]);
-                if (diff > 180.0) diff = 360.0 - diff;
-                
-                if (diff < 6.0) {
-                    transitOffsetLevel[i] = qMax(transitOffsetLevel[i], transitOffsetLevel[j] + 1);
-                }
-            }
-        }
-        
-        for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
-            double degree = m_transit->planet[i];
-            drawPlanetTic(painter, degree, true, transitOffsetLevel[i]);
-        }
-    }
-    
-    // 2. Alle Symbole zeichnen (über den Linien)
-    for (int i = 0; i < m_radix.anzahlPlanet; ++i) {
-        double degree = m_radix.planet[i];
-        bool isTransit = (m_radix.planetTyp[i] & P_TYP_TRANSIT) != 0;
-        drawPlanetSymbol(painter, i, degree, isTransit, offsetLevel[i]);
-    }
-    
-    // Transit-Planeten Symbole
-    if (m_transit != nullptr) {
-        for (int i = 0; i < m_transit->anzahlPlanet; ++i) {
-            double degree = m_transit->planet[i];
-            drawPlanetSymbol(painter, i, degree, true, transitOffsetLevel[i]);
-        }
+        QVector<int> transitOffsetLevel = calculateCollisionOffsets(*m_transit);
+        drawPlanetSet(painter, *m_transit, transitOffsetLevel, true);
     }
 }
 
@@ -1302,6 +1233,45 @@ QImage ChartWidget::renderForPrint(int size) {
     m_radiusPlanet = originalRadiusPlanet;
     
     return image;
+}
+
+
+QVector<int> ChartWidget::calculateCollisionOffsets(const Radix& r) const {
+    QVector<int> offsetLevel(r.anzahlPlanet, 0);
+    for (int i = 0; i < r.anzahlPlanet; ++i) {
+        for (int j = 0; j < i; ++j) {
+            double diff = std::fabs(r.planet[i] - r.planet[j]);
+            if (diff > 180.0) diff = 360.0 - diff;
+            
+            if (diff < 6.0) {
+                offsetLevel[i] = qMax(offsetLevel[i], offsetLevel[j] + 1);
+            }
+        }
+    }
+    return offsetLevel;
+}
+
+void ChartWidget::drawPlanetSet(QPainter& painter, const Radix& r, const QVector<int>& offsetLevel, bool isTransit) {
+    // 1. Alle Linien (Tics) zeichnen
+    for (int i = 0; i < r.anzahlPlanet && i < offsetLevel.size(); ++i) {
+        double degree = r.planet[i];
+        // Für Radix: Check if P_TYP_TRANSIT is set (mixed mode), otherwise use isTransit arg
+        bool actualIsTransit = isTransit;
+        if (!isTransit && i < r.planetTyp.size() && (r.planetTyp[i] & P_TYP_TRANSIT)) {
+             actualIsTransit = true;
+        }
+        drawPlanetTic(painter, degree, actualIsTransit, offsetLevel[i]);
+    }
+    
+    // 2. Alle Symbole zeichnen
+    for (int i = 0; i < r.anzahlPlanet && i < offsetLevel.size(); ++i) {
+        double degree = r.planet[i];
+        bool actualIsTransit = isTransit;
+        if (!isTransit && i < r.planetTyp.size() && (r.planetTyp[i] & P_TYP_TRANSIT)) {
+             actualIsTransit = true;
+        }
+        drawPlanetSymbol(painter, i, degree, actualIsTransit, offsetLevel[i]);
+    }
 }
 
 } // namespace astro
