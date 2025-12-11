@@ -1237,12 +1237,39 @@ void ChartWidget::setAspectPen(QPainter& painter, int aspect) {
 }
 
 QImage ChartWidget::renderForPrint(int size) {
-    // Speichere aktuelle Größe
-    QSize originalSize = this->size();
+    // Speichere aktuelle Radien
+    QPointF originalCenter = m_center;
+    double originalRadius = m_radius;
+    double originalRadiusStz = m_radiusStz;
+    double originalRadius10 = m_radius10;
+    double originalRadius3 = m_radius3;
+    double originalRadius5 = m_radius5;
+    double originalRadiusPlanet = m_radiusPlanet;
     
-    // Temporär auf quadratische Größe setzen
-    resize(size, size);
-    calculateRadii();
+    // Radien für quadratische Größe berechnen (ohne Widget zu resizen)
+    m_center = QPointF(size / 2.0, size / 2.0);
+    m_radius = size / 2.0 - 20.0;
+    
+    // Radien für verschiedene Kreise
+    if (m_show3Degree && m_show9Degree) {
+        m_radiusStz = m_radius * KREIS_STZ;
+        m_radius10 = m_radius * KREIS_10_GRAD;
+        m_radius3 = m_radius * KREIS_3_GRAD;
+        m_radius5 = m_radius * KREIS_5_GRAD;
+        m_radiusPlanet = m_radius * KREIS_PLANET;
+    } else if (m_show3Degree || m_show9Degree) {
+        m_radiusStz = m_radius * KREIS3_STZ;
+        m_radius10 = m_radius * KREIS3_10_GRAD;
+        m_radius3 = m_radius * KREIS3_3_GRAD;
+        m_radius5 = m_radius * KREIS3_5_GRAD;
+        m_radiusPlanet = m_radius * KREIS3_PLANET;
+    } else {
+        m_radiusStz = m_radius * KREIS9_STZ;
+        m_radius10 = m_radius * KREIS9_10_GRAD;
+        m_radius3 = m_radius * KREIS9_3_GRAD;
+        m_radius5 = m_radius * KREIS9_5_GRAD;
+        m_radiusPlanet = m_radius * KREIS9_PLANET;
+    }
     
     // Bild mit weißem Hintergrund erstellen
     QImage image(size, size, QImage::Format_ARGB32);
@@ -1265,12 +1292,14 @@ QImage ChartWidget::renderForPrint(int size) {
     
     painter.end();
     
-    // Radix so zeichnen wie er ist - keine Farbänderung
-    // Nur weißer Hintergrund statt grau
-    
-    // Originalgröße wiederherstellen
-    resize(originalSize);
-    calculateRadii();
+    // Originale Radien wiederherstellen
+    m_center = originalCenter;
+    m_radius = originalRadius;
+    m_radiusStz = originalRadiusStz;
+    m_radius10 = originalRadius10;
+    m_radius3 = originalRadius3;
+    m_radius5 = originalRadius5;
+    m_radiusPlanet = originalRadiusPlanet;
     
     return image;
 }
