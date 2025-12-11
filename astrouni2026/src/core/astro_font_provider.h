@@ -61,6 +61,9 @@ public:
     // Sternzeichen-Symbole (Index 0-11)
     QString sternzeichenSymbol(int zeichen) const;
     
+    // Sternzeichen-Symbole als Unicode (für PDF-Export)
+    QString sternzeichenSymbolUnicode(int zeichen) const;
+    
     // Aspekt-Symbole (Index entspricht Aspekt-Typ)
     QString aspektSymbol(int aspekt) const;
     

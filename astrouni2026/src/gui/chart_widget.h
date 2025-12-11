@@ -83,6 +83,13 @@ public:
      */
     QSize sizeHint() const override;
     
+    /**
+     * @brief Rendert das Chart für den Druck (weißer Hintergrund, weiße Farben -> schwarz)
+     * @param size Größe des Bildes
+     * @return QImage mit dem gerenderten Chart
+     */
+    QImage renderForPrint(int size);
+    
 signals:
     /**
      * @brief Signal wenn auf einen Planeten geklickt wurde

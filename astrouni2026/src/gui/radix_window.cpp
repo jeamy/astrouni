@@ -917,34 +917,10 @@ QString RadixWindow::buildLegendHtml() const {
     html += "<td><b>" + zodiacCell(11) + "</b></td><td>Fische</td>";
     html += "</tr>";
     
-    // Standard-Planeten-Farben (Fallback wenn nicht in Einstellungen)
-    static const QColor defaultPlanetColors[] = {
-        QColor(255, 200, 0),    // Sonne - Gold
-        QColor(170, 255, 255),  // Mond - Cyan
-        QColor(255, 255, 0),    // Merkur - Gelb
-        QColor(0, 200, 0),      // Venus - Grün
-        QColor(255, 0, 0),      // Mars - Rot
-        QColor(128, 0, 255),    // Jupiter - Violett
-        QColor(128, 64, 0),     // Saturn - Braun
-        QColor(0, 255, 255),    // Uranus - Cyan
-        QColor(0, 128, 255),    // Neptun - Blau
-        QColor(128, 0, 0),      // Pluto - Dunkelrot
-        QColor(128, 128, 128),  // Mondknoten - Grau
-        QColor(64, 64, 64),     // Lilith - Dunkelgrau
-        QColor(255, 128, 0),    // Chiron - Orange
-        QColor(139, 69, 19),    // Ceres - Braun
-        QColor(70, 130, 180),   // Pallas - Stahlblau
-        QColor(255, 20, 147),   // Juno - Pink
-        QColor(255, 165, 0)     // Vesta - Orange
-    };
-    static const int numDefaultColors = sizeof(defaultPlanetColors) / sizeof(defaultPlanetColors[0]);
-    
-    // Funktion um Planeten-Farbe zu ermitteln (Einstellungen haben Vorrang)
+    // Funktion um Planeten-Farbe zu ermitteln (aus zentraler AuInit::initColors())
     auto getPlanetColor = [&](int planet) -> QColor {
         if (planet < m_auinit.planetColor.size() && m_auinit.planetColor[planet].isValid()) {
             return m_auinit.planetColor[planet];
-        } else if (planet < numDefaultColors) {
-            return defaultPlanetColors[planet];
         }
         return sColor[COL_PLAN];
     };
