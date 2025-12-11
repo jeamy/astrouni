@@ -373,6 +373,7 @@ void PdfExporter::renderPage(QPainter &painter, QPrinter &printer,
                      astroFont().sternzeichenSymbol(zeichen));
 
     // Legende: Symbol = Name
+    painter.setFont(symbolFont);
     painter.setPen(adjustColor(getPlanetColor(i, auinit)));
     painter.drawText(col3X, posY + painter.fontMetrics().ascent(), symbol);
     painter.setFont(smallFont);
