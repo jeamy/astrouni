@@ -16,7 +16,6 @@
 namespace astro {
 
 class RadixWindow;
-class PrintManager;
 class PdfExporter;
 
 /**
@@ -101,9 +100,6 @@ private:
     
     // Tab-Widget für Radix-Anzeigen
     QTabWidget* m_tabWidget;
-    
-    // Druck-Manager
-    PrintManager* m_printManager;
     
     // PDF-Exporter
     PdfExporter* m_pdfExporter;

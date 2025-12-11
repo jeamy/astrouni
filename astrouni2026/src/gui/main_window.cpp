@@ -7,7 +7,6 @@
 
 #include "main_window.h"
 #include "radix_window.h"
-#include "print_manager.h"
 #include "pdf_exporter.h"
 #include "dialogs/person_dialog.h"
 #include "dialogs/person_search_dialog.h"
@@ -46,7 +45,6 @@ namespace astro {
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , m_tabWidget(nullptr)
-    , m_printManager(nullptr)
     , m_pdfExporter(nullptr) {
     
     // Fenster-Titel (wie im Legacy: MainMenuText)
