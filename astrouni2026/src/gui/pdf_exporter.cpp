@@ -1050,8 +1050,8 @@ void PdfExporter::renderSynastriePage(QPainter &painter, QPrinter &printer,
       QString sym1 = astroFont().planetSymbol(i);
       QString aspSym = astroFont().aspektSymbol(asp);
       QString sym2 = astroFont().planetSymbol(j);
-      QString sign1 = astroFont().sternzeichenSymbolUnicode(zeichen1);
-      QString sign2 = astroFont().sternzeichenSymbolUnicode(zeichen2);
+      QString sign1 = astroFont().sternzeichenSymbol(zeichen1);
+      QString sign2 = astroFont().sternzeichenSymbol(zeichen2);
 
       // Planet1
       painter.setFont(symbolFont);
