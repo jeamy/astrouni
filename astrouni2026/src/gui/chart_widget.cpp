@@ -933,38 +933,12 @@ void ChartWidget::drawPlanetTic(QPainter& painter, double angle, bool isTransit,
 }
 
 void ChartWidget::drawPlanetSymbol(QPainter& painter, int planet, double angle, bool isTransit, int offsetLevel) {
-    // Standard-Planeten-Farben (wie im Legacy)
-    static const QColor defaultPlanetColors[] = {
-        QColor(255, 200, 0),    // Sonne - Gold
-        QColor(170, 255, 255),  // Mond - cyan
-        QColor(255, 255, 0),    // Merkur - Gelb
-        QColor(0, 200, 0),      // Venus - Grün
-        QColor(255, 0, 0),      // Mars - Rot
-        QColor(128, 0, 255),    // Jupiter - Violett
-        QColor(128, 64, 0),     // Saturn - Braun
-        QColor(0, 255, 255),    // Uranus - Cyan
-        QColor(0, 128, 255),    // Neptun - Blau
-        QColor(128, 0, 0),      // Pluto - Dunkelrot
-        QColor(128, 128, 128),  // Mondknoten - Grau
-        QColor(64, 64, 64),     // Lilith - Dunkelgrau
-        QColor(255, 128, 0),    // Chiron - Orange
-        QColor(139, 69, 19),    // Ceres - Braun
-        QColor(70, 130, 180),   // Pallas - Stahlblau
-        QColor(255, 20, 147),   // Juno - Pink
-        QColor(255, 165, 0)     // Vesta - Orange
-    };
-    static const int numDefaultColors = sizeof(defaultPlanetColors) / sizeof(defaultPlanetColors[0]);
-    
-    // Planeten-Farbe: Einstellungen haben Vorrang, sonst Standard-Farben
+    // Planeten-Farbe: Transit-Farbe oder aus zentraler AuInit::initColors()
     QColor color;
     if (isTransit) {
         color = sColor[COL_PLAN_T];
     } else if (planet < m_auinit.planetColor.size() && m_auinit.planetColor[planet].isValid()) {
-        // Farbe aus Einstellungen (Farben-Dialog)
         color = m_auinit.planetColor[planet];
-    } else if (planet < numDefaultColors) {
-        // Standard-Farben für Planeten und Asteroiden
-        color = defaultPlanetColors[planet];
     } else {
         color = sColor[COL_PLAN];
     }
@@ -1260,6 +1234,45 @@ void ChartWidget::setAspectPen(QPainter& painter, int aspect) {
     }
     
     painter.setPen(QPen(color, width, style));
+}
+
+QImage ChartWidget::renderForPrint(int size) {
+    // Speichere aktuelle Größe
+    QSize originalSize = this->size();
+    
+    // Temporär auf quadratische Größe setzen
+    resize(size, size);
+    calculateRadii();
+    
+    // Bild mit weißem Hintergrund erstellen
+    QImage image(size, size, QImage::Format_ARGB32);
+    image.fill(Qt::white);
+    
+    QPainter painter(&image);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setRenderHint(QPainter::TextAntialiasing);
+    
+    // Chart zeichnen (wie in paintEvent, aber ohne grauen Hintergrund)
+    drawRadix(painter);
+    drawZodiacSigns(painter);
+    drawDegreeMarks(painter);
+    drawHouses(painter);
+    drawPlanets(painter);
+    
+    if (m_showAspects) {
+        drawAspects(painter);
+    }
+    
+    painter.end();
+    
+    // Radix so zeichnen wie er ist - keine Farbänderung
+    // Nur weißer Hintergrund statt grau
+    
+    // Originalgröße wiederherstellen
+    resize(originalSize);
+    calculateRadii();
+    
+    return image;
 }
 
 } // namespace astro
