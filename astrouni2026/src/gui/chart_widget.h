@@ -191,6 +191,16 @@ private:
      */
     void calculateRadii();
     
+    /**
+     * @brief Berechnet die Kollisions-Level für Planeten
+     */
+    QVector<int> calculateCollisionOffsets(const Radix& r) const;
+
+    /**
+     * @brief Zeichnet eine Menge von Planeten (Radix oder Transit)
+     */
+    void drawPlanetSet(QPainter& painter, const Radix& r, const QVector<int>& offsetLevel, bool isTransit);
+
     // Daten
     Radix m_radix;
     const Radix* m_transit;
