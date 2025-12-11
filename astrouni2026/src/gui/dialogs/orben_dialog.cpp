@@ -123,18 +123,22 @@ void OrbenDialog::setupUI() {
     // Matrix: Zeilen = Planeten (13), Spalten = Aspekte (7)
     m_orbenTable = new QTableWidget(NUM_PLANETS, ASPEKTE, this);
     
-    // Font für Symbole (DejaVu Sans für Asteroiden und Aspekte)
-    QFont symbolFont = astroFont().getPlanetSymbolFont(16);
-    symbolFont.setBold(true);
+    // Font für Planeten-Symbole (DejaVu Sans für Asteroiden)
+    QFont planetFont = astroFont().getPlanetSymbolFont(16);
+    planetFont.setBold(true);
+    
+    // Font für Aspekt-Symbole (AstroUniverse wenn verfügbar)
+    QFont aspektFont = astroFont().getAspektSymbolFont(16);
+    aspektFont.setBold(true);
     
     // Header-Font auf die gesamte Header-Sektion setzen
-    m_orbenTable->horizontalHeader()->setFont(symbolFont);
-    m_orbenTable->verticalHeader()->setFont(symbolFont);
+    m_orbenTable->horizontalHeader()->setFont(aspektFont);
+    m_orbenTable->verticalHeader()->setFont(planetFont);
     
     // Spalten-Header (Aspekt-Symbole - X-Achse) mit Farben
     for (int i = 0; i < ASPEKTE; ++i) {
         QTableWidgetItem* item = new QTableWidgetItem(astroFont().aspektSymbol(i));
-        item->setFont(symbolFont);
+        item->setFont(aspektFont);
         item->setForeground(ASPEKT_COLORS[i]);
         m_orbenTable->setHorizontalHeaderItem(i, item);
     }
@@ -142,7 +146,7 @@ void OrbenDialog::setupUI() {
     // Zeilen-Header (Planeten-Symbole - Y-Achse) mit Farben
     for (int i = 0; i < NUM_PLANETS; ++i) {
         QTableWidgetItem* item = new QTableWidgetItem(astroFont().planetSymbol(i));
-        item->setFont(symbolFont);
+        item->setFont(planetFont);
         item->setForeground(PLANET_COLORS[i]);
         m_orbenTable->setVerticalHeaderItem(i, item);
     }

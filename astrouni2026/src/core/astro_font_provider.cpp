@@ -323,11 +323,23 @@ QString AstroFontProvider::aspektSymbol(int aspekt) const {
     
     if (idx < 0) return "";
     
-    // Immer Unicode-Symbole für Aspekte (System-Font)
+    // AstroUniverse-Font hat die Aspekt-Symbole, Unicode-Fallback hat Probleme auf macOS
+    if (m_hasAstroFont && idx < m_legacyAspektSymbols.size()) {
+        return m_legacyAspektSymbols[idx];
+    }
     if (idx < m_unicodeAspektSymbols.size()) {
         return m_unicodeAspektSymbols[idx];
     }
     return "";
+}
+
+QFont AstroFontProvider::getAspektSymbolFont(int pointSize) const {
+    // Wenn AstroUniverse verfügbar ist, verwende diesen für Aspekt-Symbole
+    if (m_hasAstroFont) {
+        return getSymbolFont(pointSize);
+    }
+    // Sonst DejaVu Sans / System-Font
+    return getPlanetSymbolFont(pointSize);
 }
 
 QString AstroFontProvider::retrogradeSymbol() const {

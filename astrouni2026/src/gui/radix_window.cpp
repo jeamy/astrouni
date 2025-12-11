@@ -613,6 +613,7 @@ void RadixWindow::fillAspekteList() {
     
     QString planetFontFamily = astroFont().getPlanetSymbolFont(m_listWidget->font().pointSize()).family();
     QString zodiacFontFamily = astroFont().hasAstroFont() ? astroFont().fontName() : planetFontFamily;
+    QString aspektFontFamily = astroFont().getAspektSymbolFont(m_listWidget->font().pointSize()).family();
     
     auto spanColored = [](const QString& text, const QString& color, const QString& family) {
         return QString("<span style='color:%1; font-family:\"%2\"'>%3</span>").arg(color, family, text);
@@ -725,7 +726,7 @@ void RadixWindow::fillAspekteList() {
                 QString html = QString("%1 in %2 %3 %4 in %5")
                     .arg(planetSpan(symbol1, planetColor))
                     .arg(zodiacSpan(stzSymbol1, stzColor1))
-                    .arg(spanColored(aspSymbol, aspColor, planetFontFamily))
+                    .arg(spanColored(aspSymbol, aspColor, aspektFontFamily))
                     .arg(planetSpan(symbol2, planetColor))
                     .arg(zodiacSpan(stzSymbol2, stzColor2));
                 
@@ -772,7 +773,7 @@ void RadixWindow::fillAspekteList() {
                 QString html = QString("%1 in %2 %3 %4 in %5")
                     .arg(planetSpan(symbol, planetColor))
                     .arg(zodiacSpan(stzSymbol1, stzColor1))
-                    .arg(spanColored(aspSymbol, aspColor, planetFontFamily))
+                    .arg(spanColored(aspSymbol, aspColor, aspektFontFamily))
                     .arg(spanColored(QString("H%1").arg(h + 1, 2, 10, QChar('0')), hausColor, listFontFamily))
                     .arg(zodiacSpan(stzSymbol2, stzColor2));
                 
@@ -844,7 +845,7 @@ void RadixWindow::fillAspekteList() {
                 QString html = QString("%1 in %2 %3 %4 in %5")
                     .arg(planetSpan(symbol1, p1Color))
                     .arg(zodiacSpan(stzSymbol1, stzColor1))
-                    .arg(spanColored(aspSymbol, aspColor, planetFontFamily))
+                    .arg(spanColored(aspSymbol, aspColor, aspektFontFamily))
                     .arg(planetSpan(symbol2, p2Color))
                     .arg(zodiacSpan(stzSymbol2, stzColor2));
                 
@@ -876,6 +877,7 @@ QString RadixWindow::buildLegendHtml() const {
     
     QString planetFontFamily = astroFont().getPlanetSymbolFont(12).family();
     QString zodiacFontFamily = astroFont().hasAstroFont() ? astroFont().fontName() : planetFontFamily;
+    QString aspektFontFamily = astroFont().getAspektSymbolFont(12).family();
     
     auto span = [](const QString& text, const QString& color, const QString& family) {
         return QString("<span style='color:%1; font-family:\"%2\"'>%3</span>").arg(color, family, text);
@@ -948,15 +950,15 @@ QString RadixWindow::buildLegendHtml() const {
     
     // Aspekte
     html += "<tr>";
-    html += "<td><b>" + span(astroFont().aspektSymbol(0), colorToHtml(sColor[CKONJUNKTION]), planetFontFamily) + "</b></td><td>Konjunktion</td>";
-    html += "<td><b>" + span(astroFont().aspektSymbol(1), colorToHtml(sColor[CHALBSEX]), planetFontFamily) + "</b></td><td>Halbsextil</td>";
-    html += "<td><b>" + span(astroFont().aspektSymbol(2), colorToHtml(sColor[CSEXTIL]), planetFontFamily) + "</b></td><td>Sextil</td>";
-    html += "<td><b>" + span(astroFont().aspektSymbol(3), colorToHtml(sColor[CQUADRATUR]), planetFontFamily) + "</b></td><td>Quadrat</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(0), colorToHtml(sColor[CKONJUNKTION]), aspektFontFamily) + "</b></td><td>Konjunktion</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(1), colorToHtml(sColor[CHALBSEX]), aspektFontFamily) + "</b></td><td>Halbsextil</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(2), colorToHtml(sColor[CSEXTIL]), aspektFontFamily) + "</b></td><td>Sextil</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(3), colorToHtml(sColor[CQUADRATUR]), aspektFontFamily) + "</b></td><td>Quadrat</td>";
     html += "</tr>";
     html += "<tr>";
-    html += "<td><b>" + span(astroFont().aspektSymbol(4), colorToHtml(sColor[CTRIGON]), planetFontFamily) + "</b></td><td>Trigon</td>";
-    html += "<td><b>" + span(astroFont().aspektSymbol(5), colorToHtml(sColor[CQUINCUNX]), planetFontFamily) + "</b></td><td>Quincunx</td>";
-    html += "<td><b>" + span(astroFont().aspektSymbol(6), colorToHtml(sColor[COPOSITION]), planetFontFamily) + "</b></td><td>Opposition</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(4), colorToHtml(sColor[CTRIGON]), aspektFontFamily) + "</b></td><td>Trigon</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(5), colorToHtml(sColor[CQUINCUNX]), aspektFontFamily) + "</b></td><td>Quincunx</td>";
+    html += "<td><b>" + span(astroFont().aspektSymbol(6), colorToHtml(sColor[COPOSITION]), aspektFontFamily) + "</b></td><td>Opposition</td>";
     html += "<td></td><td></td>";
     html += "</tr>";
     

@@ -138,8 +138,10 @@ bool PrintManager::printTransits(const Radix& basisRadix,
     painter.setFont(textFont);
     QFontMetrics fm(textFont);
     
-    // Font für Symbole (Planeten, Aspekte, Asteroiden)
+    // Font für Planeten-Symbole (DejaVu Sans für Asteroiden)
     QFont symbolFont = astroFont().getPlanetSymbolFont(static_cast<int>(10 * m_factor));
+    // Font für Aspekt-Symbole (AstroUniverse wenn verfügbar)
+    QFont aspektFont = astroFont().getAspektSymbolFont(static_cast<int>(10 * m_factor));
     int lineHeight = fm.height() + 4;
     
     int xText = static_cast<int>(20 * m_factor);
@@ -187,7 +189,8 @@ bool PrintManager::printTransits(const Radix& basisRadix,
         }
         painter.drawText(xText, yText, transitPlanet);
         
-        // Aspekt-Symbol (mit Symbol-Font)
+        // Aspekt-Symbol (mit Aspekt-Font)
+        painter.setFont(aspektFont);
         int aspIdx = 0;
         switch (ta.aspekt) {
             case KONJUNKTION: aspIdx = 0; break;
@@ -200,6 +203,7 @@ bool PrintManager::printTransits(const Radix& basisRadix,
         }
         painter.drawText(xText + static_cast<int>(150 * m_factor), yText, 
                          astroFont().aspektSymbol(aspIdx));
+        painter.setFont(symbolFont);  // Zurück zu Symbol-Font für Planeten
         
         // Radix-Objekt (mit Symbol-Font für Planeten, Text-Font für Häuser)
         QString radixObj;
@@ -365,8 +369,10 @@ void PrintManager::printText(QPainter& painter, const Radix& radix, double facto
 void PrintManager::printAspects(QPainter& painter, const Radix& radix, double factor) {
     // Port von: sPrintAsp()
     
-    // Noto Sans Symbols 2 für Planeten/Aspekte (mitgeliefert)
+    // Font für Planeten-Symbole (DejaVu Sans für Asteroiden)
     QFont symbolFont = astroFont().getPlanetSymbolFont(static_cast<int>(10 * factor));
+    // Font für Aspekt-Symbole (AstroUniverse wenn verfügbar)
+    QFont aspektFont = astroFont().getAspektSymbolFont(static_cast<int>(10 * factor));
     painter.setFont(symbolFont);
     QFontMetrics fm(symbolFont);
     
@@ -417,8 +423,10 @@ void PrintManager::printAspects(QPainter& painter, const Radix& radix, double fa
                         case QUINCUNX:    aspIdx = 5; break;
                         case OPOSITION:   aspIdx = 6; break;
                     }
+                    painter.setFont(aspektFont);
                     painter.drawText(sAddX + (j - i - 1) * xAdd, yText, 
                                      astroFont().aspektSymbol(aspIdx));
+                    painter.setFont(symbolFont);
                 }
             }
         }
@@ -451,8 +459,10 @@ void PrintManager::printHouseAspects(QPainter& painter, const Radix& radix, int 
     
     if (radix.aspHaus.isEmpty()) return;
     
-    // Noto Sans Symbols 2 für Planeten/Aspekte (mitgeliefert)
+    // Font für Planeten-Symbole (DejaVu Sans für Asteroiden)
     QFont symbolFont = astroFont().getPlanetSymbolFont(static_cast<int>(10 * factor));
+    // Font für Aspekt-Symbole (AstroUniverse wenn verfügbar)
+    QFont aspektFont = astroFont().getAspektSymbolFont(static_cast<int>(10 * factor));
     painter.setFont(symbolFont);
     QFontMetrics fm(symbolFont);
     
@@ -487,11 +497,17 @@ void PrintManager::printHouseAspects(QPainter& painter, const Radix& radix, int 
             }
             QString aspSymbol = astroFont().aspektSymbol(aspIdx);
             
-            QString line = QString("%1 %2 H%3")
-                .arg(planetSymbol)
-                .arg(aspSymbol)
-                .arg(h + 1, 2, 10, QChar('0'));
-            painter.drawText(xText, yText, line);
+            // Planet-Symbol mit symbolFont
+            painter.setFont(symbolFont);
+            painter.drawText(xText, yText, planetSymbol);
+            // Aspekt-Symbol mit aspektFont
+            painter.setFont(aspektFont);
+            int aspX = xText + fm.horizontalAdvance(planetSymbol + " ");
+            painter.drawText(aspX, yText, aspSymbol);
+            // Haus-Nummer mit symbolFont
+            painter.setFont(symbolFont);
+            int hausX = aspX + fm.horizontalAdvance(aspSymbol + " ");
+            painter.drawText(hausX, yText, QString("H%1").arg(h + 1, 2, 10, QChar('0')));
             yText += lineHeight;
         }
     }

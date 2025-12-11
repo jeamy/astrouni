@@ -587,14 +587,18 @@ void MainWindow::onHelpIndex() {
                "zwischen Radix- und Transit-Aspektliste umgeschaltet werden.</p>");
 
     // Symbol-Übersicht (Sternzeichen, Planeten, Asteroiden, Knoten)
-    // Sternzeichen aus AstroUniverse-Font, Asteroiden aus DejaVu Sans
+    // Sternzeichen aus AstroUniverse-Font, Asteroiden aus DejaVu Sans, Aspekte aus AstroUniverse
     QString zodiacFont = astroFont().hasAstroFont() ? astroFont().fontName() : astroFont().getPlanetSymbolFont(12).family();
     QString planetFont = astroFont().getPlanetSymbolFont(12).family();
+    QString aspektFont = astroFont().getAspektSymbolFont(12).family();
     auto zodiacSpan = [&](const QString& sym) {
         return QString("<span style='font-family:\"%1\"'>%2</span>").arg(zodiacFont, sym);
     };
     auto planetSpan = [&](const QString& sym) {
         return QString("<span style='font-family:\"%1\"'>%2</span>").arg(planetFont, sym);
+    };
+    auto aspektSpan = [&](const QString& sym) {
+        return QString("<span style='font-family:\"%1\"'>%2</span>").arg(aspektFont, sym);
     };
     
     // Sternzeichen-Symbole aus AstroFontProvider (Legacy oder Unicode)
@@ -628,13 +632,13 @@ void MainWindow::onHelpIndex() {
                "<tr><td><b>%1</b></td><td>Konjunktion (0°)</td><td><b>%2</b></td><td>Halbsextil (30°)</td><td><b>%3</b></td><td>Sextil (60°)</td><td><b>%4</b></td><td>Quadrat (90°)</td></tr>"
                "<tr><td><b>%5</b></td><td>Trigon (120°)</td><td><b>%6</b></td><td>Quincunx (150°)</td><td><b>%7</b></td><td>Opposition (180°)</td><td></td><td></td></tr>"
                "</table>")
-        .arg(planetSpan(astroFont().aspektSymbol(0)))   // Konjunktion
-        .arg(planetSpan(astroFont().aspektSymbol(1)))   // Halbsextil
-        .arg(planetSpan(astroFont().aspektSymbol(2)))   // Sextil
-        .arg(planetSpan(astroFont().aspektSymbol(3)))   // Quadrat
-        .arg(planetSpan(astroFont().aspektSymbol(4)))   // Trigon
-        .arg(planetSpan(astroFont().aspektSymbol(5)))   // Quincunx
-        .arg(planetSpan(astroFont().aspektSymbol(6)));  // Opposition
+        .arg(aspektSpan(astroFont().aspektSymbol(0)))   // Konjunktion
+        .arg(aspektSpan(astroFont().aspektSymbol(1)))   // Halbsextil
+        .arg(aspektSpan(astroFont().aspektSymbol(2)))   // Sextil
+        .arg(aspektSpan(astroFont().aspektSymbol(3)))   // Quadrat
+        .arg(aspektSpan(astroFont().aspektSymbol(4)))   // Trigon
+        .arg(aspektSpan(astroFont().aspektSymbol(5)))   // Quincunx
+        .arg(aspektSpan(astroFont().aspektSymbol(6)));  // Opposition
 
     // Einstellungen / Orben / Farben / Aspekte
     text += tr("<h3>Einstellungen, Orben, Farben, Aspekte</h3>");
