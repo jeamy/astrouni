@@ -917,33 +917,65 @@ QString RadixWindow::buildLegendHtml() const {
     html += "<td><b>" + zodiacCell(11) + "</b></td><td>Fische</td>";
     html += "</tr>";
     
+    // Standard-Planeten-Farben (Fallback wenn nicht in Einstellungen)
+    static const QColor defaultPlanetColors[] = {
+        QColor(255, 200, 0),    // Sonne - Gold
+        QColor(170, 255, 255),  // Mond - Cyan
+        QColor(255, 255, 0),    // Merkur - Gelb
+        QColor(0, 200, 0),      // Venus - Grün
+        QColor(255, 0, 0),      // Mars - Rot
+        QColor(128, 0, 255),    // Jupiter - Violett
+        QColor(128, 64, 0),     // Saturn - Braun
+        QColor(0, 255, 255),    // Uranus - Cyan
+        QColor(0, 128, 255),    // Neptun - Blau
+        QColor(128, 0, 0),      // Pluto - Dunkelrot
+        QColor(128, 128, 128),  // Mondknoten - Grau
+        QColor(64, 64, 64),     // Lilith - Dunkelgrau
+        QColor(255, 128, 0),    // Chiron - Orange
+        QColor(139, 69, 19),    // Ceres - Braun
+        QColor(70, 130, 180),   // Pallas - Stahlblau
+        QColor(255, 20, 147),   // Juno - Pink
+        QColor(255, 165, 0)     // Vesta - Orange
+    };
+    static const int numDefaultColors = sizeof(defaultPlanetColors) / sizeof(defaultPlanetColors[0]);
+    
+    // Funktion um Planeten-Farbe zu ermitteln (Einstellungen haben Vorrang)
+    auto getPlanetColor = [&](int planet) -> QColor {
+        if (planet < m_auinit.planetColor.size() && m_auinit.planetColor[planet].isValid()) {
+            return m_auinit.planetColor[planet];
+        } else if (planet < numDefaultColors) {
+            return defaultPlanetColors[planet];
+        }
+        return sColor[COL_PLAN];
+    };
+    
     // Planeten / Knoten / Asteroiden
     html += "<tr>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(0), sColor[COL_PLAN]) + "</b></td><td>Sonne</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(1), sColor[COL_PLAN]) + "</b></td><td>Mond</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(2), sColor[COL_PLAN]) + "</b></td><td>Merkur</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(3), sColor[COL_PLAN]) + "</b></td><td>Venus</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(0), getPlanetColor(0)) + "</b></td><td>Sonne</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(1), getPlanetColor(1)) + "</b></td><td>Mond</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(2), getPlanetColor(2)) + "</b></td><td>Merkur</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(3), getPlanetColor(3)) + "</b></td><td>Venus</td>";
     html += "</tr>";
     html += "<tr>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(4), sColor[COL_PLAN]) + "</b></td><td>Mars</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(5), sColor[COL_PLAN]) + "</b></td><td>Jupiter</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(6), sColor[COL_PLAN]) + "</b></td><td>Saturn</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(7), sColor[COL_PLAN]) + "</b></td><td>Uranus</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(4), getPlanetColor(4)) + "</b></td><td>Mars</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(5), getPlanetColor(5)) + "</b></td><td>Jupiter</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(6), getPlanetColor(6)) + "</b></td><td>Saturn</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(7), getPlanetColor(7)) + "</b></td><td>Uranus</td>";
     html += "</tr>";
     html += "<tr>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(8), sColor[COL_PLAN]) + "</b></td><td>Neptun</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(9), sColor[COL_PLAN]) + "</b></td><td>Pluto</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(10), sColor[COL_PLAN]) + "</b></td><td>Nordknoten</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(11), sColor[COL_PLAN]) + "</b></td><td>Lilith</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(8), getPlanetColor(8)) + "</b></td><td>Neptun</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(9), getPlanetColor(9)) + "</b></td><td>Pluto</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(10), getPlanetColor(10)) + "</b></td><td>Nordknoten</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(11), getPlanetColor(11)) + "</b></td><td>Lilith</td>";
     html += "</tr>";
     html += "<tr>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(12), sColor[COL_PLAN]) + "</b></td><td>Chiron</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(13), sColor[COL_PLAN]) + "</b></td><td>Ceres</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(14), sColor[COL_PLAN]) + "</b></td><td>Pallas</td>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(15), sColor[COL_PLAN]) + "</b></td><td>Juno</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(12), getPlanetColor(12)) + "</b></td><td>Chiron</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(13), getPlanetColor(13)) + "</b></td><td>Ceres</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(14), getPlanetColor(14)) + "</b></td><td>Pallas</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(15), getPlanetColor(15)) + "</b></td><td>Juno</td>";
     html += "</tr>";
     html += "<tr>";
-    html += "<td><b>" + planetCell(astroFont().planetSymbol(16), sColor[COL_PLAN]) + "</b></td><td>Vesta</td>";
+    html += "<td><b>" + planetCell(astroFont().planetSymbol(16), getPlanetColor(16)) + "</b></td><td>Vesta</td>";
     html += "<td><b>" + span("℞", colorToHtml(sColor[COL_PLAN]), planetFontFamily) + "</b></td><td>Rückläufig</td>";
     html += "<td></td><td></td><td></td><td></td>";
     html += "</tr>";
