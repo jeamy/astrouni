@@ -134,12 +134,12 @@ Radix& MainWindow::getCurrentRadix() {
 
 void MainWindow::setupActions() {
     // Datei-Menü Aktionen
-    m_printAction = new QAction(tr("&Drucken..."), this);
-    m_printAction->setShortcut(QKeySequence::Print);
-    connect(m_printAction, &QAction::triggered, this, &MainWindow::onFilePrint);
-    
-    m_printerSetupAction = new QAction(tr("Drucker &einrichten..."), this);
-    connect(m_printerSetupAction, &QAction::triggered, this, &MainWindow::onFilePrinterSetup);
+    // Druck-Funktionen deaktiviert (nicht funktionsfähig)
+    // m_printAction = new QAction(tr("&Drucken..."), this);
+    // m_printAction->setShortcut(QKeySequence::Print);
+    // connect(m_printAction, &QAction::triggered, this, &MainWindow::onFilePrint);
+    // m_printerSetupAction = new QAction(tr("Drucker &einrichten..."), this);
+    // connect(m_printerSetupAction, &QAction::triggered, this, &MainWindow::onFilePrinterSetup);
     
     m_exitAction = new QAction(tr("&Beenden"), this);
     m_exitAction->setShortcut(QKeySequence::Quit);
@@ -177,9 +177,10 @@ void MainWindow::setupActions() {
 void MainWindow::setupMenus() {
     // Datei-Menü (Port von MAINMENU -> "&Datei")
     m_fileMenu = menuBar()->addMenu(tr("&Datei"));
-    m_fileMenu->addAction(m_printAction);
-    m_fileMenu->addAction(m_printerSetupAction);
-    m_fileMenu->addSeparator();
+    // Druck-Funktionen deaktiviert (nicht funktionsfähig)
+    // m_fileMenu->addAction(m_printAction);
+    // m_fileMenu->addAction(m_printerSetupAction);
+    // m_fileMenu->addSeparator();
     m_fileMenu->addAction(m_exitAction);
     m_fileMenu->setMinimumWidth(200);  // Mindestbreite für vollständige Texte
 
