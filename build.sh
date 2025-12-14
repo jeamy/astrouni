@@ -1,66 +1,49 @@
 #!/bin/bash
 #
-# AstroUniverse 2026 - Build Script
-# Unterstützt: Linux, macOS
+# AstroUniverse Build Script
 #
 
-set -e
+set -e  # Exit on error
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$SCRIPT_DIR/astrouni2026"
-BUILD_TYPE="${1:-Release}"
+BUILD_DIR="$SCRIPT_DIR/astrouni2026/build"
 
-echo "========================================"
-echo "  AstroUniverse 2026 Build"
-echo "========================================"
-echo "Build Type: $BUILD_TYPE"
+echo "=== AstroUniverse Build Script ==="
+echo "Working directory: $SCRIPT_DIR"
 echo ""
 
-# Prüfen ob CMake installiert ist
-if ! command -v cmake &> /dev/null; then
-    echo "FEHLER: CMake nicht gefunden!"
-    echo ""
-    echo "Installation:"
-    echo "  Ubuntu/Debian: sudo apt install cmake"
-    echo "  macOS:         brew install cmake"
-    exit 1
+# Clean old build
+if [ -d "$BUILD_DIR" ]; then
+    echo "Cleaning old build directory..."
+    rm -rf "$BUILD_DIR"
 fi
 
-# Prüfen ob Qt6 installiert ist
-if ! cmake --find-package -DNAME=Qt6 -DCOMPILER_ID=GNU -DLANGUAGE=CXX -DMODE=EXIST &> /dev/null; then
-    echo "WARNUNG: Qt6 möglicherweise nicht gefunden."
-    echo ""
-    echo "Installation:"
-    echo "  Ubuntu/Debian: sudo apt install qt6-base-dev qt6-tools-dev"
-    echo "  macOS:         brew install qt@6"
-    echo ""
-fi
-
-# Build-Verzeichnis erstellen
-BUILD_DIR="$PROJECT_DIR/build"
+# Create build directory
+echo "Creating build directory..."
 mkdir -p "$BUILD_DIR"
+
+# Configure with CMake
+echo ""
+echo "=== Configuring with CMake ==="
 cd "$BUILD_DIR"
+cmake .. || {
+    echo ""
+    echo "ERROR: CMake configuration failed!"
+    exit 1
+}
 
-# CMake konfigurieren
-echo "Konfiguriere CMake..."
-cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..
+# Build
+echo ""
+echo "=== Building ==="
+make -j$(nproc) || {
+    echo ""
+    echo "ERROR: Build failed!"
+    exit 1
+}
 
-# Bauen
+# Success
 echo ""
-echo "Baue Projekt..."
-NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
-cmake --build . -j"$NPROC"
-
+echo "=== Build Successful! ==="
+echo "Executable: $BUILD_DIR/AstroUniverse"
 echo ""
-echo "========================================"
-echo "  Build erfolgreich!"
-echo "========================================"
-echo ""
-echo "Ausführen:"
-echo "  cd $BUILD_DIR"
-echo "  ./astrouni2026"
-echo ""
-echo "Tests:"
-echo "  cd $BUILD_DIR"
-echo "  ctest --output-on-failure"
-echo ""
+echo "Run with: cd $BUILD_DIR && ./AstroUniverse"
