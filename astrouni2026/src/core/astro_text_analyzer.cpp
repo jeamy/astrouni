@@ -9,6 +9,8 @@
 
 namespace astro {
 
+using namespace astro;  // Make constants available without prefix
+
 AstroTextAnalyzer::AstroTextAnalyzer() {
     initializePlanetNames();
     initializeSignNames();
@@ -234,8 +236,6 @@ QString AstroTextAnalyzer::getGenericAspectText(int planet1, int planet2, int8_t
     text += "</p>";
     return text;
 }
-
-} // namespace astro
 
 //==============================================================================
 // Sonnenzeichen-Texte

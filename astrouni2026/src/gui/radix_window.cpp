@@ -20,6 +20,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTextStream>
+#include <QStringConverter>
 #include <QDate>
 
 namespace astro {
@@ -1217,7 +1218,7 @@ void RadixWindow::onTextAnalyseClicked() {
             QFile file(fileName);
             if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
                 QTextStream out(&file);
-                out.setCodec("UTF-8");
+                out.setEncoding(QStringConverter::Utf8);
                 out << analysisHtml;
                 file.close();
                 
