@@ -15,6 +15,8 @@ add_library(astrouni_core STATIC
     swiss_eph.cpp
     astro_font_provider.h
     astro_font_provider.cpp
+    astro_text_analyzer.h
+    astro_text_analyzer.cpp
 )
 
 target_include_directories(astrouni_core PUBLIC

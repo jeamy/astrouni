@@ -10,10 +10,17 @@
 #include "../core/calculations.h"
 #include "../core/chart_calc.h"
 #include "../core/astro_font_provider.h"
+#include "../core/astro_text_analyzer.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QSplitter>
+#include <QDialog>
+#include <QTextBrowser>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QTextStream>
+#include <QDate>
 
 namespace astro {
 
@@ -148,6 +155,13 @@ void RadixWindow::setupUI() {
     m_aspekteButton = new QPushButton(tr("Aspekte"), rightWidget);
     connect(m_aspekteButton, &QPushButton::clicked, this, &RadixWindow::onAspekteClicked);
     buttonLayout->addWidget(m_aspekteButton);
+    
+    buttonLayout->addSpacing(10);  // Abstand
+    
+    m_textAnalyseButton = new QPushButton(tr("📄 Textanalyse"), rightWidget);
+    m_textAnalyseButton->setStyleSheet("font-weight: bold; background-color: #3498db; color: white;");
+    connect(m_textAnalyseButton, &QPushButton::clicked, this, &RadixWindow::onTextAnalyseClicked);
+    buttonLayout->addWidget(m_textAnalyseButton);
     
     rightLayout->addLayout(buttonLayout);
     
@@ -1160,6 +1174,73 @@ void RadixWindow::recalculateChart() {
     if (ChartCalc::calculate(m_radix, nullptr, TYP_RADIX) >= 0) {
         updateDisplay();
     }
+}
+
+//==============================================================================
+// Textanalyse
+//==============================================================================
+
+void RadixWindow::onTextAnalyseClicked() {
+    // Textanalyse in neuem Fenster anzeigen
+    QDialog* dialog = new QDialog(this);
+    dialog->setWindowTitle(tr("Horoskop-Textanalyse: %1").arg(getTabTitle()));
+    dialog->resize(800, 600);
+    
+    QVBoxLayout* layout = new QVBoxLayout(dialog);
+    
+    // TextBrowser für HTML-Anzeige
+    QTextBrowser* textBrowser = new QTextBrowser(dialog);
+    textBrowser->setOpenExternalLinks(false);
+    
+    // Textanalyse generieren
+    AstroTextAnalyzer analyzer;
+    QString analysisHtml = analyzer.analyzeRadix(m_radix);
+    textBrowser->setHtml(analysisHtml);
+    
+    layout->addWidget(textBrowser);
+    
+    // Buttons
+    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    
+    QPushButton* saveButton = new QPushButton(tr("Als HTML speichern"), dialog);
+    connect(saveButton, &QPushButton::clicked, [this, analysisHtml]() {
+        QString fileName = QFileDialog::getSaveFileName(
+            this,
+            tr("Horoskop-Analyse speichern"),
+            QString("%1_%2_Analyse.html")
+                .arg(m_radix.rFix.vorname.isEmpty() ? "Radix" : m_radix.rFix.vorname)
+                .arg(QDate::currentDate().toString("yyyyMMdd")),
+            tr("HTML Dateien (*.html);;Alle Dateien (*)")
+        );
+        
+        if (!fileName.isEmpty()) {
+            QFile file(fileName);
+            if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                QTextStream out(&file);
+                out.setCodec("UTF-8");
+                out << analysisHtml;
+                file.close();
+                
+                QMessageBox::information(this, tr("Gespeichert"), 
+                    tr("Die Horoskop-Analyse wurde erfolgreich gespeichert:\n%1").arg(fileName));
+            } else {
+                QMessageBox::warning(this, tr("Fehler"),
+                    tr("Die Datei konnte nicht gespeichert werden."));
+            }
+        }
+    });
+    buttonLayout->addWidget(saveButton);
+    
+    buttonLayout->addStretch();
+    
+    QPushButton* closeButton = new QPushButton(tr("Schließen"), dialog);
+    connect(closeButton, &QPushButton::clicked, dialog, &QDialog::accept);
+    buttonLayout->addWidget(closeButton);
+    
+    layout->addLayout(buttonLayout);
+    
+    dialog->exec();
+    dialog->deleteLater();
 }
 
 } // namespace astro
