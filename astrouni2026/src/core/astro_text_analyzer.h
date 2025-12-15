@@ -79,6 +79,10 @@ public:
    */
   QString getAspectName(int16_t aspectIndex) const;
 
+  QString contextAspectText(int planet1, int8_t sign1, int planet2, int8_t sign2, int16_t aspect) const;
+  QString planetPairText(int planet1, int planet2, int16_t aspect) const;
+  QString genericAspectTemplate(int16_t aspect) const;
+
 private:
   // Texte für Sonnenzeichen
   QMap<int, QString> m_sunSignTexts;
@@ -116,6 +120,8 @@ private:
   QString getPlanetPairText(int planet1, int planet2, int16_t aspect) const;
   QString getContextAspectText(int planet1, int8_t sign1, int planet2,
                                int8_t sign2, int16_t aspect) const;
+
+  QString defaultGenericAspectTemplate(int16_t aspect) const;
 };
 
 } // namespace astro

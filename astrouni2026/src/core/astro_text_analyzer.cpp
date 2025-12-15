@@ -5,11 +5,16 @@
 
 #include "astro_text_analyzer.h"
 #include "constants.h"
+#include "astro_text_store.h"
 #include <QStringList>
 
 namespace astro {
 
 using namespace astro; // Make constants available without prefix
+
+static QString analyzerLang() {
+  return AstroTextStore::systemLanguageCode();
+}
 
 AstroTextAnalyzer::AstroTextAnalyzer() {
   initializePlanetNames();
@@ -24,27 +29,36 @@ AstroTextAnalyzer::AstroTextAnalyzer() {
 QString AstroTextAnalyzer::analyzeTransit(const Radix &radix) const {
   QString html;
 
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+
   // Header
   // Transit-Datum formatieren
   int stunde = static_cast<int>(radix.rFix.zeit);
   int minute = static_cast<int>((radix.rFix.zeit - stunde) * 60);
-  QString datumStr = QString("Datum: %1.%2.%3 um %4:%5 Uhr")
+  QString dateTemplate = astroTextStore().text(lang, "analysis.transit.date_line",
+                                              "Datum: %1.%2.%3 um %4:%5 Uhr");
+  QString datumStr = dateTemplate
                          .arg(radix.rFix.tag, 2, 10, QChar('0'))
                          .arg(radix.rFix.monat, 2, 10, QChar('0'))
                          .arg(radix.rFix.jahr)
                          .arg(stunde, 2, 10, QChar('0'))
                          .arg(minute, 2, 10, QChar('0'));
 
-  html += QString("<h1>Horoskop-Analyse: Transit</h1>");
+  QString title = astroTextStore().text(lang, "analysis.transit.title",
+                                       "Horoskop-Analyse: Transit");
+  html += QString("<h1>%1</h1>").arg(title);
   html += QString("<h3>%1</h3>").arg(datumStr);
-  html += "<p>Diese Analyse beschreibt die aktuellen planetaren Einflüsse auf "
-          "Ihr Geburtshoroskop.</p>";
+  html += astroTextStore().text(lang, "analysis.transit.intro",
+                               "<p>Diese Analyse beschreibt die aktuellen planetaren Einflüsse auf Ihr Geburtshoroskop.</p>");
   html += "<hr>";
 
   // Transit Texte
-  html += "<h2>Aktuelle Einflüsse</h2>";
-  html += "<p>Transite zeigen zeitweilige Einflüsse der aktuellen "
-          "Planetenstände auf Ihr Geburtshoroskop.</p>";
+  html += QString("<h2>%1</h2>")
+              .arg(astroTextStore().text(lang, "analysis.transit.section_influences",
+                                        "Aktuelle Einflüsse"));
+  html += astroTextStore().text(lang, "analysis.transit.definition",
+                               "<p>Transite zeigen zeitweilige Einflüsse der aktuellen Planetenstände auf Ihr Geburtshoroskop.</p>");
 
   // Aspekte
   int aspectCount = 0;
@@ -86,7 +100,8 @@ QString AstroTextAnalyzer::analyzeTransit(const Radix &radix) const {
   }
 
   if (aspectCount == 0) {
-    html += "<p><i>Keine signifikanten Transite für diesen Tag.</i></p>";
+    html += astroTextStore().text(lang, "analysis.transit.no_aspects",
+                                 "<p><i>Keine signifikanten Transite für diesen Tag.</i></p>");
   }
 
   return html;
@@ -95,10 +110,17 @@ QString AstroTextAnalyzer::analyzeTransit(const Radix &radix) const {
 QString AstroTextAnalyzer::analyzeSynastry(const Radix &radix) const {
   QString html;
 
-  html += "<h1>Horoskop-Analyse: Partner-Vergleich</h1>";
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+
+  html += QString("<h1>%1</h1>")
+              .arg(astroTextStore().text(lang, "analysis.synastry.title",
+                                        "Horoskop-Analyse: Partner-Vergleich"));
   html += "<hr>";
 
-  html += "<h2>Beziehungs-Aspekte</h2>";
+  html += QString("<h2>%1</h2>")
+              .arg(astroTextStore().text(lang, "analysis.synastry.section_relationship",
+                                        "Beziehungs-Aspekte"));
 
   int aspectCount = 0;
   for (int i = 0; i < radix.anzahlPlanet && i < MAX_PLANET; i++) {
@@ -127,7 +149,8 @@ QString AstroTextAnalyzer::analyzeSynastry(const Radix &radix) const {
   }
 
   if (aspectCount == 0) {
-    html += "<p><i>Keine starken Verbindungsaspekte gefunden.</i></p>";
+    html += astroTextStore().text(lang, "analysis.synastry.no_aspects",
+                                 "<p><i>Keine starken Verbindungsaspekte gefunden.</i></p>");
   }
 
   return html;
@@ -138,6 +161,9 @@ QString AstroTextAnalyzer::analyzeSynastry(const Radix &radix) const {
 //==============================================================================
 
 QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+
   // Dispatch basierend auf Horoskop-Typ
   if (radix.horoTyp == TYP_TRANSIT) {
     return analyzeTransit(radix);
@@ -167,21 +193,22 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
     name += radix.rFix.name;
   }
   if (name.isEmpty())
-    name = "Radix";
+    name = astroTextStore().text(lang, "analysis.radix.default_name", "Radix");
 
-  html += QString("<h1>Horoskop-Analyse: %1</h1>").arg(name);
-  html += QString("<p><i>Geboren am %1 um %2 Uhr in %3</i></p>")
-              .arg(radix.datum)
-              .arg(radix.zeit)
-              .arg(radix.rFix.ort);
+  QString titleTemplate = astroTextStore().text(lang, "analysis.radix.title", "Horoskop-Analyse: %1");
+  html += QString("<h1>%1</h1>").arg(titleTemplate.arg(name));
+
+  QString bornTemplate = astroTextStore().text(lang, "analysis.radix.born_line",
+                                              "<p><i>Geboren am %1 um %2 Uhr in %3</i></p>");
+  html += bornTemplate.arg(radix.datum).arg(radix.zeit).arg(radix.rFix.ort);
 
   html += "<hr>";
 
   // 1. Sonnenzeichen (Hauptthema)
   if (radix.stzPlanet.size() > P_SONNE) {
     int8_t sunSign = radix.stzPlanet[P_SONNE];
-    html += "<h2>" + QString(PLANET_SYMBOLS[P_SONNE]) +
-            " Sonnenzeichen: " + getSignName(sunSign) + "</h2>";
+    QString sunLabel = astroTextStore().text(lang, "analysis.label.sun_sign", "Sonnenzeichen");
+    html += "<h2>" + QString(PLANET_SYMBOLS[P_SONNE]) + " " + sunLabel + ": " + getSignName(sunSign) + "</h2>";
     html += QString("<p class='sign-symbol'>%1</p>")
                 .arg(STERNZEICHEN_SYMBOLS[sunSign]);
     html += analyzeSunSign(sunSign);
@@ -190,7 +217,8 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
   // 2. Aszendent
   if (radix.stzHaus.size() > 0) {
     int8_t ascSign = radix.stzHaus[0];
-    html += "<h2>ASC Aszendent: " + getSignName(ascSign) + "</h2>";
+    QString ascLabel = astroTextStore().text(lang, "analysis.label.ascendant", "Aszendent");
+    html += "<h2>ASC " + ascLabel + ": " + getSignName(ascSign) + "</h2>";
     html += QString("<p class='sign-symbol'>%1</p>")
                 .arg(STERNZEICHEN_SYMBOLS[ascSign]);
     html += analyzeAscendant(ascSign);
@@ -199,8 +227,8 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
   // 3. Mondzeichen
   if (radix.stzPlanet.size() > P_MOND) {
     int8_t moonSign = radix.stzPlanet[P_MOND];
-    html += "<h2>" + QString(PLANET_SYMBOLS[P_MOND]) +
-            " Mondzeichen: " + getSignName(moonSign) + "</h2>";
+    QString moonLabel = astroTextStore().text(lang, "analysis.label.moon_sign", "Mondzeichen");
+    html += "<h2>" + QString(PLANET_SYMBOLS[P_MOND]) + " " + moonLabel + ": " + getSignName(moonSign) + "</h2>";
     html += QString("<p class='sign-symbol'>%1</p>")
                 .arg(STERNZEICHEN_SYMBOLS[moonSign]);
     html += analyzeMoonSign(moonSign);
@@ -208,8 +236,10 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
 
   // 4. Aspekte
   // 4. Aspekte
-  html += "<h2>" + QString(ASPEKT_SYMBOLS[SEXTIL]) + " Wichtige Aspekte</h2>";
-  html += "<p><i>Aspekte zeigen die Beziehungen zwischen den Planeten.</i></p>";
+  QString aspectsLabel = astroTextStore().text(lang, "analysis.label.important_aspects", "Wichtige Aspekte");
+  html += "<h2>" + QString(ASPEKT_SYMBOLS[SEXTIL]) + " " + aspectsLabel + "</h2>";
+  html += astroTextStore().text(lang, "analysis.radix.aspects_intro",
+                               "<p><i>Aspekte zeigen die Beziehungen zwischen den Planeten.</i></p>");
 
   // Aspekte durchgehen
   int aspectCount = 0;
@@ -249,7 +279,8 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
   }
 
   if (aspectCount == 0) {
-    html += "<p><i>Keine signifikanten Aspekte gefunden.</i></p>";
+    html += astroTextStore().text(lang, "analysis.radix.no_aspects",
+                                 "<p><i>Keine signifikanten Aspekte gefunden.</i></p>");
   }
 
   html += "</body></html>";
@@ -314,19 +345,42 @@ void AstroTextAnalyzer::initializeAspectNames() {
 //==============================================================================
 
 QString AstroTextAnalyzer::getPlanetName(int planetIndex) const {
-  return m_planetNames.value(planetIndex, "Unbekannt");
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+  const QString key = QString("planet_name.%1").arg(planetIndex);
+  return astroTextStore().text(lang, key, m_planetNames.value(planetIndex, "Unbekannt"));
 }
 
 QString AstroTextAnalyzer::getSignName(int8_t signIndex) const {
-  return m_signNames.value(signIndex, "Unbekannt");
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+  const QString key = QString("sign_name.%1").arg(static_cast<int>(signIndex));
+  return astroTextStore().text(lang, key, m_signNames.value(signIndex, "Unbekannt"));
 }
 
 QString AstroTextAnalyzer::getAspectName(int16_t aspectIndex) const {
-  if (m_aspectNames.contains(aspectIndex)) {
-    return m_aspectNames[aspectIndex];
-  }
-  // Fallback: Zeige ID an, damit wir wissen, was fehlt
-  return QString("Aspekt_%1").arg(aspectIndex);
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+  const QString key = QString("aspect_name.%1").arg(static_cast<int>(aspectIndex));
+  const QString fallback = m_aspectNames.contains(aspectIndex)
+                               ? m_aspectNames[aspectIndex]
+                               : QString("Aspekt_%1").arg(aspectIndex);
+  return astroTextStore().text(lang, key, fallback);
+}
+
+QString AstroTextAnalyzer::contextAspectText(int planet1, int8_t sign1, int planet2, int8_t sign2, int16_t aspect) const {
+  return getContextAspectText(planet1, sign1, planet2, sign2, aspect);
+}
+
+QString AstroTextAnalyzer::planetPairText(int planet1, int planet2, int16_t aspect) const {
+  return getPlanetPairText(planet1, planet2, aspect);
+}
+
+QString AstroTextAnalyzer::genericAspectTemplate(int16_t aspect) const {
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+  const QString key = QString("aspect.generic.%1").arg(static_cast<int>(aspect));
+  return astroTextStore().text(lang, key, defaultGenericAspectTemplate(aspect));
 }
 
 //==============================================================================
@@ -353,79 +407,52 @@ QString AstroTextAnalyzer::getGenericAspectText(int planet1, int planet2,
     return text;
   }
 
-  // Fallback auf generische Aspekt-Texte
-  switch (aspect) {
-  case KONJUNKTION:
-    text += QString(
-        "Die Energien von %1 und %2 verschmelzen hier zu einer Einheit. "
-        "Diese Verbindung intensiviert beide Planetenprinzipien und schafft "
-        "einen kraftvollen Fokus in diesem Lebensbereich. Die Themen beider "
-        "Planeten werden untrennbar miteinander verwoben.")
-        .arg(p1, p2);
-    break;
-
-  case SEXTIL:
-    text += QString(
-        "Das Sextil zwischen %1 und %2 öffnet Türen für kreative Möglichkeiten. "
-        "Diese harmonische Verbindung erfordert jedoch bewusste Aktivierung - "
-        "die Chancen sind da, aber Sie müssen sie ergreifen. Es entsteht ein "
-        "produktiver Austausch zwischen diesen Lebensbereichen.")
-        .arg(p1, p2);
-    break;
-
-  case QUADRATUR:
-    text += QString(
-        "Das Quadrat zwischen %1 und %2 erzeugt eine dynamische Spannung, "
-        "die zu Wachstum und Entwicklung drängt. Diese Herausforderung ist "
-        "ein Motor für Veränderung - sie zwingt Sie, kreative Lösungen zu "
-        "finden und über sich hinauszuwachsen.")
-        .arg(p1, p2);
-    break;
-
-  case TRIGON:
-    text += QString(
-        "Das Trigon zwischen %1 und %2 zeigt natürliche Begabungen und einen "
-        "mühelosen Energiefluss. Hier fließen die Kräfte harmonisch zusammen "
-        "und unterstützen sich gegenseitig. Dies ist ein Bereich, in dem "
-        "Ihnen vieles leicht fällt.")
-        .arg(p1, p2);
-    break;
-
-  case OPOSITION:
-    text += QString(
-        "Die Opposition zwischen %1 und %2 spiegelt ein inneres Spannungsfeld "
-        "wider, das nach Integration verlangt. Oft erleben wir diese Polarität "
-        "durch Beziehungen oder Projektionen auf andere. Die Aufgabe liegt "
-        "darin, beide Pole in sich zu vereinen und Balance zu finden.")
-        .arg(p1, p2);
-    break;
-
-  case QUINCUNX:
-    text += QString(
-        "Der Quincunx zwischen %1 und %2 zeigt zwei Lebensbereiche, die "
-        "scheinbar nichts miteinander zu tun haben. Diese ungewohnte Verbindung "
-        "erfordert ständige Anpassung und Feinabstimmung. Hier liegt ein "
-        "verborgenes Wachstumspotenzial, das Flexibilität verlangt.")
-        .arg(p1, p2);
-    break;
-
-  case HALBSEX:
-    text += QString(
-        "Das Halbsextil zwischen %1 und %2 deutet auf eine subtile Verbindung "
-        "hin, die im Hintergrund wirkt. Diese leichte Reibung kann zu kleinen "
-        "Anpassungen führen und fördert schrittweise Entwicklung.")
-        .arg(p1, p2);
-    break;
-
-  default:
-    text += QString("Der Aspekt zwischen %1 und %2 verbindet diese "
-                    "Lebensbereiche auf besondere Weise.")
-                .arg(p1, p2);
-    break;
-  }
+  const QString templ = genericAspectTemplate(aspect);
+  text += QString(templ).arg(p1, p2);
 
   text += "</p>";
   return text;
+}
+
+QString AstroTextAnalyzer::defaultGenericAspectTemplate(int16_t aspect) const {
+  switch (aspect) {
+  case KONJUNKTION:
+    return "Die Energien von %1 und %2 verschmelzen hier zu einer Einheit. "
+           "Diese Verbindung intensiviert beide Planetenprinzipien und schafft "
+           "einen kraftvollen Fokus in diesem Lebensbereich. Die Themen beider "
+           "Planeten werden untrennbar miteinander verwoben.";
+  case SEXTIL:
+    return "Das Sextil zwischen %1 und %2 öffnet Türen für kreative Möglichkeiten. "
+           "Diese harmonische Verbindung erfordert jedoch bewusste Aktivierung - "
+           "die Chancen sind da, aber Sie müssen sie ergreifen. Es entsteht ein "
+           "produktiver Austausch zwischen diesen Lebensbereichen.";
+  case QUADRATUR:
+    return "Das Quadrat zwischen %1 und %2 erzeugt eine dynamische Spannung, "
+           "die zu Wachstum und Entwicklung drängt. Diese Herausforderung ist "
+           "ein Motor für Veränderung - sie zwingt Sie, kreative Lösungen zu "
+           "finden und über sich hinauszuwachsen.";
+  case TRIGON:
+    return "Das Trigon zwischen %1 und %2 zeigt natürliche Begabungen und einen "
+           "mühelosen Energiefluss. Hier fließen die Kräfte harmonisch zusammen "
+           "und unterstützen sich gegenseitig. Dies ist ein Bereich, in dem "
+           "Ihnen vieles leicht fällt.";
+  case OPOSITION:
+    return "Die Opposition zwischen %1 und %2 spiegelt ein inneres Spannungsfeld "
+           "wider, das nach Integration verlangt. Oft erleben wir diese Polarität "
+           "durch Beziehungen oder Projektionen auf andere. Die Aufgabe liegt "
+           "darin, beide Pole in sich zu vereinen und Balance zu finden.";
+  case QUINCUNX:
+    return "Der Quincunx zwischen %1 und %2 zeigt zwei Lebensbereiche, die "
+           "scheinbar nichts miteinander zu tun haben. Diese ungewohnte Verbindung "
+           "erfordert ständige Anpassung und Feinabstimmung. Hier liegt ein "
+           "verborgenes Wachstumspotenzial, das Flexibilität verlangt.";
+  case HALBSEX:
+    return "Das Halbsextil zwischen %1 und %2 deutet auf eine subtile Verbindung "
+           "hin, die im Hintergrund wirkt. Diese leichte Reibung kann zu kleinen "
+           "Anpassungen führen und fördert schrittweise Entwicklung.";
+  default:
+    return "Der Aspekt zwischen %1 und %2 verbindet diese Lebensbereiche auf besondere Weise.";
+  }
 }
 
 QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
@@ -433,6 +460,25 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
   // Sortiere Planeten für konsistente Schlüssel
   int p1 = qMin(planet1, planet2);
   int p2 = qMax(planet1, planet2);
+
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+  const QString key = QString("aspect.pair.%1.%2.%3").arg(p1).arg(p2).arg(static_cast<int>(aspect));
+  const QString overrideText = astroTextStore().text(lang, key, QString());
+  if (!overrideText.isEmpty()) {
+    return overrideText;
+  }
+
+  // Fallback: feste Default-Texte aus initializeAspectTexts (falls vorhanden)
+  const uint32_t akey = makeAspectKey(p1, p2, aspect);
+  if (m_aspectTexts.contains(akey)) {
+    QString v = m_aspectTexts.value(akey);
+    if (v.startsWith("<p>"))
+      v = v.mid(3);
+    if (v.endsWith("</p>"))
+      v.chop(4);
+    return v;
+  }
 
   // === GLEICHE PLANETEN (für Synastrie/Transit) ===
   if (planet1 == planet2) {
@@ -2408,18 +2454,39 @@ void AstroTextAnalyzer::initializeAspectTexts() {
 //==============================================================================
 
 QString AstroTextAnalyzer::analyzeSunSign(int8_t sternzeichen) const {
-  return m_sunSignTexts.value(
-      sternzeichen, "<p><i>Keine detaillierte Beschreibung verfügbar.</i></p>");
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+  const QString key = QString("sun_sign.%1").arg(static_cast<int>(sternzeichen));
+  return astroTextStore().text(
+      lang,
+      key,
+      m_sunSignTexts.value(
+          sternzeichen,
+          "<p><i>Keine detaillierte Beschreibung verfügbar.</i></p>"));
 }
 
 QString AstroTextAnalyzer::analyzeAscendant(int8_t sternzeichen) const {
-  return m_ascendantTexts.value(
-      sternzeichen, "<p><i>Keine detaillierte Beschreibung verfügbar.</i></p>");
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+  const QString key = QString("ascendant.%1").arg(static_cast<int>(sternzeichen));
+  return astroTextStore().text(
+      lang,
+      key,
+      m_ascendantTexts.value(
+          sternzeichen,
+          "<p><i>Keine detaillierte Beschreibung verfügbar.</i></p>"));
 }
 
 QString AstroTextAnalyzer::analyzeMoonSign(int8_t sternzeichen) const {
-  return m_moonSignTexts.value(
-      sternzeichen, "<p><i>Keine detaillierte Beschreibung verfügbar.</i></p>");
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+  const QString key = QString("moon_sign.%1").arg(static_cast<int>(sternzeichen));
+  return astroTextStore().text(
+      lang,
+      key,
+      m_moonSignTexts.value(
+          sternzeichen,
+          "<p><i>Keine detaillierte Beschreibung verfügbar.</i></p>"));
 }
 
 // Alte Methode (Forwarder)
@@ -2432,6 +2499,22 @@ QString AstroTextAnalyzer::analyzeAspect(int planet1, int planet2,
 QString AstroTextAnalyzer::getContextAspectText(int planet1, int8_t sign1,
                                                 int planet2, int8_t sign2,
                                                 int16_t aspect) const {
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+
+  if (sign1 >= 0 && sign2 >= 0) {
+    const QString k = QString("aspect.context.%1.%2.%3.%4.%5")
+                          .arg(static_cast<int>(sign1))
+                          .arg(planet1)
+                          .arg(static_cast<int>(aspect))
+                          .arg(planet2)
+                          .arg(static_cast<int>(sign2));
+    const QString ov = astroTextStore().text(lang, k, QString());
+    if (!ov.isEmpty()) {
+      return ov;
+    }
+  }
+
   QString text = "<p>";
 
   // Element-Berechnung
@@ -2457,21 +2540,23 @@ QString AstroTextAnalyzer::getContextAspectText(int planet1, int8_t sign1,
 
   // Element-Namen
   auto elementName = [](int e) -> QString {
+    const QString langLocal = analyzerLang();
     switch (e) {
-    case 0: return "Feuer";
-    case 1: return "Erde";
-    case 2: return "Luft";
-    case 3: return "Wasser";
+    case 0: return astroTextStore().text(langLocal, "element.fire", "Feuer");
+    case 1: return astroTextStore().text(langLocal, "element.earth", "Erde");
+    case 2: return astroTextStore().text(langLocal, "element.air", "Luft");
+    case 3: return astroTextStore().text(langLocal, "element.water", "Wasser");
     default: return "";
     }
   };
 
   // Qualitäts-Namen
   auto qualityName = [](int q) -> QString {
+    const QString langLocal = analyzerLang();
     switch (q) {
-    case 0: return "kardinal";
-    case 1: return "fix";
-    case 2: return "veränderlich";
+    case 0: return astroTextStore().text(langLocal, "quality.cardinal", "kardinal");
+    case 1: return astroTextStore().text(langLocal, "quality.fixed", "fix");
+    case 2: return astroTextStore().text(langLocal, "quality.mutable", "veränderlich");
     default: return "";
     }
   };
@@ -2503,31 +2588,23 @@ QString AstroTextAnalyzer::getContextAspectText(int planet1, int8_t sign1,
       QString elName = elementName(el1);
       switch (el1) {
       case 0: // Feuer
-        text += QString("Beide Planeten stehen in %1-Zeichen, was diesem Aspekt "
-                        "besondere Dynamik, Energie und Leidenschaft verleiht. "
-                        "Hier ist viel Initiative und Unternehmungslust vorhanden, "
-                        "aber auch die Gefahr von Impulsivität und Ungeduld.")
+        text += astroTextStore().text(lang, "context.same.fire",
+                        "Beide Planeten stehen in %1-Zeichen, was diesem Aspekt besondere Dynamik, Energie und Leidenschaft verleiht. Hier ist viel Initiative und Unternehmungslust vorhanden, aber auch die Gefahr von Impulsivität und Ungeduld.")
                     .arg(elName);
         break;
       case 1: // Erde
-        text += QString("Beide Planeten stehen in %1-Zeichen, was diesem Aspekt "
-                        "Stabilität, Ausdauer und Pragmatismus verleiht. Sie gehen "
-                        "methodisch vor und bauen auf solide Fundamente. "
-                        "Materielle Sicherheit ist wichtig.")
+        text += astroTextStore().text(lang, "context.same.earth",
+                        "Beide Planeten stehen in %1-Zeichen, was diesem Aspekt Stabilität, Ausdauer und Pragmatismus verleiht. Sie gehen methodisch vor und bauen auf solide Fundamente. Materielle Sicherheit ist wichtig.")
                     .arg(elName);
         break;
       case 2: // Luft
-        text += QString("Beide Planeten stehen in %1-Zeichen, was diesem Aspekt "
-                        "geistige Beweglichkeit und kommunikative Fähigkeiten "
-                        "verleiht. Ideen und sozialer Austausch stehen im Vordergrund. "
-                        "Objektivität ist eine Stärke.")
+        text += astroTextStore().text(lang, "context.same.air",
+                        "Beide Planeten stehen in %1-Zeichen, was diesem Aspekt geistige Beweglichkeit und kommunikative Fähigkeiten verleiht. Ideen und sozialer Austausch stehen im Vordergrund. Objektivität ist eine Stärke.")
                     .arg(elName);
         break;
       case 3: // Wasser
-        text += QString("Beide Planeten stehen in %1-Zeichen, was diesem Aspekt "
-                        "emotionale Tiefe und intuitive Qualitäten verleiht. "
-                        "Gefühle und Empfindungen sind hier sehr stark. "
-                        "Einfühlungsvermögen und Sensibilität prägen diesen Bereich.")
+        text += astroTextStore().text(lang, "context.same.water",
+                        "Beide Planeten stehen in %1-Zeichen, was diesem Aspekt emotionale Tiefe und intuitive Qualitäten verleiht. Gefühle und Empfindungen sind hier sehr stark. Einfühlungsvermögen und Sensibilität prägen diesen Bereich.")
                     .arg(elName);
         break;
       }
@@ -2539,53 +2616,42 @@ QString AstroTextAnalyzer::getContextAspectText(int planet1, int8_t sign1,
       // Harmonische Element-Kombinationen
       if ((el1 == 0 && el2 == 2) || (el1 == 2 && el2 == 0)) {
         // Feuer-Luft
-        text += QString("%1 (%2) und %3 (%4) verbinden sich hier zu einer "
-                        "energiegeladenen, enthusiastischen Kombination. "
-                        "Ideen werden in Aktion umgesetzt, Inspiration führt zu Taten.")
-                    .arg(getPlanetName(planet1), elName1,
-                         getPlanetName(planet2), elName2);
+        text += astroTextStore().text(lang, "context.combo.fire_air",
+                        "%1 (%2) und %3 (%4) verbinden sich hier zu einer energiegeladenen, enthusiastischen Kombination. Ideen werden in Aktion umgesetzt, Inspiration führt zu Taten.")
+                    .arg(getPlanetName(planet1), elName1, getPlanetName(planet2), elName2);
       } else if ((el1 == 1 && el2 == 3) || (el1 == 3 && el2 == 1)) {
         // Erde-Wasser
-        text += QString("%1 (%2) und %3 (%4) verbinden sich zu einer "
-                        "fruchtbaren, nährenden Kombination. Praktisches und "
-                        "Emotionales arbeiten zusammen. Gefühle finden konkreten Ausdruck.")
-                    .arg(getPlanetName(planet1), elName1,
-                         getPlanetName(planet2), elName2);
+        text += astroTextStore().text(lang, "context.combo.earth_water",
+                        "%1 (%2) und %3 (%4) verbinden sich zu einer fruchtbaren, nährenden Kombination. Praktisches und Emotionales arbeiten zusammen. Gefühle finden konkreten Ausdruck.")
+                    .arg(getPlanetName(planet1), elName1, getPlanetName(planet2), elName2);
       } else if ((el1 == 0 && el2 == 1) || (el1 == 1 && el2 == 0)) {
         // Feuer-Erde
-        text += QString("%1 (%2) und %3 (%4) verbinden Impuls mit Substanz. "
-                        "Der Feuerdrang will schnelle Ergebnisse, die Erde fordert Geduld. "
-                        "Diese Spannung kann zu konkreten Errungenschaften führen.")
-                    .arg(getPlanetName(planet1), elName1,
-                         getPlanetName(planet2), elName2);
+        text += astroTextStore().text(lang, "context.combo.fire_earth",
+                        "%1 (%2) und %3 (%4) verbinden Impuls mit Substanz. Der Feuerdrang will schnelle Ergebnisse, die Erde fordert Geduld. Diese Spannung kann zu konkreten Errungenschaften führen.")
+                    .arg(getPlanetName(planet1), elName1, getPlanetName(planet2), elName2);
       } else if ((el1 == 0 && el2 == 3) || (el1 == 3 && el2 == 0)) {
         // Feuer-Wasser
-        text += QString("%1 (%2) und %3 (%4) erzeugen Dampf - eine kraftvolle, "
-                        "aber volatile Mischung. Leidenschaft trifft auf Gefühl, "
-                        "was zu intensiven, aber auch stürmischen Energien führen kann.")
-                    .arg(getPlanetName(planet1), elName1,
-                         getPlanetName(planet2), elName2);
+        text += astroTextStore().text(lang, "context.combo.fire_water",
+                        "%1 (%2) und %3 (%4) erzeugen Dampf - eine kraftvolle, aber volatile Mischung. Leidenschaft trifft auf Gefühl, was zu intensiven, aber auch stürmischen Energien führen kann.")
+                    .arg(getPlanetName(planet1), elName1, getPlanetName(planet2), elName2);
       } else if ((el1 == 1 && el2 == 2) || (el1 == 2 && el2 == 1)) {
         // Erde-Luft
-        text += QString("%1 (%2) und %3 (%4) verbinden Theorie mit Praxis. "
-                        "Ideen brauchen praktische Umsetzung, und die Erde erdet "
-                        "das manchmal zu abstrakte Denken der Luft.")
-                    .arg(getPlanetName(planet1), elName1,
-                         getPlanetName(planet2), elName2);
+        text += astroTextStore().text(lang, "context.combo.earth_air",
+                        "%1 (%2) und %3 (%4) verbinden Theorie mit Praxis. Ideen brauchen praktische Umsetzung, und die Erde erdet das manchmal zu abstrakte Denken der Luft.")
+                    .arg(getPlanetName(planet1), elName1, getPlanetName(planet2), elName2);
       } else if ((el1 == 2 && el2 == 3) || (el1 == 3 && el2 == 2)) {
         // Luft-Wasser
-        text += QString("%1 (%2) und %3 (%4) verbinden Verstand mit Gefühl. "
-                        "Das kann zu künstlerischer Sensibilität führen, aber auch "
-                        "zu Konflikten zwischen Kopf und Herz.")
-                    .arg(getPlanetName(planet1), elName1,
-                         getPlanetName(planet2), elName2);
+        text += astroTextStore().text(lang, "context.combo.air_water",
+                        "%1 (%2) und %3 (%4) verbinden Verstand mit Gefühl. Das kann zu künstlerischer Sensibilität führen, aber auch zu Konflikten zwischen Kopf und Herz.")
+                    .arg(getPlanetName(planet1), elName1, getPlanetName(planet2), elName2);
       }
     }
 
     // Qualitäts-Kontext hinzufügen
     if (qual1 >= 0 && qual2 >= 0 && qual1 == qual2) {
       QString qualName = qualityName(qual1);
-      text += QString(" Beide Zeichen sind %1, was die Intensität dieses Aspekts verstärkt.")
+      text += astroTextStore().text(lang, "context.quality.same",
+                                   " Beide Zeichen sind %1, was die Intensität dieses Aspekts verstärkt.")
                   .arg(qualName);
     }
 

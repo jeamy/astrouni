@@ -61,6 +61,9 @@ private slots:
     void onOrben();
     void onFarben();
     void onAspekte();
+
+    // Bearbeiten-Menü
+    void onEditTexts();
     
     // Hilfe-Menü
     void onHelpIndex();
@@ -77,6 +80,7 @@ private:
     
     // Menüs
     QMenu* m_fileMenu;
+    QMenu* m_editMenu;
     QMenu* m_erfassenMenu;
     QMenu* m_horoskopMenu;
     QMenu* m_hilfeMenu;
@@ -85,6 +89,7 @@ private:
     QAction* m_exportPdfAction;
     QAction* m_printAction;
     QAction* m_exitAction;
+    QAction* m_editTextsAction;
     QAction* m_personAction;
     QAction* m_ortAction;
     QAction* m_horoTypAction;
