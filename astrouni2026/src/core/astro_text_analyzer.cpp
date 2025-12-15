@@ -598,6 +598,17 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Mond und Merkur im Trigon schenken emotionale Intelligenz und die "
              "Fähigkeit, Gefühle eloquent auszudrücken. Sie verstehen instinktiv, "
              "was andere bewegt, und können trösten und vermitteln.";
+    case OPOSITION:
+      return "Die Opposition von Mond und Merkur zeigt einen inneren Konflikt zwischen "
+             "Verstand und Gefühl. Sie analysieren Ihre Emotionen oder projizieren "
+             "Ihre Gedanken auf andere. Integration von Kopf und Herz ist gefragt.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mond und Merkur erfordert ständige Anpassung "
+             "zwischen intuitivem Fühlen und rationalem Denken. Was Sie fühlen und "
+             "was Sie denken, scheint nicht zusammenzupassen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mond und Merkur deutet auf eine subtile "
+             "Verbindung zwischen Gefühl und Verstand hin, die bewusste Integration erfordert.";
     }
   }
 
@@ -621,6 +632,17 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Mond und Venus im Trigon schenken ein natürliches Talent für Liebe "
              "und Beziehungen. Sie fühlen sich in harmonischer Umgebung wohl und "
              "haben ein feines Gespür für Ästhetik.";
+    case OPOSITION:
+      return "Die Opposition von Mond und Venus kann Konflikte zwischen emotionalen "
+             "Bedürfnissen und Beziehungswünschen anzeigen. Sie projizieren möglicherweise "
+             "Ihre Liebessehnsucht auf Partner oder erleben Spannungen zwischen Geben und Nehmen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mond und Venus erfordert ständige Nachjustierung "
+             "zwischen dem, was Sie emotional brauchen, und dem, was Sie in Beziehungen "
+             "suchen. Selbstfürsorge und Partnerliebe wollen ausbalanciert werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mond und Venus deutet auf eine feine Spannung "
+             "zwischen Gefühlsleben und Beziehungsbedürfnissen hin, die sanfte Aufmerksamkeit erfordert.";
     }
   }
 
@@ -647,6 +669,13 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Die Opposition von Mond und Mars kann emotionale Konflikte in "
              "Beziehungen anzeigen - besonders zwischen Nähebedürfnis und "
              "Unabhängigkeitsdrang. Lernen Sie, beide Pole zu integrieren.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mond und Mars erfordert ständige Anpassung "
+             "zwischen Ihrem Bedürfnis nach emotionaler Sicherheit und Ihrem "
+             "Drang zu handeln. Sanftheit und Kraft wollen integriert werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mond und Mars deutet auf eine subtile Reibung "
+             "zwischen Gefühl und Aktion hin, die zu kleinen Anpassungen führt.";
     }
   }
 
@@ -681,6 +710,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
              "Verbindung zwischen Ihrem emotionalen Sicherheitsbedürfnis und "
              "Ihrem Wunsch nach Wachstum und Horizonterweiterung. Sie müssen "
              "ständig nachjustieren, wie viel Abenteuer Ihre Seele verträgt.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mond und Jupiter deutet auf eine feine "
+             "Spannung zwischen emotionaler Geborgenheit und Expansionsdrang hin.";
     }
   }
 
@@ -715,6 +747,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
              "zwischen Ihrem Bedürfnis nach emotionaler Wärme und den Anforderungen "
              "der Realität. Sie müssen lernen, Struktur und Gefühl in Einklang "
              "zu bringen, ohne eines zu unterdrücken.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mond und Saturn zeigt eine leichte Reibung "
+             "zwischen Gefühlsbedürfnissen und Verantwortung, die schrittweise Integration erfordert.";
     }
   }
 
@@ -744,6 +779,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Mond und Uranus zeigt eine unbehagliche "
              "Spannung zwischen Ihrem Bedürfnis nach emotionaler Geborgenheit "
              "und Ihrem Drang nach Unabhängigkeit und Veränderung.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mond und Uranus deutet auf eine subtile "
+             "Spannung zwischen Tradition und Innovation im Gefühlsleben hin.";
     }
   }
 
@@ -773,6 +811,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Mond und Neptun erfordert ständige "
              "Nachjustierung zwischen Ihrem Bedürfnis nach klaren emotionalen "
              "Grenzen und Ihrer durchlässigen, empfindsamen Natur.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mond und Neptun deutet auf eine feine "
+             "Verbindung zwischen Realitätssinn und Träumerei hin.";
     }
   }
 
@@ -803,6 +844,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Mond und Pluto zeigt eine unbequeme "
              "Verbindung zwischen Ihrem Bedürfnis nach emotionaler Sicherheit "
              "und tiefen Transformationsprozessen, die Altes sterben lassen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mond und Pluto zeigt eine subtile "
+             "Verbindung zwischen Alltagsgefühlen und tieferen Transformationsprozessen.";
     }
   }
 
@@ -823,6 +867,18 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Die Spannung zwischen Merkur und Venus kann zu Konflikten zwischen "
              "Kopf und Herz in der Kommunikation führen. Vielleicht fällt es Ihnen "
              "schwer, Ihre Zuneigung auszudrücken, oder Sie wirken oberflächlich.";
+    case TRIGON:
+      return "Merkur und Venus im Trigon schenken natürlichen Charme und die "
+             "Fähigkeit, angenehme Gespräche zu führen. Kunst und Kommunikation verbinden sich.";
+    case OPOSITION:
+      return "Die Opposition von Merkur und Venus kann innere Konflikte zwischen "
+             "rationalen und ästhetischen Bedürfnissen anzeigen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Merkur und Venus erfordert Anpassung zwischen "
+             "klarer Kommunikation und harmonischem Ausdruck.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Merkur und Venus deutet auf eine feine "
+             "Spannung zwischen Denken und Genießen hin.";
     }
   }
 
@@ -844,6 +900,15 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return "Merkur und Mars im Trigon verleihen geistige Schlagfertigkeit und "
              "die Fähigkeit, Ihre Gedanken energisch, aber geschickt zu vertreten.";
+    case OPOSITION:
+      return "Die Opposition von Merkur und Mars kann zu verbalen Konflikten oder "
+             "dem Gefühl führen, Ihre Ideen verteidigen zu müssen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Merkur und Mars erfordert Anpassung zwischen "
+             "überlegtem Denken und impulsivem Handeln.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Merkur und Mars deutet auf eine feine Reibung "
+             "zwischen Nachdenken und Losstürmen hin.";
     }
   }
 
@@ -873,6 +938,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Merkur und Jupiter erfordert ständige Anpassung "
              "zwischen Ihrem analytischen Verstand und Ihrem Bedürfnis nach Sinnsuche. "
              "Kleine Fakten und große Wahrheiten wollen integriert werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Merkur und Jupiter zeigt eine subtile Spannung "
+             "zwischen Detailgenauigkeit und großzügigem Denken.";
     }
   }
 
@@ -901,6 +969,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Merkur und Saturn zeigt eine unbequeme Verbindung "
              "zwischen Ihrem Bedürfnis, frei zu denken, und dem Druck, ernst genommen "
              "zu werden. Leichtigkeit und Tiefe wollen verbunden werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Merkur und Saturn deutet auf eine feine Spannung "
+             "zwischen spontanem Ausdruck und gründlicher Überlegung hin.";
     }
   }
 
@@ -929,6 +1000,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Merkur und Uranus erfordert Anpassung zwischen "
              "konventionellem und revolutionärem Denken. Sie müssen lernen, Ihre "
              "genialen Einfälle so zu vermitteln, dass andere folgen können.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Merkur und Uranus zeigt eine subtile Verbindung "
+             "zwischen strukturiertem und originellem Denken.";
     }
   }
 
@@ -957,6 +1031,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Merkur und Neptun zeigt eine unbehagliche Spannung "
              "zwischen logischem Denken und intuitiver Wahrnehmung. Sie müssen lernen, "
              "beiden Seiten Raum zu geben, ohne sich zu verlieren.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Merkur und Neptun deutet auf eine feine Verbindung "
+             "zwischen klarem Denken und träumerischer Intuition hin.";
     }
   }
 
@@ -986,6 +1063,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Merkur und Pluto erfordert ständige Anpassung "
              "zwischen oberflächlicher Kommunikation und dem Drang, alles tiefgründig "
              "zu analysieren. Nicht alles muss auf den Grund gegangen werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Merkur und Pluto zeigt eine subtile Verbindung "
+             "zwischen Alltagskommunikation und tiefgründiger Analyse.";
     }
   }
 
@@ -1019,6 +1099,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Venus und Mars erfordert ständige Nachjustierung "
              "zwischen Harmoniebedürfnis und Durchsetzungswillen. Sie müssen lernen, "
              "Ihre sanfte und Ihre kämpferische Seite zu integrieren.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Venus und Mars zeigt eine feine Spannung "
+             "zwischen Anziehung und Begehren, die bewusste Integration erfordert.";
     }
   }
 
@@ -1047,6 +1130,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Venus und Jupiter erfordert Anpassung zwischen "
              "persönlichen Beziehungen und größeren Lebensplänen. Liebe und Freiheit, "
              "Nähe und Expansion wollen ausbalanciert werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Venus und Jupiter zeigt eine subtile Spannung "
+             "zwischen intimer Liebe und großzügiger Expansion.";
     }
   }
 
@@ -1076,6 +1162,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Venus und Saturn erfordert ständige Anpassung "
              "zwischen Ihrem Bedürfnis nach Liebe und Leichtigkeit und den Anforderungen "
              "der Realität. Genießen und Arbeiten wollen ausbalanciert werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Venus und Saturn zeigt eine feine Reibung "
+             "zwischen Genuss und Disziplin, die schrittweise Integration erfordert.";
     }
   }
 
@@ -1102,6 +1191,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Venus und Uranus zeigt eine unbehagliche Spannung "
              "zwischen Harmoniebedarf und Freiheitsdrang. Sie müssen lernen, beide "
              "Bedürfnisse zu integrieren.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Venus und Uranus zeigt eine feine Spannung "
+             "zwischen Stabilität und Aufregung in Beziehungen.";
     }
   }
 
@@ -1127,6 +1219,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case QUINCUNX:
       return "Der Quincunx zwischen Venus und Neptun erfordert ständige Anpassung zwischen "
              "realistischen Beziehungsbedürfnissen und romantischen Träumen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Venus und Neptun zeigt eine subtile Verbindung "
+             "zwischen Realitätssinn und romantischer Sehnsucht.";
     }
   }
 
@@ -1152,6 +1247,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case QUINCUNX:
       return "Der Quincunx zwischen Venus und Pluto erfordert ständige Anpassung zwischen "
              "dem Wunsch nach Harmonie und tiefen, transformativen Kräften in Beziehungen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Venus und Pluto zeigt eine feine Verbindung "
+             "zwischen oberflächlicher Harmonie und tieferer Leidenschaft.";
     }
   }
 
@@ -1182,6 +1280,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Mars und Jupiter erfordert Anpassung zwischen "
              "Ihrem Drang zu handeln und dem Bedürfnis, das große Bild zu sehen. "
              "Aktion und Vision wollen integriert werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mars und Jupiter zeigt eine subtile Spannung "
+             "zwischen fokussiertem Handeln und expansivem Denken.";
     }
   }
 
@@ -1212,6 +1313,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Mars und Saturn erfordert ständige Nachjustierung "
              "zwischen Ihrem Drang loszulegen und der Notwendigkeit, geduldig zu sein. "
              "Tempo und Timing wollen ausbalanciert werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mars und Saturn zeigt eine feine Reibung "
+             "zwischen Impuls und Zurückhaltung.";
     }
   }
 
@@ -1239,6 +1343,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Mars und Uranus erfordert Anpassung zwischen "
              "direktem Handeln und ungewöhnlichen Methoden. Tradition und Innovation "
              "wollen verbunden werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mars und Uranus zeigt eine subtile Spannung "
+             "zwischen geplanter Aktion und spontaner Veränderung.";
     }
   }
 
@@ -1265,6 +1372,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Mars und Neptun zeigt eine unbequeme Verbindung "
              "zwischen direktem Handeln und intuitivem Fließen. Sie müssen lernen, "
              "wann Sie kämpfen und wann Sie loslassen sollten.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mars und Neptun zeigt eine feine Verbindung "
+             "zwischen konkreter Tat und visionärer Inspiration.";
     }
   }
 
@@ -1292,6 +1402,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Mars und Pluto erfordert ständige Anpassung zwischen "
              "oberflächlichem Handeln und tiefgreifender Transformation. Kontrolle und "
              "Loslassen wollen ausbalanciert werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Mars und Pluto zeigt eine subtile Verbindung "
+             "zwischen Alltagshandeln und tieferen Transformationskräften.";
     }
   }
 
@@ -1319,6 +1432,9 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Der Quincunx zwischen Jupiter und Saturn erfordert ständige Anpassung "
              "zwischen Ihrem Optimismus und den Realitäten. Träume und Praktikabilität "
              "wollen integriert werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Jupiter und Saturn zeigt eine feine Spannung "
+             "zwischen Expansion und Konsolidierung.";
     }
   }
 
@@ -1339,6 +1455,12 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case QUINCUNX:
       return "Der Quincunx zwischen Jupiter und Uranus erfordert Anpassung zwischen "
              "traditionellen Werten und revolutionären Impulsen.";
+    case OPOSITION:
+      return "Die Opposition von Jupiter und Uranus kann zu radikalen Schwankungen "
+             "zwischen Überoptimismus und plötzlichen Umwälzungen führen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Jupiter und Uranus zeigt eine subtile Verbindung "
+             "zwischen traditionellem Wachstum und innovativen Impulsen.";
     }
   }
 
@@ -1359,6 +1481,12 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case QUINCUNX:
       return "Der Quincunx zwischen Jupiter und Neptun zeigt eine unbequeme Verbindung "
              "zwischen praktischem Wachstum und spiritueller Sehnsucht.";
+    case OPOSITION:
+      return "Die Opposition von Jupiter und Neptun kann zu übertriebenem Idealismus "
+             "oder Realitätsflucht führen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Jupiter und Neptun zeigt eine feine Verbindung "
+             "zwischen weltlichem Erfolg und spiritueller Suche.";
     }
   }
 
@@ -1379,6 +1507,12 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case QUINCUNX:
       return "Der Quincunx zwischen Jupiter und Pluto erfordert Anpassung zwischen "
              "Expansion und tiefgreifender Transformation.";
+    case OPOSITION:
+      return "Die Opposition von Jupiter und Pluto kann zu Machtkämpfen um Einfluss "
+             "und Ressourcen führen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Jupiter und Pluto zeigt eine subtile Verbindung "
+             "zwischen äußerem Wachstum und innerer Transformation.";
     }
   }
 
@@ -1399,6 +1533,12 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case QUINCUNX:
       return "Der Quincunx zwischen Saturn und Uranus erfordert ständige Anpassung "
              "zwischen Stabilität und Veränderung, Regeln und Freiheit.";
+    case OPOSITION:
+      return "Die Opposition von Saturn und Uranus zeigt den Konflikt zwischen "
+             "etablierten Strukturen und revolutionären Kräften.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Saturn und Uranus zeigt eine feine Spannung "
+             "zwischen Bewährtem und Neuem.";
     }
   }
 
@@ -1419,6 +1559,12 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case QUINCUNX:
       return "Der Quincunx zwischen Saturn und Neptun zeigt eine unbehagliche Spannung "
              "zwischen praktischen Anforderungen und spirituellen Sehnsüchten.";
+    case OPOSITION:
+      return "Die Opposition von Saturn und Neptun kann zu Desillusion oder dem "
+             "Zusammenbruch unrealistischer Strukturen führen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Saturn und Neptun zeigt eine subtile Verbindung "
+             "zwischen konkreter Realität und transzendenter Vision.";
     }
   }
 
@@ -1439,6 +1585,12 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case QUINCUNX:
       return "Der Quincunx zwischen Saturn und Pluto erfordert ständige Anpassung "
              "zwischen Kontrolle und Loslassen, Struktur und Transformation.";
+    case OPOSITION:
+      return "Die Opposition von Saturn und Pluto kann existenzielle Machtkämpfe "
+             "oder den Zusammenbruch alter Strukturen anzeigen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Saturn und Pluto zeigt eine subtile Verbindung "
+             "zwischen Alltagsstrukturen und tiefgreifenden Transformationsprozessen.";
     }
   }
 
@@ -1453,6 +1605,18 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case QUINCUNX:
       return "Der Quincunx zwischen Uranus und Neptun zeigt generationelle Spannungen "
              "zwischen Revolution und Transzendenz.";
+    case QUADRATUR:
+      return "Das Quadrat zwischen Uranus und Neptun erzeugt Spannungen zwischen "
+             "revolutionären Impulsen und spirituellen Idealen.";
+    case TRIGON:
+      return "Das Trigon zwischen Uranus und Neptun begünstigt inspirierende "
+             "Verbindung von Innovation und Vision.";
+    case OPOSITION:
+      return "Die Opposition von Uranus und Neptun zeigt generationelle Konflikte "
+             "zwischen Fortschritt und Spiritualität.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Uranus und Neptun zeigt eine feine Verbindung "
+             "zwischen Innovation und Transzendenz.";
     }
   }
 
@@ -1470,6 +1634,15 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case QUINCUNX:
       return "Der Quincunx zwischen Uranus und Pluto erfordert Anpassung zwischen "
              "plötzlichen Veränderungen und tiefgreifender Transformation.";
+    case TRIGON:
+      return "Das Trigon zwischen Uranus und Pluto begünstigt kraftvolle "
+             "Erneuerung und tiefgreifende Veränderung.";
+    case OPOSITION:
+      return "Die Opposition von Uranus und Pluto markiert Zeiten intensiver "
+             "gesellschaftlicher Umwälzungen und Machtkämpfe.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Uranus und Pluto zeigt eine subtile Verbindung "
+             "zwischen plötzlichen Impulsen und tieferer Transformation.";
     }
   }
 
@@ -1484,6 +1657,18 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case QUINCUNX:
       return "Der Quincunx zwischen Neptun und Pluto zeigt generationelle Herausforderungen "
              "bei der Integration von Spiritualität und Macht.";
+    case QUADRATUR:
+      return "Das Quadrat zwischen Neptun und Pluto markiert epochale Spannungen "
+             "zwischen Spiritualität und Macht.";
+    case TRIGON:
+      return "Das Trigon zwischen Neptun und Pluto begünstigt die Integration "
+             "von spirituellem Bewusstsein und transformativer Kraft.";
+    case OPOSITION:
+      return "Die Opposition von Neptun und Pluto markiert zivilisatorische "
+             "Wendepunkte im Verhältnis von Spiritualität und Macht.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Neptun und Pluto zeigt eine feine Verbindung "
+             "zwischen Transzendenz und Transformation.";
     }
   }
 
@@ -1506,6 +1691,15 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return QString("%1 im Trigon zu Chiron schenkt natürliche Heilfähigkeiten "
              "und die Gabe, aus Erfahrung Weisheit zu schöpfen.").arg(getPlanetName(p1));
+    case OPOSITION:
+      return QString("Die Opposition von %1 und Chiron kann alte Wunden in "
+             "Beziehungen aktivieren. Heilung kommt durch Integration.").arg(getPlanetName(p1));
+    case QUINCUNX:
+      return QString("Der Quincunx zwischen %1 und Chiron erfordert Anpassung "
+             "zwischen Alltagsleben und Heilungsprozessen.").arg(getPlanetName(p1));
+    case HALBSEX:
+      return QString("Das Halbsextil zwischen %1 und Chiron zeigt eine feine "
+             "Verbindung zwischen Lebenserfahrung und Heilung.").arg(getPlanetName(p1));
     }
   }
 
@@ -1523,6 +1717,18 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return QString("%1 im Trigon zu Ceres schenkt ein natürliches Talent "
              "für Pflege und das Schaffen einer nährenden Umgebung.")
              .arg(getPlanetName(p1));
+    case QUADRATUR:
+      return QString("Die Spannung zwischen %1 und Ceres kann Konflikte um "
+             "Fürsorge und Loslassen anzeigen.").arg(getPlanetName(p1));
+    case OPOSITION:
+      return QString("Die Opposition von %1 und Ceres kann Themen des "
+             "Nährens versus Loslassens aktivieren.").arg(getPlanetName(p1));
+    case QUINCUNX:
+      return QString("Der Quincunx zwischen %1 und Ceres erfordert Anpassung "
+             "zwischen Selbstfürsorge und Fürsorge für andere.").arg(getPlanetName(p1));
+    case HALBSEX:
+      return QString("Das Halbsextil zwischen %1 und Ceres zeigt eine subtile "
+             "Verbindung zu Fürsorgethemen.").arg(getPlanetName(p1));
     }
   }
 
@@ -1539,6 +1745,18 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return QString("%1 im Trigon zu Pallas schenkt natürliche Weisheit "
              "und die Gabe, kreative Lösungen zu finden.").arg(getPlanetName(p1));
+    case QUADRATUR:
+      return QString("Die Spannung zwischen %1 und Pallas kann Konflikte zwischen "
+             "Intuition und Strategie anzeigen.").arg(getPlanetName(p1));
+    case OPOSITION:
+      return QString("Die Opposition von %1 und Pallas zeigt den Konflikt "
+             "zwischen Instinkt und kluger Planung.").arg(getPlanetName(p1));
+    case QUINCUNX:
+      return QString("Der Quincunx zwischen %1 und Pallas erfordert Anpassung "
+             "zwischen spontanem Handeln und strategischem Denken.").arg(getPlanetName(p1));
+    case HALBSEX:
+      return QString("Das Halbsextil zwischen %1 und Pallas zeigt eine feine "
+             "Verbindung zwischen Kreativität und Weisheit.").arg(getPlanetName(p1));
     }
   }
 
@@ -1555,6 +1773,18 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return QString("%1 im Trigon zu Juno schenkt ein natürliches Talent "
              "für dauerhafte, loyale Partnerschaften.").arg(getPlanetName(p1));
+    case QUADRATUR:
+      return QString("Die Spannung zwischen %1 und Juno kann Beziehungskonflikte "
+             "um Treue und Gleichberechtigung anzeigen.").arg(getPlanetName(p1));
+    case OPOSITION:
+      return QString("Die Opposition von %1 und Juno zeigt Partnerschaftsthemen, "
+             "die durch andere gespiegelt werden.").arg(getPlanetName(p1));
+    case QUINCUNX:
+      return QString("Der Quincunx zwischen %1 und Juno erfordert Anpassung "
+             "zwischen persönlichen und Partnerschaftsbedürfnissen.").arg(getPlanetName(p1));
+    case HALBSEX:
+      return QString("Das Halbsextil zwischen %1 und Juno zeigt eine subtile "
+             "Verbindung zu Partnerschaftsthemen.").arg(getPlanetName(p1));
     }
   }
 
@@ -1572,6 +1802,18 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return QString("%1 im Trigon zu Vesta schenkt natürliche Fokussierung "
              "und die Gabe, das innere Feuer der Hingabe zu bewahren.")
              .arg(getPlanetName(p1));
+    case QUADRATUR:
+      return QString("Die Spannung zwischen %1 und Vesta kann Konflikte zwischen "
+             "persönlichen Bedürfnissen und Hingabe anzeigen.").arg(getPlanetName(p1));
+    case OPOSITION:
+      return QString("Die Opposition von %1 und Vesta zeigt den Konflikt "
+             "zwischen Weltlichem und Heiligem.").arg(getPlanetName(p1));
+    case QUINCUNX:
+      return QString("Der Quincunx zwischen %1 und Vesta erfordert Anpassung "
+             "zwischen Alltagsleben und innerer Berufung.").arg(getPlanetName(p1));
+    case HALBSEX:
+      return QString("Das Halbsextil zwischen %1 und Vesta zeigt eine feine "
+             "Verbindung zwischen Fokus und Hingabe.").arg(getPlanetName(p1));
     }
   }
 
@@ -1589,6 +1831,18 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return QString("Die Spannung zwischen %1 und Lilith kann verdrängte "
              "Aspekte Ihrer Persönlichkeit aktivieren. Integration ist gefragt.")
              .arg(getPlanetName(p1));
+    case TRIGON:
+      return QString("%1 im Trigon zu Lilith schenkt natürlichen Zugang zu "
+             "Ihrer inneren Wildheit und ungezähmten Kraft.").arg(getPlanetName(p1));
+    case OPOSITION:
+      return QString("Die Opposition von %1 und Lilith kann verdrängte "
+             "Schattenaspekte durch andere aktivieren.").arg(getPlanetName(p1));
+    case QUINCUNX:
+      return QString("Der Quincunx zwischen %1 und Lilith erfordert Anpassung "
+             "zwischen zivilisiertem Verhalten und innerer Wildheit.").arg(getPlanetName(p1));
+    case HALBSEX:
+      return QString("Das Halbsextil zwischen %1 und Lilith zeigt eine subtile "
+             "Verbindung zu unterdrückten Aspekten Ihrer Natur.").arg(getPlanetName(p1));
     }
   }
 
