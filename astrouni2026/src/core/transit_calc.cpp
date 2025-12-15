@@ -63,10 +63,10 @@ int TransitCalc::calcMultiTransit(const Radix& radix,
     const int numPlanets = radix.anzahlPlanet;
     
     // Laufende Sequenzen speichern
-    QVector<int8_t> curAspPlanet(numPlanets * numPlanets, KEIN_ASP);
+    QVector<int16_t> curAspPlanet(numPlanets * numPlanets, KEIN_ASP);
     QVector<int>    startAspPlanet(numPlanets * numPlanets, -1);
     
-    QVector<int8_t> curAspHaus(numPlanets * MAX_HAUS, KEIN_ASP);
+    QVector<int16_t> curAspHaus(numPlanets * MAX_HAUS, KEIN_ASP);
     QVector<int>    startAspHaus(numPlanets * MAX_HAUS, -1);
     
     int idx = 0;
@@ -91,7 +91,7 @@ int TransitCalc::calcMultiTransit(const Radix& radix,
             for (int rp = 0; rp < numPlanets; ++rp) {
                 int pairIdx = tp * numPlanets + rp;
                 
-                int8_t aspFound = KEIN_ASP;
+                int16_t aspFound = KEIN_ASP;
                 static const int aspektWinkel[] = { KONJUNKTION, HALBSEX, SEXTIL, QUADRATUR, TRIGON, QUINCUNX, OPOSITION };
                 
                 for (int a = 0; a < ASPEKTE; ++a) {
@@ -102,7 +102,7 @@ int TransitCalc::calcMultiTransit(const Radix& radix,
                     
                     double exakterWinkel;
                     if (Calculations::checkAspekt(transit.planet[tp], radix.planet[rp], aspekt, orb, exakterWinkel)) {
-                        aspFound = static_cast<int8_t>(aspekt);
+                        aspFound = static_cast<int16_t>(aspekt);
                         break;
                     }
                 }
@@ -148,7 +148,7 @@ int TransitCalc::calcMultiTransit(const Radix& radix,
             for (int h = 0; h < MAX_HAUS; ++h) {
                 int pairIdx = tp * MAX_HAUS + h;
                 
-                int8_t aspFound = KEIN_ASP;
+                int16_t aspFound = KEIN_ASP;
                 static const int aspektWinkel[] = { KONJUNKTION, HALBSEX, SEXTIL, QUADRATUR, TRIGON, QUINCUNX, OPOSITION };
                 
                 for (int a = 0; a < ASPEKTE; ++a) {
@@ -159,7 +159,7 @@ int TransitCalc::calcMultiTransit(const Radix& radix,
                     
                     double exakterWinkel;
                     if (Calculations::checkAspekt(transit.planet[tp], radix.haus[h], aspekt, orb, exakterWinkel)) {
-                        aspFound = static_cast<int8_t>(aspekt);
+                        aspFound = static_cast<int16_t>(aspekt);
                         break;
                     }
                 }

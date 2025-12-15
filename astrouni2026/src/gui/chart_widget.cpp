@@ -361,14 +361,16 @@ bool ChartWidget::findAspectAtPoint(const QPointF &p, int &idx1, int &idx2,
   // Radix-Aspekte
   if (!m_showSynastrieAspects || m_transit == nullptr) {
     int numPlanets = m_radix.anzahlPlanet;
-    for (int i = 0; i < numPlanets; ++i) {
-      for (int j = i + 1; j < numPlanets; ++j) {
-        int idx = i * numPlanets + j;
-        int8_t asp = m_radix.aspPlanet[idx];
-        if (asp == KEIN_ASP)
-          continue;
-        QPointF p1 = degreeToPoint(m_radix.planet[i], m_radiusAsp);
-        QPointF p2 = degreeToPoint(m_radix.planet[j], m_radiusAsp);
+
+  // Aspekte durchgehen
+  for (int i = 0; i < numPlanets; ++i) {
+    for (int j = i + 1; j < numPlanets; ++j) {
+      int idx = i * numPlanets + j;
+      int16_t asp = m_radix.aspPlanet[idx];
+      if (asp == KEIN_ASP)
+        continue;
+      QPointF p1 = degreeToPoint(m_radix.planet[i], m_radiusAsp);
+      QPointF p2 = degreeToPoint(m_radix.planet[j], m_radiusAsp);
         double d = distToSegment(p1, p2, p);
         if (d < 8.0 && d < bestDist) {
           bestDist = d;
@@ -390,7 +392,7 @@ bool ChartWidget::findAspectAtPoint(const QPointF &p, int &idx1, int &idx2,
         if (diff > 180.0)
           diff = 360.0 - diff;
 
-        int8_t asp = KEIN_ASP;
+        int16_t asp = KEIN_ASP;
         if (diff <= 10.0)
           asp = KONJUNKTION;
         else if (std::abs(diff - 30.0) <= 3.0)
@@ -1004,7 +1006,7 @@ void ChartWidget::drawAspects(QPainter &painter) {
         }
 
         int idx = i * numPlanets + j;
-        int8_t asp = m_radix.aspPlanet[idx];
+        int16_t asp = m_radix.aspPlanet[idx];
 
         if (asp == KEIN_ASP)
           continue;
@@ -1052,7 +1054,7 @@ void ChartWidget::drawAspects(QPainter &painter) {
                                           ? m_auinit.orbenSPlanet
                                           : m_auinit.orbenTPlanet;
 
-        int8_t asp = KEIN_ASP;
+        int16_t asp = KEIN_ASP;
         float orb0 = orben.size() > 0 ? orben[0] : 8.0f;
         float orb1 = orben.size() > 1 ? orben[1] : 2.0f;
         float orb2 = orben.size() > 2 ? orben[2] : 4.0f;

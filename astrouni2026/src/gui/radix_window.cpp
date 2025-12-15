@@ -6,14 +6,23 @@
 #include "radix_window.h"
 #include "chart_widget.h"
 #include "html_item_delegate.h"
+#include "pdf_exporter.h"
 #include "dialogs/person_dialog.h"
 #include "../core/calculations.h"
 #include "../core/chart_calc.h"
 #include "../core/astro_font_provider.h"
+#include "../core/astro_text_analyzer.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QSplitter>
+#include <QDialog>
+#include <QTextBrowser>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QTextStream>
+#include <QStringConverter>
+#include <QDate>
 
 namespace astro {
 
@@ -148,6 +157,13 @@ void RadixWindow::setupUI() {
     m_aspekteButton = new QPushButton(tr("Aspekte"), rightWidget);
     connect(m_aspekteButton, &QPushButton::clicked, this, &RadixWindow::onAspekteClicked);
     buttonLayout->addWidget(m_aspekteButton);
+    
+    buttonLayout->addSpacing(10);  // Abstand
+    
+    m_textAnalyseButton = new QPushButton(tr("📄 Textanalyse"), rightWidget);
+    m_textAnalyseButton->setStyleSheet("font-weight: bold; background-color: #3498db; color: white;");
+    connect(m_textAnalyseButton, &QPushButton::clicked, this, &RadixWindow::onTextAnalyseClicked);
+    buttonLayout->addWidget(m_textAnalyseButton);
     
     rightLayout->addLayout(buttonLayout);
     
@@ -701,7 +717,7 @@ void RadixWindow::fillAspekteList() {
         for (int i = 0; i < numPlanets; ++i) {
             for (int j = i + 1; j < numPlanets; ++j) {
                 int idx = i * numPlanets + j;
-                int8_t asp = m_radix.aspPlanet[idx];
+                int16_t asp = m_radix.aspPlanet[idx];
                 
                 if (asp == KEIN_ASP) continue;
                 
@@ -748,7 +764,7 @@ void RadixWindow::fillAspekteList() {
                 int idx = i * MAX_HAUS + h;
                 if (idx >= m_radix.aspHaus.size()) continue;
                 
-                int8_t asp = m_radix.aspHaus[idx];
+                int16_t asp = m_radix.aspHaus[idx];
                 if (asp == KEIN_ASP) continue;
                 
                 QString symbol = astroFont().planetSymbol(i);
@@ -812,7 +828,7 @@ void RadixWindow::fillAspekteList() {
                 const QVector<float>& orben = (m_radix.horoTyp == TYP_SYNASTRIE) ? 
                     m_auinit.orbenSPlanet : m_auinit.orbenTPlanet;
                 
-                int8_t asp = KEIN_ASP;
+                int16_t asp = KEIN_ASP;
                 if (diff <= orben[0]) asp = KONJUNKTION;
                 else if (std::abs(diff - 30.0) <= orben[1]) asp = HALBSEX;
                 else if (std::abs(diff - 60.0) <= orben[2]) asp = SEXTIL;
@@ -1160,6 +1176,61 @@ void RadixWindow::recalculateChart() {
     if (ChartCalc::calculate(m_radix, nullptr, TYP_RADIX) >= 0) {
         updateDisplay();
     }
+}
+
+//==============================================================================
+// Textanalyse
+//==============================================================================
+
+void RadixWindow::onTextAnalyseClicked() {
+    // Textanalyse in neuem Fenster anzeigen
+    QDialog* dialog = new QDialog(this);
+    dialog->setWindowTitle(tr("Horoskop-Textanalyse: %1").arg(getTabTitle()));
+    dialog->resize(800, 600);
+    
+    QVBoxLayout* layout = new QVBoxLayout(dialog);
+    
+    // TextBrowser für HTML-Anzeige
+    QTextBrowser* textBrowser = new QTextBrowser(dialog);
+    textBrowser->setOpenExternalLinks(false);
+    
+    // Textanalyse generieren
+    AstroTextAnalyzer analyzer;
+    QString analysisHtml = analyzer.analyzeRadix(m_radix);
+    textBrowser->setHtml(analysisHtml);
+    
+    layout->addWidget(textBrowser);
+    
+    // Buttons
+    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    
+    QPushButton* pdfButton = new QPushButton(tr("Als PDF exportieren"), dialog);
+    connect(pdfButton, &QPushButton::clicked, [this, dialog]() {
+        PdfExporter exporter;
+        if (m_radix.synastrie) {
+            if (m_radix.horoTyp == TYP_TRANSIT) {
+                exporter.exportTransit(m_radix, *m_radix.synastrie, m_auinit, 
+                                       m_chartWidget, this);
+            } else {
+                exporter.exportSynastrie(m_radix, *m_radix.synastrie, m_auinit, 
+                                          m_chartWidget, this);
+            }
+        } else {
+            exporter.exportRadix(m_radix, m_auinit, m_chartWidget, this);
+        }
+    });
+    buttonLayout->addWidget(pdfButton);
+    
+    buttonLayout->addStretch();
+    
+    QPushButton* closeButton = new QPushButton(tr("Schließen"), dialog);
+    connect(closeButton, &QPushButton::clicked, dialog, &QDialog::accept);
+    buttonLayout->addWidget(closeButton);
+    
+    layout->addLayout(buttonLayout);
+    
+    dialog->exec();
+    dialog->deleteLater();
 }
 
 } // namespace astro
