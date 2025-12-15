@@ -716,7 +716,7 @@ void RadixWindow::fillAspekteList() {
         for (int i = 0; i < numPlanets; ++i) {
             for (int j = i + 1; j < numPlanets; ++j) {
                 int idx = i * numPlanets + j;
-                int8_t asp = m_radix.aspPlanet[idx];
+                int16_t asp = m_radix.aspPlanet[idx];
                 
                 if (asp == KEIN_ASP) continue;
                 
@@ -763,7 +763,7 @@ void RadixWindow::fillAspekteList() {
                 int idx = i * MAX_HAUS + h;
                 if (idx >= m_radix.aspHaus.size()) continue;
                 
-                int8_t asp = m_radix.aspHaus[idx];
+                int16_t asp = m_radix.aspHaus[idx];
                 if (asp == KEIN_ASP) continue;
                 
                 QString symbol = astroFont().planetSymbol(i);
@@ -827,7 +827,7 @@ void RadixWindow::fillAspekteList() {
                 const QVector<float>& orben = (m_radix.horoTyp == TYP_SYNASTRIE) ? 
                     m_auinit.orbenSPlanet : m_auinit.orbenTPlanet;
                 
-                int8_t asp = KEIN_ASP;
+                int16_t asp = KEIN_ASP;
                 if (diff <= orben[0]) asp = KONJUNKTION;
                 else if (std::abs(diff - 30.0) <= orben[1]) asp = HALBSEX;
                 else if (std::abs(diff - 60.0) <= orben[2]) asp = SEXTIL;
