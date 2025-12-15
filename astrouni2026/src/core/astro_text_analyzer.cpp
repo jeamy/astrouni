@@ -345,92 +345,675 @@ QString AstroTextAnalyzer::getGenericAspectText(int planet1, int planet2,
   QString p1 = getPlanetName(planet1);
   QString p2 = getPlanetName(planet2);
 
-  // Variierte Templates um Repetition zu vermeiden
+  // Spezifische Texte für Planeten-Kombinationen
+  QString specificText = getPlanetPairText(planet1, planet2, aspect);
+  if (!specificText.isEmpty()) {
+    text += specificText;
+    text += "</p>";
+    return text;
+  }
+
+  // Fallback auf generische Aspekt-Texte
   switch (aspect) {
   case KONJUNKTION:
-    if ((planet1 + planet2) % 2 == 0) {
-      text +=
-          QString(
-              "Die Energien von %1 und %2 verschmelzen hier zu einer Einheit. "
-              "Dies schafft einen starken Fokus und Intensität in diesem "
-              "Lebensbereich.")
-              .arg(p1, p2);
-    } else {
-      text +=
-          QString(
-              "Bei der Konjunktion von %1 und %2 bündeln sich die Kräfte. "
-              "Ein neuer Zyklus oder ein impulsiver Neuanfang wird angezeigt.")
-              .arg(p1, p2);
-    }
+    text += QString(
+        "Die Energien von %1 und %2 verschmelzen hier zu einer Einheit. "
+        "Diese Verbindung intensiviert beide Planetenprinzipien und schafft "
+        "einen kraftvollen Fokus in diesem Lebensbereich. Die Themen beider "
+        "Planeten werden untrennbar miteinander verwoben.")
+        .arg(p1, p2);
     break;
 
   case SEXTIL:
-    if ((planet1 * planet2) % 2 == 0) {
-      text += QString("Das Sextil zwischen %1 und %2 bietet Gelegenheiten. "
-                      "Es liegt an Ihnen, diese harmonischen Impulse produktiv "
-                      "zu nutzen.")
-                  .arg(p1, p2);
-    } else {
-      text += QString("%1 und %2 stehen in einem anregenden Verhältnis. "
-                      "Ideen und Kommunikation fließen leichter.")
-                  .arg(p1, p2);
-    }
+    text += QString(
+        "Das Sextil zwischen %1 und %2 öffnet Türen für kreative Möglichkeiten. "
+        "Diese harmonische Verbindung erfordert jedoch bewusste Aktivierung - "
+        "die Chancen sind da, aber Sie müssen sie ergreifen. Es entsteht ein "
+        "produktiver Austausch zwischen diesen Lebensbereichen.")
+        .arg(p1, p2);
     break;
 
   case QUADRATUR:
-    if ((planet1 + planet2) % 3 == 0) {
-      text += QString("Zwischen %1 und %2 besteht eine herausfordernde Spannung "
-                      "(Quadrat). "
-                      "Dieser Konflikt drängt zur Handlung und Veränderung.")
-                  .arg(p1, p2);
-    } else {
-      text += QString("Das Quadrat von %1 zu %2 kann Hindernisse anzeigen. "
-                      "Doch genau diese Reibung erzeugt die Energie für wichtige "
-                      "Durchbrüche.")
-                  .arg(p1, p2);
-    }
+    text += QString(
+        "Das Quadrat zwischen %1 und %2 erzeugt eine dynamische Spannung, "
+        "die zu Wachstum und Entwicklung drängt. Diese Herausforderung ist "
+        "ein Motor für Veränderung - sie zwingt Sie, kreative Lösungen zu "
+        "finden und über sich hinauszuwachsen.")
+        .arg(p1, p2);
     break;
 
   case TRIGON:
-    if ((planet1 + planet2) % 2 != 0) {
-      text += QString(
-                  "%1 und %2 fließen harmonisch zusammen (Trigon). "
-                  "Talente und glückliche Fügungen zeigen sich hier mühelos.")
-                  .arg(p1, p2);
-    } else {
-      text += QString(
-                  "Ein stabilisierender Fluss zwischen %1 und %2 unterstützt Sie. "
-                  "Genießen Sie diesen Zustand des Gleichgewichts.")
-                  .arg(p1, p2);
-    }
+    text += QString(
+        "Das Trigon zwischen %1 und %2 zeigt natürliche Begabungen und einen "
+        "mühelosen Energiefluss. Hier fließen die Kräfte harmonisch zusammen "
+        "und unterstützen sich gegenseitig. Dies ist ein Bereich, in dem "
+        "Ihnen vieles leicht fällt.")
+        .arg(p1, p2);
     break;
 
   case OPOSITION:
     text += QString(
-                "%1 und %2 stehen sich gegenüber. "
-                "Ein Spannungsfeld, das nach Balance und Integration verlangt. "
-                "Oft erleben wir dies durch Projektion auf Partner oder Außenwelt.")
-                .arg(p1, p2);
+        "Die Opposition zwischen %1 und %2 spiegelt ein inneres Spannungsfeld "
+        "wider, das nach Integration verlangt. Oft erleben wir diese Polarität "
+        "durch Beziehungen oder Projektionen auf andere. Die Aufgabe liegt "
+        "darin, beide Pole in sich zu vereinen und Balance zu finden.")
+        .arg(p1, p2);
     break;
 
   case QUINCUNX:
     text += QString(
-                "Der Quincunx-Aspekt zwischen %1 und %2 erfordert Anpassung. "
-                "Diese Energien haben wenig gemeinsam und müssen erst "
-                "lernen, miteinander zu wirken.")
-                .arg(p1, p2);
+        "Der Quincunx zwischen %1 und %2 zeigt zwei Lebensbereiche, die "
+        "scheinbar nichts miteinander zu tun haben. Diese ungewohnte Verbindung "
+        "erfordert ständige Anpassung und Feinabstimmung. Hier liegt ein "
+        "verborgenes Wachstumspotenzial, das Flexibilität verlangt.")
+        .arg(p1, p2);
+    break;
+
+  case HALBSEX:
+    text += QString(
+        "Das Halbsextil zwischen %1 und %2 deutet auf eine subtile Verbindung "
+        "hin, die im Hintergrund wirkt. Diese leichte Reibung kann zu kleinen "
+        "Anpassungen führen und fördert schrittweise Entwicklung.")
+        .arg(p1, p2);
     break;
 
   default:
-    text += QString("Der Aspekt %1 verbindet %2 und %3 auf subtile Weise.")
-                .arg(getAspectName(aspect))
-                .arg(p1)
-                .arg(p2);
+    text += QString("Der Aspekt zwischen %1 und %2 verbindet diese "
+                    "Lebensbereiche auf besondere Weise.")
+                .arg(p1, p2);
     break;
   }
 
   text += "</p>";
   return text;
+}
+
+QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
+                                              int16_t aspect) const {
+  // Sortiere Planeten für konsistente Schlüssel
+  int p1 = qMin(planet1, planet2);
+  int p2 = qMax(planet1, planet2);
+
+  // === SONNE-ASPEKTE ===
+  if (p1 == P_SONNE && p2 == P_MOND) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Sonne und Mond vereint zeigen eine starke Übereinstimmung zwischen "
+             "Ihrem bewussten Willen und Ihrem emotionalen Selbst. Sie handeln "
+             "aus einem Guss, Kopf und Herz sprechen dieselbe Sprache. Diese "
+             "Neumond-Konstellation verleiht Fokus und Zielstrebigkeit.";
+    case SEXTIL:
+      return "Sonne und Mond in harmonischem Austausch ermöglichen eine gute "
+             "Balance zwischen Aktivität und Ruhe, zwischen Handeln und Fühlen. "
+             "Sie können Ihre Bedürfnisse gut kommunizieren und finden leicht "
+             "Wege, Ihre Ziele mit Ihrem emotionalen Wohlbefinden in Einklang zu bringen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Sonne und Mond zeigt einen inneren Konflikt "
+             "zwischen dem, was Sie wollen, und dem, was Sie brauchen. Ihr Kopf "
+             "sagt ja, Ihr Bauch sagt nein - oder umgekehrt. Diese Reibung kann "
+             "zu Unzufriedenheit führen, ist aber auch ein Motor für Wachstum.";
+    case TRIGON:
+      return "Sonne und Mond im Trigon schenken Ihnen innere Harmonie und "
+             "emotionale Stabilität. Ihr Selbstbild stimmt mit Ihrem Gefühlsleben "
+             "überein. Sie strahlen Authentizität aus, weil Sie mit sich im Reinen sind.";
+    case OPOSITION:
+      return "Sonne und Mond in Opposition (Vollmond-Konstellation) zeigen eine "
+             "Polarität zwischen Ihrem bewussten Ich und Ihrem emotionalen Selbst. "
+             "Sie erleben oft Spannungen zwischen Beruf und Privatleben, zwischen "
+             "Selbstverwirklichung und Geborgenheit. Integration ist die Aufgabe.";
+    }
+  }
+
+  if (p1 == P_SONNE && p2 == P_MERKUR) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Sonne und Merkur vereint verbinden Ihr Selbstbewusstsein mit Ihrem "
+             "Denken und Ihrer Kommunikation. Sie drücken sich klar und selbstsicher "
+             "aus. Ihre Gedanken sind eng mit Ihrer Identität verknüpft - Sie sind, "
+             "was Sie denken und sagen.";
+    }
+  }
+
+  if (p1 == P_SONNE && p2 == P_VENUS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Sonne und Venus vereint schenken Charme, Anmut und ein natürliches "
+             "Gespür für Schönheit. Sie möchten geliebt werden und haben die Gabe, "
+             "andere für sich zu gewinnen. Kreativität und Harmoniebedürfnis prägen "
+             "Ihre Persönlichkeit.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Sonne und Venus begünstigt Ihre sozialen "
+             "Fähigkeiten und Ihren künstlerischen Ausdruck. Sie verstehen es, "
+             "Beziehungen zu pflegen und Schönheit in Ihr Leben zu integrieren.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Sonne und Venus kann zu Unsicherheiten in "
+             "Liebesbeziehungen führen oder ein übermäßiges Bedürfnis nach Anerkennung "
+             "anzeigen. Lernen Sie, sich selbst wertzuschätzen, unabhängig von "
+             "äußerer Bestätigung.";
+    }
+  }
+
+  if (p1 == P_SONNE && p2 == P_MARS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Sonne und Mars vereint verleihen enorme Energie, Durchsetzungskraft "
+             "und Mut. Sie sind ein Macher, der Herausforderungen sucht und annimmt. "
+             "Vorsicht vor Ungeduld und Aggressivität - kanalisieren Sie diese "
+             "kraftvolle Energie konstruktiv.";
+    case SEXTIL:
+      return "Das harmonische Zusammenspiel von Sonne und Mars gibt Ihnen die "
+             "Fähigkeit, Ihre Energie gezielt und produktiv einzusetzen. Sie können "
+             "sich durchsetzen, ohne andere zu verletzen, und wissen, wann Aktion "
+             "gefragt ist.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Sonne und Mars kann zu Konflikten zwischen "
+             "Ihrem Willen und Ihrem Handeln führen. Frustration und Ungeduld "
+             "können aufkommen. Die Herausforderung liegt darin, Ihre Energie "
+             "konstruktiv zu lenken statt zu explodieren.";
+    case TRIGON:
+      return "Sonne und Mars im Trigon schenken natürliche Vitalität und die "
+             "Fähigkeit, Ihre Ziele mit Leichtigkeit zu verfolgen. Sie haben ein "
+             "gesundes Selbstvertrauen und können sich mühelos behaupten.";
+    case OPOSITION:
+      return "Die Opposition von Sonne und Mars zeigt oft Konflikte mit "
+             "Autoritätspersonen oder Konkurrenten. Sie projizieren Ihre eigene "
+             "Kampfnatur möglicherweise auf andere. Lernen Sie, Ihre Durchsetzungskraft "
+             "als Teil Ihrer selbst anzunehmen.";
+    }
+  }
+
+  if (p1 == P_SONNE && p2 == P_JUPITER) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Sonne und Jupiter vereint schenken Optimismus, Großzügigkeit und "
+             "ein starkes Vertrauen ins Leben. Sie denken groß und haben hohe Ideale. "
+             "Glück scheint Sie zu begleiten, doch achten Sie darauf, nicht zu "
+             "übertreiben oder arrogant zu werden.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Sonne und Jupiter öffnet Türen für "
+             "Wachstum und Expansion. Sie erkennen Chancen und wissen sie zu nutzen. "
+             "Ihr positives Weltbild zieht günstige Gelegenheiten an.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Sonne und Jupiter kann zu Übertreibung, "
+             "Selbstüberschätzung oder Maßlosigkeit führen. Ihr Optimismus braucht "
+             "einen Realitätscheck. Lernen Sie, Ihre hohen Ansprüche mit praktischen "
+             "Möglichkeiten in Einklang zu bringen.";
+    case TRIGON:
+      return "Sonne und Jupiter im Trigon schenken natürliches Glück und eine "
+             "positive Lebenseinstellung. Sie haben ein großzügiges Herz und die "
+             "Fähigkeit, andere zu inspirieren. Erfolg kommt Ihnen oft mühelos zu.";
+    case OPOSITION:
+      return "Die Opposition von Sonne und Jupiter kann zu Konflikten zwischen "
+             "persönlichen Zielen und gesellschaftlichen Erwartungen führen. Sie "
+             "schwanken zwischen Selbstverwirklichung und dem Bedürfnis nach "
+             "Anerkennung durch andere.";
+    }
+  }
+
+  if (p1 == P_SONNE && p2 == P_SATURN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Sonne und Saturn vereint prägen eine ernste, verantwortungsbewusste "
+             "Persönlichkeit. Sie sind diszipliniert und ausdauernd, aber vielleicht "
+             "auch zu streng mit sich selbst. Ihr Weg zum Erfolg führt über harte "
+             "Arbeit und Geduld.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Sonne und Saturn gibt Ihnen die "
+             "Fähigkeit, langfristige Ziele mit Disziplin zu verfolgen. Sie verbinden "
+             "Ambition mit Realismus und können Verantwortung übernehmen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Sonne und Saturn kann Selbstzweifel, Hemmungen "
+             "oder das Gefühl von Einschränkung erzeugen. Autoritätskonflikte sind "
+             "möglich. Die Herausforderung liegt darin, Ihre eigene innere Autorität "
+             "zu entwickeln.";
+    case TRIGON:
+      return "Sonne und Saturn im Trigon verleihen natürliche Reife, Strukturfähigkeit "
+             "und die Gabe, Verantwortung zu übernehmen. Sie sind zuverlässig und "
+             "bauen systematisch auf, was von Dauer sein soll.";
+    case OPOSITION:
+      return "Die Opposition von Sonne und Saturn zeigt oft Spannungen mit "
+             "Vaterfiguren oder Autoritäten. Sie fühlen sich möglicherweise "
+             "eingeschränkt oder nicht anerkannt. Lernen Sie, Ihre eigene Autorität "
+             "zu leben.";
+    }
+  }
+
+  // === MOND-ASPEKTE ===
+  if (p1 == P_MOND && p2 == P_MERKUR) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mond und Merkur vereint verbinden Gefühl und Verstand eng miteinander. "
+             "Sie denken mit dem Herzen und fühlen mit dem Kopf. Ihre Kommunikation "
+             "ist emotional gefärbt, und Sie haben ein gutes Gespür für die Stimmungen "
+             "anderer.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mond und Merkur ermöglicht es Ihnen, "
+             "Ihre Gefühle klar auszudrücken. Sie können gut zuhören und haben ein "
+             "Talent dafür, emotionale Situationen zu verstehen und zu vermitteln.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mond und Merkur kann zu innerem Zwist zwischen "
+             "Logik und Gefühl führen. Manchmal reden Sie sich um Kopf und Kragen oder "
+             "rationalisieren Ihre Emotionen weg. Lernen Sie, beide Seiten zu integrieren.";
+    case TRIGON:
+      return "Mond und Merkur im Trigon schenken emotionale Intelligenz und die "
+             "Fähigkeit, Gefühle eloquent auszudrücken. Sie verstehen instinktiv, "
+             "was andere bewegt, und können trösten und vermitteln.";
+    }
+  }
+
+  if (p1 == P_MOND && p2 == P_VENUS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mond und Venus vereint schenken ein tiefes Bedürfnis nach Harmonie, "
+             "Liebe und Schönheit. Sie sind emotional warmherzig und haben ein "
+             "natürliches Talent für zwischenmenschliche Beziehungen. Kunst und "
+             "Genuss nähren Ihre Seele.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mond und Venus begünstigt liebevolle "
+             "Beziehungen und ein ausgeglichenes Gefühlsleben. Sie verstehen es, "
+             "Ihr Zuhause gemütlich zu gestalten und Harmonie zu schaffen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mond und Venus kann emotionale Bedürfnisse "
+             "und Beziehungswünsche in Konflikt bringen. Vielleicht fällt es Ihnen "
+             "schwer, sich geliebt zu fühlen, oder Sie haben widersprüchliche "
+             "Vorstellungen von Nähe.";
+    case TRIGON:
+      return "Mond und Venus im Trigon schenken ein natürliches Talent für Liebe "
+             "und Beziehungen. Sie fühlen sich in harmonischer Umgebung wohl und "
+             "haben ein feines Gespür für Ästhetik.";
+    }
+  }
+
+  if (p1 == P_MOND && p2 == P_MARS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mond und Mars vereint erzeugen intensive, leidenschaftliche Gefühle. "
+             "Sie reagieren spontan und manchmal impulsiv auf emotionale Situationen. "
+             "Diese Konstellation kann große Leidenschaft, aber auch emotionale "
+             "Explosivität anzeigen.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mond und Mars gibt Ihnen emotionalen "
+             "Mut und die Fähigkeit, für Ihre Bedürfnisse einzustehen. Sie können "
+             "Ihre Gefühle in konstruktive Aktion umsetzen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mond und Mars kann zu emotionalen Ausbrüchen "
+             "oder innerem Ärger führen. Ungeduld und Reizbarkeit sind mögliche "
+             "Themen. Lernen Sie, Ihre emotionale Energie konstruktiv zu kanalisieren.";
+    case TRIGON:
+      return "Mond und Mars im Trigon verbinden Gefühl und Tatkraft harmonisch. "
+             "Sie können Ihre Emotionen in Handlung umsetzen und haben ein "
+             "gesundes emotionales Selbstvertrauen.";
+    case OPOSITION:
+      return "Die Opposition von Mond und Mars kann emotionale Konflikte in "
+             "Beziehungen anzeigen - besonders zwischen Nähebedürfnis und "
+             "Unabhängigkeitsdrang. Lernen Sie, beide Pole zu integrieren.";
+    }
+  }
+
+  // === MERKUR-ASPEKTE ===
+  if (p1 == P_MERKUR && p2 == P_VENUS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Merkur und Venus vereint schenken eine gewandte, charmante "
+             "Ausdrucksweise. Sie haben ein Talent für Diplomatie, Poesie und "
+             "künstlerische Kommunikation. Ihre Worte sind wohlklingend und "
+             "können andere bezaubern.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Merkur und Venus begünstigt "
+             "angenehme Gespräche, künstlerischen Ausdruck und diplomatisches "
+             "Geschick. Sie können Schönheit in Worte fassen und haben ein "
+             "feines Gespür für sprachliche Nuancen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Merkur und Venus kann zu Konflikten zwischen "
+             "Kopf und Herz in der Kommunikation führen. Vielleicht fällt es Ihnen "
+             "schwer, Ihre Zuneigung auszudrücken, oder Sie wirken oberflächlich.";
+    }
+  }
+
+  if (p1 == P_MERKUR && p2 == P_MARS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Merkur und Mars vereint erzeugen einen scharfen, schnellen Verstand. "
+             "Sie denken und sprechen direkt, manchmal scharf oder streitlustig. "
+             "Ihr Intellekt ist kampfbereit - nutzen Sie diese Energie für Debatten "
+             "und mutige Ideen.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Merkur und Mars gibt Ihrem Denken "
+             "Durchsetzungskraft und Ihren Worten Wirkung. Sie können Ihre Ideen "
+             "überzeugend vertreten und schnell reagieren.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Merkur und Mars kann zu vorschnellem Reden, "
+             "scharfer Kritik oder Streitlust führen. Ihr Verstand ist schnell, "
+             "aber manchmal zu aggressiv. Lernen Sie, Ihre mentale Energie zu zügeln.";
+    case TRIGON:
+      return "Merkur und Mars im Trigon verleihen geistige Schlagfertigkeit und "
+             "die Fähigkeit, Ihre Gedanken energisch, aber geschickt zu vertreten.";
+    }
+  }
+
+  if (p1 == P_MERKUR && p2 == P_JUPITER) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Merkur und Jupiter vereint schenken ein weites, optimistisches Denken. "
+             "Sie interessieren sich für das große Bild, Philosophie und Bildung. "
+             "Ihr Geist ist expansiv - achten Sie darauf, nicht zu viel auf einmal "
+             "zu wollen.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Merkur und Jupiter begünstigt "
+             "positives Denken, Lernfähigkeit und erfolgreiche Kommunikation. "
+             "Sie können komplexe Themen verständlich vermitteln.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Merkur und Jupiter kann zu Übertreibung, "
+             "Weitschweifigkeit oder unrealistischen Plänen führen. Ihr Denken "
+             "ist groß - manchmal zu groß. Bringen Sie Ihre Visionen auf den Boden.";
+    case TRIGON:
+      return "Merkur und Jupiter im Trigon schenken natürliche Weisheit und die "
+             "Gabe, Wissen zu teilen. Sie sind ein geborener Lehrer und Philosoph.";
+    }
+  }
+
+  if (p1 == P_MERKUR && p2 == P_SATURN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Merkur und Saturn vereint erzeugen ein ernstes, strukturiertes Denken. "
+             "Sie sind gründlich, methodisch und haben ein gutes Gedächtnis. "
+             "Manchmal neigen Sie zu Pessimismus oder Selbstzweifeln im Denken.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Merkur und Saturn gibt Ihrem Denken "
+             "Tiefe und Struktur. Sie können komplexe Probleme systematisch lösen "
+             "und haben Ausdauer bei geistiger Arbeit.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Merkur und Saturn kann mentale Blockaden, "
+             "Kommunikationshemmungen oder negatives Denken erzeugen. Lernen Sie, "
+             "Ihre kritische Stimme konstruktiv einzusetzen.";
+    case TRIGON:
+      return "Merkur und Saturn im Trigon verleihen einen klaren, logischen "
+             "Verstand und die Fähigkeit zu konzentrierter geistiger Arbeit.";
+    }
+  }
+
+  if (p1 == P_MERKUR && p2 == P_URANUS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Merkur und Uranus vereint schenken einen blitzschnellen, originellen "
+             "Geist. Sie denken unkonventionell und haben geniale Einfälle. Manchmal "
+             "ist Ihr Denken zu sprunghaft - lernen Sie, Ihre Ideen zu erden.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Merkur und Uranus begünstigt "
+             "innovative Ideen und die Fähigkeit, über den Tellerrand zu schauen. "
+             "Sie sind geistig flexibel und offen für Neues.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Merkur und Uranus kann zu Nervosität, "
+             "geistiger Unruhe oder exzentrischen Ideen führen. Ihr Geist rast - "
+             "lernen Sie, ihn zu beruhigen und zu fokussieren.";
+    case TRIGON:
+      return "Merkur und Uranus im Trigon schenken intuitive Intelligenz und "
+             "die Gabe, Zukunftstrends zu erkennen. Ihre Ideen sind ihrer Zeit voraus.";
+    }
+  }
+
+  if (p1 == P_MERKUR && p2 == P_NEPTUN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Merkur und Neptun vereint verbinden Denken mit Intuition und "
+             "Imagination. Sie haben ein Talent für Poesie, Musik und visionäres "
+             "Denken. Achten Sie darauf, nicht zu verträumt oder unklar zu werden.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Merkur und Neptun schenkt künstlerische "
+             "Sensibilität und die Fähigkeit, das Unsagbare auszudrücken. Sie haben "
+             "ein feines Gespür für Stimmungen und Symbole.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Merkur und Neptun kann zu Verwirrung, "
+             "Unklarheit im Denken oder Täuschung führen. Unterscheiden Sie "
+             "zwischen Intuition und Wunschdenken. Erdung ist wichtig.";
+    case TRIGON:
+      return "Merkur und Neptun im Trigon schenken poetische Begabung und "
+             "intuitive Einsichten. Sie können das Mystische in Worte fassen.";
+    }
+  }
+
+  if (p1 == P_MERKUR && p2 == P_PLUTO) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Merkur und Pluto vereint verleihen einen durchdringenden, "
+             "forschenden Geist. Sie gehen den Dingen auf den Grund und haben "
+             "ein Talent für Psychologie und Geheimnisse. Ihr Wort hat Macht.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Merkur und Pluto gibt Ihrem Denken "
+             "Tiefe und Transformationskraft. Sie können versteckte Wahrheiten "
+             "erkennen und andere mit Ihren Worten bewegen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Merkur und Pluto kann zu obsessivem Denken, "
+             "manipulativer Kommunikation oder Machtkämpfen durch Worte führen. "
+             "Nutzen Sie Ihre mentale Intensität konstruktiv.";
+    case TRIGON:
+      return "Merkur und Pluto im Trigon schenken die Fähigkeit, zum Kern "
+             "jeder Sache vorzudringen. Ihr Verstand ist ein mächtiges Werkzeug "
+             "für Transformation.";
+    }
+  }
+
+  // === VENUS-ASPEKTE ===
+  if (p1 == P_VENUS && p2 == P_MARS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Venus und Mars vereint - die große Liebeskonstellation! Hier "
+             "verbinden sich weibliches und männliches Prinzip, Anziehung und "
+             "Begehren, Empfangen und Erobern. Sie haben eine starke erotische "
+             "Ausstrahlung und leben Ihre Leidenschaft intensiv.";
+    case SEXTIL:
+      return "Venus und Mars in harmonischem Austausch ermöglichen eine "
+             "ausgewogene Verbindung von Liebe und Leidenschaft. Sie wissen, "
+             "wann Sie zärtlich und wann Sie leidenschaftlich sein sollten. "
+             "Beziehungen profitieren von dieser Balance.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Venus und Mars kann Konflikte zwischen "
+             "Herz und Begehren erzeugen. Vielleicht wollen Sie jemanden, den "
+             "Sie nicht lieben, oder lieben jemanden, den Sie nicht wollen. "
+             "Diese Reibung kann aber auch große kreative Energie freisetzen.";
+    case TRIGON:
+      return "Venus und Mars im Trigon schenken natürlichen Charme und die "
+             "Fähigkeit, Liebe und Leidenschaft harmonisch zu verbinden. Sie "
+             "sind attraktiv und wissen, was Sie in Beziehungen wollen.";
+    case OPOSITION:
+      return "Die Opposition von Venus und Mars zeigt die Polarität zwischen "
+             "Geben und Nehmen in Beziehungen. Sie erleben diese Spannung oft "
+             "durch Partner, die das verkörpern, was Ihnen fehlt.";
+    }
+  }
+
+  if (p1 == P_VENUS && p2 == P_JUPITER) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Venus und Jupiter vereint - ein klassischer Glücksaspekt! Sie haben "
+             "ein großes Herz, sind großzügig in der Liebe und ziehen Fülle an. "
+             "Genuss, Kunst und Lebensfreude sind Ihre Themen.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Venus und Jupiter begünstigt "
+             "soziales Glück, künstlerischen Erfolg und liebevolle Beziehungen. "
+             "Sie sehen das Gute in Menschen und ziehen Positives an.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Venus und Jupiter kann zu Übertreibung in "
+             "Liebe und Genuss führen. Zu viel des Guten - ob in Beziehungen, "
+             "Ausgaben oder Vergnügen. Lernen Sie Maß zu halten.";
+    case TRIGON:
+      return "Venus und Jupiter im Trigon schenken natürliches Glück in "
+             "Beziehungen und ein Talent, Schönheit und Fülle anzuziehen.";
+    }
+  }
+
+  if (p1 == P_VENUS && p2 == P_SATURN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Venus und Saturn vereint können Liebe mit Pflicht verbinden oder "
+             "Hemmungen in Beziehungen anzeigen. Sie nehmen die Liebe ernst und "
+             "suchen dauerhafte Bindungen. Vielleicht fühlen Sie sich in der "
+             "Liebe manchmal eingeschränkt oder nicht würdig.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Venus und Saturn gibt Ihren "
+             "Beziehungen Stabilität und Tiefe. Sie sind loyal und bereit, "
+             "für die Liebe zu arbeiten.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Venus und Saturn kann Liebeskummer, "
+             "Einsamkeitsgefühle oder Beziehungsprobleme anzeigen. Sie haben "
+             "hohe Ansprüche, aber vielleicht auch Angst vor Nähe.";
+    case TRIGON:
+      return "Venus und Saturn im Trigon verbinden Liebe mit Verantwortung. "
+             "Ihre Beziehungen sind solide und beständig.";
+    }
+  }
+
+  // === MARS-ASPEKTE ===
+  if (p1 == P_MARS && p2 == P_JUPITER) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mars und Jupiter vereint schenken enormen Tatendrang und "
+             "Unternehmungsgeist. Sie wollen Großes erreichen und haben die "
+             "Energie dafür. Achten Sie darauf, Ihre Kräfte nicht zu "
+             "überschätzen.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mars und Jupiter begünstigt "
+             "erfolgreiche Unternehmungen und die Fähigkeit, Chancen zu "
+             "ergreifen. Mut und Optimismus arbeiten zusammen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mars und Jupiter kann zu Übertreibung, "
+             "Risikofreude oder Konflikten mit dem Gesetz führen. Ihre Energie "
+             "ist groß - kanalisieren Sie sie weise.";
+    case TRIGON:
+      return "Mars und Jupiter im Trigon schenken natürlichen Erfolg bei "
+             "mutigen Unternehmungen. Sie haben das Glück des Tüchtigen.";
+    }
+  }
+
+  if (p1 == P_MARS && p2 == P_SATURN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mars und Saturn vereint können kontrollierte Kraft oder gehemmte "
+             "Energie anzeigen. Sie arbeiten ausdauernd und diszipliniert, aber "
+             "vielleicht mit innerer Frustration. Lernen Sie, Ihre Energie "
+             "geduldig einzusetzen.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mars und Saturn gibt Ihrem "
+             "Handeln Struktur und Ausdauer. Sie können langfristige Ziele "
+             "konsequent verfolgen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mars und Saturn kann Frustration, "
+             "gehemmte Aggression oder Konflikte mit Autoritäten anzeigen. "
+             "Sie fahren mit angezogener Handbremse - lernen Sie, sich "
+             "zu befreien.";
+    case TRIGON:
+      return "Mars und Saturn im Trigon verbinden Energie mit Ausdauer. "
+             "Sie können Großes aufbauen, weil Sie Kraft mit Geduld verbinden.";
+    }
+  }
+
+  // === ASTEROIDEN ===
+  if (p2 == P_CHIRON) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return QString("Die Verbindung mit Chiron zeigt einen sensiblen Bereich, "
+             "in dem %1 mit der Urverletzung in Berührung kommt. Hier liegt "
+             "sowohl Schmerz als auch ein großes Heilungspotenzial für sich "
+             "selbst und andere.").arg(getPlanetName(p1));
+    case SEXTIL:
+      return QString("Die harmonische Verbindung von %1 und Chiron ermöglicht "
+             "es Ihnen, aus eigenen Wunden Weisheit zu gewinnen und anderen "
+             "zu helfen.").arg(getPlanetName(p1));
+    case QUADRATUR:
+      return QString("Die Spannung zwischen %1 und Chiron zeigt einen Bereich, "
+             "in dem alte Wunden aufbrechen können. Die Heilung erfordert "
+             "bewusste Arbeit.").arg(getPlanetName(p1));
+    case TRIGON:
+      return QString("%1 im Trigon zu Chiron schenkt natürliche Heilfähigkeiten "
+             "und die Gabe, aus Erfahrung Weisheit zu schöpfen.").arg(getPlanetName(p1));
+    }
+  }
+
+  if (p2 == P_CERES) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return QString("Die Verbindung von %1 mit Ceres betont Themen der "
+             "Fürsorge, Nahrung und des Loslassens. Sie haben ein tiefes "
+             "Bedürfnis, zu nähren und genährt zu werden.").arg(getPlanetName(p1));
+    case SEXTIL:
+      return QString("Die harmonische Verbindung von %1 und Ceres begünstigt "
+             "einen natürlichen Zugang zu Fürsorge und Selbstfürsorge.")
+             .arg(getPlanetName(p1));
+    case TRIGON:
+      return QString("%1 im Trigon zu Ceres schenkt ein natürliches Talent "
+             "für Pflege und das Schaffen einer nährenden Umgebung.")
+             .arg(getPlanetName(p1));
+    }
+  }
+
+  if (p2 == P_PALLAS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return QString("Die Verbindung von %1 mit Pallas Athene betont "
+             "strategisches Denken, kreative Intelligenz und die Fähigkeit, "
+             "Muster zu erkennen.").arg(getPlanetName(p1));
+    case SEXTIL:
+      return QString("Die harmonische Verbindung von %1 und Pallas fördert "
+             "kreative Problemlösung und diplomatisches Geschick.")
+             .arg(getPlanetName(p1));
+    case TRIGON:
+      return QString("%1 im Trigon zu Pallas schenkt natürliche Weisheit "
+             "und die Gabe, kreative Lösungen zu finden.").arg(getPlanetName(p1));
+    }
+  }
+
+  if (p2 == P_JUNO) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return QString("Die Verbindung von %1 mit Juno betont Partnerschaftsthemen, "
+             "Treue und das Bedürfnis nach einer gleichberechtigten Beziehung.")
+             .arg(getPlanetName(p1));
+    case SEXTIL:
+      return QString("Die harmonische Verbindung von %1 und Juno begünstigt "
+             "harmonische Partnerschaften und Fairness in Beziehungen.")
+             .arg(getPlanetName(p1));
+    case TRIGON:
+      return QString("%1 im Trigon zu Juno schenkt ein natürliches Talent "
+             "für dauerhafte, loyale Partnerschaften.").arg(getPlanetName(p1));
+    }
+  }
+
+  if (p2 == P_VESTA) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return QString("Die Verbindung von %1 mit Vesta betont Hingabe, Fokus "
+             "und das heilige Feuer der inneren Berufung. Hier können Sie "
+             "sich ganz einer Sache widmen.").arg(getPlanetName(p1));
+    case SEXTIL:
+      return QString("Die harmonische Verbindung von %1 und Vesta fördert "
+             "konzentriertes Arbeiten und die Fähigkeit, sich einer Aufgabe "
+             "mit Hingabe zu widmen.").arg(getPlanetName(p1));
+    case TRIGON:
+      return QString("%1 im Trigon zu Vesta schenkt natürliche Fokussierung "
+             "und die Gabe, das innere Feuer der Hingabe zu bewahren.")
+             .arg(getPlanetName(p1));
+    }
+  }
+
+  if (p2 == P_LILITH) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return QString("Die Verbindung von %1 mit Lilith berührt Ihre wilde, "
+             "ungezähmte Seite und Themen von Unterdrückung und Befreiung. "
+             "Hier liegt verborgene Kraft.").arg(getPlanetName(p1));
+    case SEXTIL:
+      return QString("Die harmonische Verbindung von %1 und Lilith ermöglicht "
+             "Zugang zu Ihrer inneren Wildheit auf konstruktive Weise.")
+             .arg(getPlanetName(p1));
+    case QUADRATUR:
+      return QString("Die Spannung zwischen %1 und Lilith kann verdrängte "
+             "Aspekte Ihrer Persönlichkeit aktivieren. Integration ist gefragt.")
+             .arg(getPlanetName(p1));
+    }
+  }
+
+  // Kein spezifischer Text gefunden
+  return QString();
 }
 
 //==============================================================================
@@ -821,82 +1404,164 @@ QString AstroTextAnalyzer::getContextAspectText(int planet1, int8_t sign1,
                                                 int16_t aspect) const {
   QString text = "<p>";
 
-  // Beispiel für spezifischen Text: Sonne in Widder Konjunktion Jupiter in
-  // Widder
-  if (planet1 == P_SONNE && planet2 == P_JUPITER && aspect == KONJUNKTION) {
-    if (sign1 == iWIDDER && sign2 == iWIDDER) {
-      text += "<b>Sonne Konjunktion Jupiter im Widder:</b> Gewaltige Energie "
-              "und Expansionsdrang. Sie wollen die Welt erobern.";
-      text += "</p>";
-      return text;
-    } else if (sign1 == iSTEINBOCK || sign2 == iSTEINBOCK) {
-      text += "<b>Sonne Konjunktion Jupiter im Steinbock:</b> Diszipliniertes "
-              "Wachstum. Sie bauen Ihren Erfolg Schritt für Schritt auf.";
-      text += "</p>";
-      return text;
-    }
-  }
-
-  // Fallback auf generischen Text, aber mit Erwähnung der Zeichen
-  QString signName1 = (sign1 >= 0) ? getSignName(sign1) : "";
-  QString signName2 = (sign2 >= 0) ? getSignName(sign2) : "";
-
-  // Element-Logik für besseren Fallback
+  // Element-Berechnung
   // Feuer: 0 Widder, 4 Löwe, 8 Schütze
   // Erde: 1 Stier, 5 Jungfrau, 9 Steinbock
   // Luft: 2 Zwillinge, 6 Waage, 10 Wassermann
   // Wasser: 3 Krebs, 7 Skorpion, 11 Fische
-
   auto getElement = [](int s) -> int { return (s >= 0) ? s % 4 : -1; };
+
+  // Qualität/Modalität: Kardinal, Fix, Veränderlich
+  // Kardinal: 0 Widder, 3 Krebs, 6 Waage, 9 Steinbock
+  // Fix: 1 Stier, 4 Löwe, 7 Skorpion, 10 Wassermann
+  // Veränderlich: 2 Zwillinge, 5 Jungfrau, 8 Schütze, 11 Fische
+  auto getQuality = [](int s) -> int { return (s >= 0) ? s % 3 : -1; };
+
   int el1 = getElement(sign1);
   int el2 = getElement(sign2);
+  int qual1 = getQuality(sign1);
+  int qual2 = getQuality(sign2);
 
-  if (!signName1.isEmpty()) {
-    text += QString("<i>(%1 in %2").arg(getPlanetName(planet1), signName1);
+  QString signName1 = (sign1 >= 0) ? getSignName(sign1) : "";
+  QString signName2 = (sign2 >= 0) ? getSignName(sign2) : "";
 
-    // Kleiner Zusatz basierend auf Element
-    QString elementZusatz;
-    if (el1 == 0)
-      elementZusatz = " (Feuer: Impulsiv)";
-    else if (el1 == 1)
-      elementZusatz = " (Erde: Praktisch)";
-    else if (el1 == 2)
-      elementZusatz = " (Luft: Geistig)";
-    else if (el1 == 3)
-      elementZusatz = " (Wasser: Emotional)";
-    if (!elementZusatz.isEmpty())
-      text += elementZusatz;
-
-    if (!signName2.isEmpty()) {
-      text += QString(" - %1 in %2").arg(getPlanetName(planet2), signName2);
-
-      QString elementZusatz2;
-      if (el2 == 0)
-        elementZusatz2 = " [Feuer]";
-      else if (el2 == 1)
-        elementZusatz2 = " [Erde]";
-      else if (el2 == 2)
-        elementZusatz2 = " [Luft]";
-      else if (el2 == 3)
-        elementZusatz2 = " [Wasser]";
-      if (!elementZusatz2.isEmpty())
-        text += elementZusatz2;
-
-      text += ")</i><br>";
-    } else {
-      text += ")</i><br>";
+  // Element-Namen
+  auto elementName = [](int e) -> QString {
+    switch (e) {
+    case 0: return "Feuer";
+    case 1: return "Erde";
+    case 2: return "Luft";
+    case 3: return "Wasser";
+    default: return "";
     }
-  }
+  };
 
-  // Generischen Text holen
+  // Qualitäts-Namen
+  auto qualityName = [](int q) -> QString {
+    switch (q) {
+    case 0: return "kardinal";
+    case 1: return "fix";
+    case 2: return "veränderlich";
+    default: return "";
+    }
+  };
+
+  // Generischen Text als Basis holen
   QString generic = getGenericAspectText(planet1, planet2, aspect);
-  // <p> Tag entfernen, da wir schon eines haben, oder einfach anhängen
   if (generic.startsWith("<p>"))
     generic = generic.mid(3);
   if (generic.endsWith("</p>"))
     generic.chop(4);
 
+  // Planetenposition hinzufügen
+  if (!signName1.isEmpty() && !signName2.isEmpty()) {
+    text += QString("<b>%1 in %2 %3 %4 in %5</b><br>")
+                .arg(getPlanetName(planet1), signName1,
+                     getAspectName(aspect),
+                     getPlanetName(planet2), signName2);
+  }
+
+  // Aspekt-Text einfügen
   text += generic;
+
+  // Element-Kontext hinzufügen
+  if (el1 >= 0 && el2 >= 0) {
+    text += "<br><br><i>";
+
+    if (el1 == el2) {
+      // Gleiche Elemente verstärken sich
+      QString elName = elementName(el1);
+      switch (el1) {
+      case 0: // Feuer
+        text += QString("Beide Planeten stehen in %1-Zeichen, was diesem Aspekt "
+                        "besondere Dynamik, Energie und Leidenschaft verleiht. "
+                        "Hier ist viel Initiative und Unternehmungslust vorhanden, "
+                        "aber auch die Gefahr von Impulsivität und Ungeduld.")
+                    .arg(elName);
+        break;
+      case 1: // Erde
+        text += QString("Beide Planeten stehen in %1-Zeichen, was diesem Aspekt "
+                        "Stabilität, Ausdauer und Pragmatismus verleiht. Sie gehen "
+                        "methodisch vor und bauen auf solide Fundamente. "
+                        "Materielle Sicherheit ist wichtig.")
+                    .arg(elName);
+        break;
+      case 2: // Luft
+        text += QString("Beide Planeten stehen in %1-Zeichen, was diesem Aspekt "
+                        "geistige Beweglichkeit und kommunikative Fähigkeiten "
+                        "verleiht. Ideen und sozialer Austausch stehen im Vordergrund. "
+                        "Objektivität ist eine Stärke.")
+                    .arg(elName);
+        break;
+      case 3: // Wasser
+        text += QString("Beide Planeten stehen in %1-Zeichen, was diesem Aspekt "
+                        "emotionale Tiefe und intuitive Qualitäten verleiht. "
+                        "Gefühle und Empfindungen sind hier sehr stark. "
+                        "Einfühlungsvermögen und Sensibilität prägen diesen Bereich.")
+                    .arg(elName);
+        break;
+      }
+    } else {
+      // Unterschiedliche Elemente - Kombination beschreiben
+      QString elName1 = elementName(el1);
+      QString elName2 = elementName(el2);
+
+      // Harmonische Element-Kombinationen
+      if ((el1 == 0 && el2 == 2) || (el1 == 2 && el2 == 0)) {
+        // Feuer-Luft
+        text += QString("%1 (%2) und %3 (%4) verbinden sich hier zu einer "
+                        "energiegeladenen, enthusiastischen Kombination. "
+                        "Ideen werden in Aktion umgesetzt, Inspiration führt zu Taten.")
+                    .arg(getPlanetName(planet1), elName1,
+                         getPlanetName(planet2), elName2);
+      } else if ((el1 == 1 && el2 == 3) || (el1 == 3 && el2 == 1)) {
+        // Erde-Wasser
+        text += QString("%1 (%2) und %3 (%4) verbinden sich zu einer "
+                        "fruchtbaren, nährenden Kombination. Praktisches und "
+                        "Emotionales arbeiten zusammen. Gefühle finden konkreten Ausdruck.")
+                    .arg(getPlanetName(planet1), elName1,
+                         getPlanetName(planet2), elName2);
+      } else if ((el1 == 0 && el2 == 1) || (el1 == 1 && el2 == 0)) {
+        // Feuer-Erde
+        text += QString("%1 (%2) und %3 (%4) verbinden Impuls mit Substanz. "
+                        "Der Feuerdrang will schnelle Ergebnisse, die Erde fordert Geduld. "
+                        "Diese Spannung kann zu konkreten Errungenschaften führen.")
+                    .arg(getPlanetName(planet1), elName1,
+                         getPlanetName(planet2), elName2);
+      } else if ((el1 == 0 && el2 == 3) || (el1 == 3 && el2 == 0)) {
+        // Feuer-Wasser
+        text += QString("%1 (%2) und %3 (%4) erzeugen Dampf - eine kraftvolle, "
+                        "aber volatile Mischung. Leidenschaft trifft auf Gefühl, "
+                        "was zu intensiven, aber auch stürmischen Energien führen kann.")
+                    .arg(getPlanetName(planet1), elName1,
+                         getPlanetName(planet2), elName2);
+      } else if ((el1 == 1 && el2 == 2) || (el1 == 2 && el2 == 1)) {
+        // Erde-Luft
+        text += QString("%1 (%2) und %3 (%4) verbinden Theorie mit Praxis. "
+                        "Ideen brauchen praktische Umsetzung, und die Erde erdet "
+                        "das manchmal zu abstrakte Denken der Luft.")
+                    .arg(getPlanetName(planet1), elName1,
+                         getPlanetName(planet2), elName2);
+      } else if ((el1 == 2 && el2 == 3) || (el1 == 3 && el2 == 2)) {
+        // Luft-Wasser
+        text += QString("%1 (%2) und %3 (%4) verbinden Verstand mit Gefühl. "
+                        "Das kann zu künstlerischer Sensibilität führen, aber auch "
+                        "zu Konflikten zwischen Kopf und Herz.")
+                    .arg(getPlanetName(planet1), elName1,
+                         getPlanetName(planet2), elName2);
+      }
+    }
+
+    // Qualitäts-Kontext hinzufügen
+    if (qual1 >= 0 && qual2 >= 0 && qual1 == qual2) {
+      QString qualName = qualityName(qual1);
+      text += QString(" Beide Zeichen sind %1, was die Intensität dieses Aspekts verstärkt.")
+                  .arg(qualName);
+    }
+
+    text += "</i>";
+  }
+
   text += "</p>";
   return text;
 }

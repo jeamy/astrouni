@@ -111,9 +111,9 @@ private:
   void initializeAspectTexts();
 
   // Hilfsfunktionen
-  // Hilfsfunktionen
   uint32_t makeAspectKey(int planet1, int planet2, int16_t aspect) const;
   QString getGenericAspectText(int planet1, int planet2, int16_t aspect) const;
+  QString getPlanetPairText(int planet1, int planet2, int16_t aspect) const;
   QString getContextAspectText(int planet1, int8_t sign1, int planet2,
                                int8_t sign2, int16_t aspect) const;
 };
