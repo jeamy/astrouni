@@ -61,6 +61,7 @@ private slots:
     void onDatenClicked();
     void onPositionenClicked();
     void onAspekteClicked();
+    void onTextAnalyseClicked();
     void onNeuClicked();
     
     // Zeit-Scroll
@@ -97,6 +98,7 @@ private:
     QPushButton* m_datenButton;
     QPushButton* m_positionenButton;
     QPushButton* m_aspekteButton;
+    QPushButton* m_textAnalyseButton;
     
     // STRICT LEGACY: Zeit-Scroll Widgets (Port von SC_MIN, SC_STU, SC_TAG, SC_MON, SC_JAH)
     QPushButton* m_neuButton;

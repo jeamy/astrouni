@@ -179,14 +179,45 @@ elif command -v qtpaths6 &>/dev/null && command -v patchelf &>/dev/null; then
   QT_PLUGIN_DIR="$(qtpaths6 --plugin-dir 2>/dev/null || true)"
   QT_PREFIX="$(qtpaths6 --install-prefix 2>/dev/null || true)"
   QT_LIB_DIR="$QT_PREFIX/lib"
-  
+
   mkdir -p "$DIST_DIR/lib" "$DIST_DIR/plugins"
-  
-  # Qt-abhängige libs des Binaries kopieren
+
+  # Hilfsfunktion: alle relevanten Dependencies eines Binaries via ldd einsammeln
+  copy_deps() {
+    local target="$1"
+    [ -z "$target" ] && return 0
+    [ ! -e "$target" ] && return 0
+
+    # ldd-Output parsen, nur echte, gefundene Pfade berücksichtigen
+    while IFS= read -r dep; do
+      [ -z "$dep" ] && continue
+      # Zeilen wie "not found" ignorieren
+      if [ "$dep" = "not" ]; then
+        continue
+      fi
+      local base
+      base="$(basename "$dep")"
+      # Kern-Systemlibs nicht bundeln (werden vom Zielsystem erwartet)
+      case "$base" in
+        linux-vdso.so.*|ld-linux*.so*|libc.so.*|libm.so.*|libdl.so.*|libpthread.so.*|librt.so.*)
+          continue
+          ;;
+      esac
+
+      if [ ! -f "$DIST_DIR/lib/$base" ]; then
+        cp -L "$dep" "$DIST_DIR/lib/" 2>/dev/null || true
+      fi
+    done < <(ldd "$target" 2>/dev/null | awk '/=>/ {print $(NF-1)}' | grep -E '^/' || true)
+  }
+
+  # Qt-abhängige libs des Binaries kopieren (Qt6::Core/Gui/Widgets/PrintSupport)
   for lib in $(ldd "$DIST_DIR/astrouni2026" | awk '/Qt6/ {print $3}'); do
     [ -f "$lib" ] && cp -L "$lib" "$DIST_DIR/lib/"
   done
-  
+
+  # Zusätzlich alle Nicht-Qt-Dependencies des Hauptbinaries einsammeln (z.B. libicu, libxcb)
+  copy_deps "$DIST_DIR/astrouni2026"
+
   # Wichtige Plugin-Ordner kopieren
   for sub in platforms styles imageformats xcbglintegrations iconengines; do
     if [ -d "$QT_PLUGIN_DIR/$sub" ]; then
@@ -194,7 +225,21 @@ elif command -v qtpaths6 &>/dev/null && command -v patchelf &>/dev/null; then
       cp -L "$QT_PLUGIN_DIR/$sub"/*.so "$DIST_DIR/plugins/$sub"/ 2>/dev/null || true
     fi
   done
-  
+
+  # Dependencies der Qt-Libs einsammeln
+  if ls "$DIST_DIR/lib/"Qt6*.so* >/dev/null 2>&1; then
+    for lib in "$DIST_DIR/lib/"Qt6*.so*; do
+      [ -f "$lib" ] && copy_deps "$lib"
+    done
+  fi
+
+  # Dependencies der Plugin-Libs einsammeln (insb. qxcb-Plugin und seine libxcb/libicu-Abhängigkeiten)
+  if [ -d "$DIST_DIR/plugins" ]; then
+    while IFS= read -r sofile; do
+      copy_deps "$sofile"
+    done < <(find "$DIST_DIR/plugins" -type f -name "*.so" 2>/dev/null)
+  fi
+
   # qt.conf damit Qt im lokalen plugins-Verzeichnis sucht
   cat > "$DIST_DIR/qt.conf" <<EOF
 [Paths]
@@ -203,8 +248,8 @@ Plugins=plugins
 Imports=imports
 Qml2Imports=qml
 EOF
-  
-  # RPATH auf lokales lib-Verzeichnis setzen
+
+  # RPATH auf lokales lib-Verzeichnis setzen (für Binary und alle gebündelten Libs)
   patchelf --set-rpath '$ORIGIN/lib' "$DIST_DIR/astrouni2026" || true
   for lib in "$DIST_DIR/lib/"*.so*; do
     patchelf --set-rpath '$ORIGIN' "$lib" || true

@@ -137,9 +137,9 @@ struct Radix {
     QVector<double>  planetRad;      // Planeten-Positionen (Radiant)
     QVector<double>  haus;           // Häuser-Positionen (Grad)
     QVector<double>  hausRad;        // Häuser-Positionen (Radiant)
-    QVector<int8_t>  aspPlanet;      // Aspekte zwischen Planeten
+    QVector<int16_t> aspPlanet;      // Aspekte zwischen Planeten
     QVector<double>  winkelPlanet;   // Winkel zwischen Planeten
-    QVector<int8_t>  aspHaus;        // Aspekte Planet-Haus
+    QVector<int16_t> aspHaus;        // Aspekte Planet-Haus
     QVector<double>  winkelHaus;     // Winkel Planet-Haus
     QVector<int16_t> planetTyp;      // Planet-Typ (normal/rückläufig/transit)
     QVector<int8_t>  inHaus;         // Planet in welchem Haus

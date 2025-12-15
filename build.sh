@@ -1,66 +1,99 @@
 #!/bin/bash
 #
-# AstroUniverse 2026 - Build Script
-# Unterstützt: Linux, macOS
+# AstroUniverse Build Script
 #
 
-set -e
+set -euo pipefail  # Exit on error
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$SCRIPT_DIR/astrouni2026"
-BUILD_TYPE="${1:-Release}"
+SOURCE_DIR="$SCRIPT_DIR/astrouni2026"
+BUILD_DIR="$SOURCE_DIR/build"
 
-echo "========================================"
-echo "  AstroUniverse 2026 Build"
-echo "========================================"
-echo "Build Type: $BUILD_TYPE"
+CLEAN=0
+BUILD_TYPE="Release"
+JOBS="$(nproc)"
+
+usage() {
+    echo "Usage: $0 [--clean] [--debug|--release] [--jobs N]"
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --clean|-c)
+            CLEAN=1
+            shift
+            ;;
+        --debug)
+            BUILD_TYPE="Debug"
+            shift
+            ;;
+        --release)
+            BUILD_TYPE="Release"
+            shift
+            ;;
+        --jobs|-j)
+            if [ $# -lt 2 ]; then
+                usage
+                exit 1
+            fi
+            JOBS="$2"
+            shift 2
+            ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+echo "=== AstroUniverse Build Script ==="
+echo "Working directory: $SCRIPT_DIR"
+echo "Source directory:  $SOURCE_DIR"
+echo "Build directory:   $BUILD_DIR"
+echo "Build type:        $BUILD_TYPE"
+echo "Jobs:              $JOBS"
 echo ""
 
-# Prüfen ob CMake installiert ist
-if ! command -v cmake &> /dev/null; then
-    echo "FEHLER: CMake nicht gefunden!"
-    echo ""
-    echo "Installation:"
-    echo "  Ubuntu/Debian: sudo apt install cmake"
-    echo "  macOS:         brew install cmake"
-    exit 1
+if [ "$CLEAN" -eq 1 ] && [ -d "$BUILD_DIR" ]; then
+    echo "Cleaning old build directory..."
+    rm -rf "$BUILD_DIR"
 fi
 
-# Prüfen ob Qt6 installiert ist
-if ! cmake --find-package -DNAME=Qt6 -DCOMPILER_ID=GNU -DLANGUAGE=CXX -DMODE=EXIST &> /dev/null; then
-    echo "WARNUNG: Qt6 möglicherweise nicht gefunden."
-    echo ""
-    echo "Installation:"
-    echo "  Ubuntu/Debian: sudo apt install qt6-base-dev qt6-tools-dev"
-    echo "  macOS:         brew install qt@6"
-    echo ""
-fi
-
-# Build-Verzeichnis erstellen
-BUILD_DIR="$PROJECT_DIR/build"
+echo "Creating build directory..."
 mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
-
-# CMake konfigurieren
-echo "Konfiguriere CMake..."
-cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..
-
-# Bauen
-echo ""
-echo "Baue Projekt..."
-NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
-cmake --build . -j"$NPROC"
 
 echo ""
-echo "========================================"
-echo "  Build erfolgreich!"
-echo "========================================"
+echo "=== Configuring with CMake ==="
+cmake -S "$SOURCE_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE" || {
+    echo ""
+    echo "ERROR: CMake configuration failed!"
+    exit 1
+}
+
 echo ""
-echo "Ausführen:"
-echo "  cd $BUILD_DIR"
-echo "  ./astrouni2026"
+echo "=== Building ==="
+cmake --build "$BUILD_DIR" --parallel "$JOBS" || {
+    echo ""
+    echo "ERROR: Build failed!"
+    exit 1
+}
+
 echo ""
-echo "Tests:"
-echo "  cd $BUILD_DIR"
-echo "  ctest --output-on-failure"
-echo ""
+echo "=== Build Successful! ==="
+
+if [ -x "$BUILD_DIR/astrouni2026" ]; then
+    echo "Executable: $BUILD_DIR/astrouni2026"
+    echo ""
+    echo "Run with: cd $BUILD_DIR && ./astrouni2026"
+elif [ -x "$BUILD_DIR/AstroUniverse" ]; then
+    echo "Executable: $BUILD_DIR/AstroUniverse"
+    echo ""
+    echo "Run with: cd $BUILD_DIR && ./AstroUniverse"
+else
+    echo "Executable: (not found in $BUILD_DIR)"
+fi

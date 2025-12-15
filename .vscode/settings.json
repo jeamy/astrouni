@@ -72,5 +72,6 @@
         "cinttypes": "cpp",
         "bitset": "cpp",
         "qlistwidget": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/docker/programming/astrouni/astrouni2026"
 }
