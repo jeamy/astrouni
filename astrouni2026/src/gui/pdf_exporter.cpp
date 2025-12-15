@@ -625,7 +625,11 @@ void PdfExporter::renderPage(QPainter &painter, QPrinter &printer,
       "p { margin-bottom: 10px; }");
   doc.setHtml(html);
   doc.setTextWidth(pageWidth - 2 * marginX);
-  doc.setPageSize(QSizeF(pageWidth - 2 * marginX, pageHeight - 2 * marginY));
+
+  const double docPageWidth = static_cast<double>(pageWidth - 2 * marginX);
+  const double docPageHeight =
+      static_cast<double>(pageHeight - y - marginY); // Platz ab aktuellem y
+  doc.setPageSize(QSizeF(docPageWidth, docPageHeight));
 
   // Wir müssen manuell Positionierung und Umbruch handhaben, wenn es über
   // mehrere Seiten geht. Einfacher Ansatz: Wir rendern alles in ein Rechteck.
@@ -633,60 +637,40 @@ void PdfExporter::renderPage(QPainter &painter, QPrinter &printer,
   // unterstützt das nicht direkt trivial auf QPainter ohne Clip. Aber wir
   // können den Inhalt "clippen" und auf neuen Seiten weitermalen.
 
-  QRectF textRect(marginX, y, pageWidth - 2 * marginX,
-                  pageHeight - y - marginY);
+  // Loop für Mehrseitigkeit (seitenweise anhand der QTextDocument-Paginierung)
+  const double sliceHeight = doc.pageSize().height();
+  const int totalPages = qMax(1, doc.pageCount());
 
-  // Loop für Mehrseitigkeit
-  double currentY = 0;
-  double contentHeight = doc.size().height();
-
-  while (currentY < contentHeight) {
-    painter.save();
-    painter.translate(marginX, y); // Startposition auf der Seite
-
-      // Clip-Rechteck für diesen Abschnitt
-      // Wir verschieben den Painter-Origin, also malen wir ab (0,0) bis (width,
-      // availableHeight) Aber wir müssen den Content verschieben (-0,
-      // -currentY)
-
-      QRectF clipRect(0, 0, pageWidth - 2 * marginX, pageHeight - y - marginY);
-      painter.setClipRect(clipRect);
-      painter.translate(0, -currentY); // Scroll den Content nach oben
-
-      QAbstractTextDocumentLayout::PaintContext ctx;
-      ctx.clip =
-          QRectF(0, currentY, clipRect.width(),
-                 clipRect.height()); // Nur sichtbaren Teil malen (Optimierung)
-      doc.documentLayout()->draw(&painter, ctx);
-
-      painter.restore();
-
-      // Footer malen
-      painter.setFont(smallFont);
-      painter.setPen(Qt::gray);
-      painter.drawText(
-          marginX, pageHeight - marginY,
-          QString("Erstellt mit AstroUniverse 2026 am %1 - Seite %2")
-              .arg(QDate::currentDate().toString("dd.MM.yyyy"))
-              .arg(pageNum));
-
-      currentY += (pageHeight - y - marginY);
-
-    if (currentY < contentHeight) {
+  for (int pageIndex = 0; pageIndex < totalPages; ++pageIndex) {
+    if (pageIndex > 0) {
       printer.newPage();
       pageNum++;
       y = marginY; // Auf Folgeseiten oben anfangen
     }
-  }
 
-  // === FOOTER letzte Seite (falls nicht oben schon gemalt) ===
-  // Der Loop malt Footer auf jeder Seite. Alles gut.
-  painter.setFont(smallFont);
-  painter.setPen(Qt::gray);
-  painter.drawText(marginX, pageHeight - marginY,
-                   QString("Erstellt mit AstroUniverse 2026 am %1 - Seite %2")
-                       .arg(QDate::currentDate().toString("dd.MM.yyyy"))
-                       .arg(pageNum));
+    painter.save();
+    painter.translate(marginX, y); // Startposition auf der Seite
+
+    QRectF clipRect(0, 0, docPageWidth, sliceHeight);
+    painter.setClipRect(clipRect);
+    painter.translate(0, -pageIndex * sliceHeight); // Seite nach oben scrollen
+
+    QAbstractTextDocumentLayout::PaintContext ctx;
+    ctx.clip = QRectF(0, pageIndex * sliceHeight, clipRect.width(),
+                      clipRect.height());
+    doc.documentLayout()->draw(&painter, ctx);
+
+    painter.restore();
+
+    // Footer malen
+    painter.setFont(smallFont);
+    painter.setPen(Qt::gray);
+    painter.drawText(
+        marginX, pageHeight - marginY,
+        QString("Erstellt mit AstroUniverse 2026 am %1 - Seite %2")
+            .arg(QDate::currentDate().toString("dd.MM.yyyy"))
+            .arg(pageNum));
+  }
 
 }
 
