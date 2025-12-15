@@ -6,6 +6,7 @@
 #include "radix_window.h"
 #include "chart_widget.h"
 #include "html_item_delegate.h"
+#include "pdf_exporter.h"
 #include "dialogs/person_dialog.h"
 #include "../core/calculations.h"
 #include "../core/chart_calc.h"
@@ -1203,34 +1204,22 @@ void RadixWindow::onTextAnalyseClicked() {
     // Buttons
     QHBoxLayout* buttonLayout = new QHBoxLayout();
     
-    QPushButton* saveButton = new QPushButton(tr("Als HTML speichern"), dialog);
-    connect(saveButton, &QPushButton::clicked, [this, analysisHtml]() {
-        QString fileName = QFileDialog::getSaveFileName(
-            this,
-            tr("Horoskop-Analyse speichern"),
-            QString("%1_%2_Analyse.html")
-                .arg(m_radix.rFix.vorname.isEmpty() ? "Radix" : m_radix.rFix.vorname)
-                .arg(QDate::currentDate().toString("yyyyMMdd")),
-            tr("HTML Dateien (*.html);;Alle Dateien (*)")
-        );
-        
-        if (!fileName.isEmpty()) {
-            QFile file(fileName);
-            if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-                QTextStream out(&file);
-                out.setEncoding(QStringConverter::Utf8);
-                out << analysisHtml;
-                file.close();
-                
-                QMessageBox::information(this, tr("Gespeichert"), 
-                    tr("Die Horoskop-Analyse wurde erfolgreich gespeichert:\n%1").arg(fileName));
+    QPushButton* pdfButton = new QPushButton(tr("Als PDF exportieren"), dialog);
+    connect(pdfButton, &QPushButton::clicked, [this, dialog]() {
+        PdfExporter exporter;
+        if (m_radix.synastrie) {
+            if (m_radix.horoTyp == TYP_TRANSIT) {
+                exporter.exportTransit(m_radix, *m_radix.synastrie, m_auinit, 
+                                       m_chartWidget, this);
             } else {
-                QMessageBox::warning(this, tr("Fehler"),
-                    tr("Die Datei konnte nicht gespeichert werden."));
+                exporter.exportSynastrie(m_radix, *m_radix.synastrie, m_auinit, 
+                                          m_chartWidget, this);
             }
+        } else {
+            exporter.exportRadix(m_radix, m_auinit, m_chartWidget, this);
         }
     });
-    buttonLayout->addWidget(saveButton);
+    buttonLayout->addWidget(pdfButton);
     
     buttonLayout->addStretch();
     
