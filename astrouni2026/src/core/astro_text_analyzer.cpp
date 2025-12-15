@@ -650,6 +650,162 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     }
   }
 
+  if (p1 == P_MOND && p2 == P_JUPITER) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mond und Jupiter vereint schenken emotionale Großzügigkeit und "
+             "ein tiefes Vertrauen ins Leben. Sie haben ein großes Herz und "
+             "sind von Natur aus optimistisch. Ihre Gefühle sind weit und "
+             "expansiv - manchmal vielleicht zu weit.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mond und Jupiter begünstigt "
+             "emotionales Wohlbefinden und Lebensfreude. Sie finden leicht "
+             "Zugang zu innerer Fülle und können andere mit Ihrer positiven "
+             "Ausstrahlung anstecken.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mond und Jupiter kann zu emotionaler "
+             "Maßlosigkeit oder übertriebenen Erwartungen führen. Sie schwanken "
+             "zwischen Euphorie und Enttäuschung. Lernen Sie, Ihre emotionalen "
+             "Höhenflüge zu erden.";
+    case TRIGON:
+      return "Mond und Jupiter im Trigon schenken natürliches emotionales Glück "
+             "und eine tiefe innere Zufriedenheit. Sie haben ein Talent, andere "
+             "zu ermutigen und Optimismus zu verbreiten.";
+    case OPOSITION:
+      return "Die Opposition von Mond und Jupiter zeigt einen Konflikt zwischen "
+             "emotionalen Bedürfnissen und dem Drang nach Expansion. Sie suchen "
+             "immer nach mehr, während ein Teil von Ihnen einfach Geborgenheit "
+             "braucht.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mond und Jupiter zeigt eine unbequeme "
+             "Verbindung zwischen Ihrem emotionalen Sicherheitsbedürfnis und "
+             "Ihrem Wunsch nach Wachstum und Horizonterweiterung. Sie müssen "
+             "ständig nachjustieren, wie viel Abenteuer Ihre Seele verträgt.";
+    }
+  }
+
+  if (p1 == P_MOND && p2 == P_SATURN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mond und Saturn vereint können emotionale Tiefe mit "
+             "Verantwortungsbewusstsein verbinden, aber auch Schwermut oder "
+             "emotionale Hemmungen anzeigen. Sie nehmen Gefühle ernst und "
+             "brauchen Zeit, um sich zu öffnen.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mond und Saturn gibt Ihren "
+             "Gefühlen Stabilität und Ausdauer. Sie können emotionale "
+             "Verantwortung übernehmen und sind für andere ein Fels in der "
+             "Brandung.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mond und Saturn kann emotionale Blockaden, "
+             "Angst vor Ablehnung oder ein Gefühl des Nicht-genug-seins "
+             "erzeugen. Alte Wunden aus der Kindheit können hier eine Rolle "
+             "spielen. Selbstmitgefühl ist der Schlüssel.";
+    case TRIGON:
+      return "Mond und Saturn im Trigon verbinden Gefühl mit Struktur auf "
+             "natürliche Weise. Sie haben emotionale Reife und können auch in "
+             "schwierigen Zeiten Ihren inneren Halt bewahren.";
+    case OPOSITION:
+      return "Die Opposition von Mond und Saturn zeigt einen Konflikt zwischen "
+             "emotionalen Bedürfnissen und Pflichten oder Einschränkungen. Sie "
+             "fühlen sich manchmal zwischen Nähe und Distanz, zwischen Weichheit "
+             "und Härte hin- und hergerissen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mond und Saturn erfordert ständige Anpassung "
+             "zwischen Ihrem Bedürfnis nach emotionaler Wärme und den Anforderungen "
+             "der Realität. Sie müssen lernen, Struktur und Gefühl in Einklang "
+             "zu bringen, ohne eines zu unterdrücken.";
+    }
+  }
+
+  if (p1 == P_MOND && p2 == P_URANUS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mond und Uranus vereint erzeugen ein ungewöhnliches Gefühlsleben. "
+             "Sie sind emotional unabhängig, manchmal exzentrisch, und brauchen "
+             "Freiheit in Beziehungen. Plötzliche Stimmungsumschwünge sind möglich.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mond und Uranus schenkt emotionale "
+             "Originalität und die Fähigkeit, festgefahrene Gefühlsmuster zu "
+             "durchbrechen. Sie sind offen für neue emotionale Erfahrungen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mond und Uranus kann emotionale Unruhe, "
+             "Bindungsangst oder plötzliche Trennungen anzeigen. Sie rebellieren "
+             "gegen emotionale Einengung, brauchen aber auch Stabilität.";
+    case TRIGON:
+      return "Mond und Uranus im Trigon verbinden Gefühl mit Intuition auf "
+             "inspirierende Weise. Sie haben einen einzigartigen emotionalen "
+             "Ausdruck und können anderen neue Perspektiven eröffnen.";
+    case OPOSITION:
+      return "Die Opposition von Mond und Uranus kann Konflikte zwischen "
+             "Sicherheitsbedürfnis und Freiheitsdrang anzeigen. Sie projizieren "
+             "möglicherweise Ihre eigene Unruhe auf Partner.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mond und Uranus zeigt eine unbehagliche "
+             "Spannung zwischen Ihrem Bedürfnis nach emotionaler Geborgenheit "
+             "und Ihrem Drang nach Unabhängigkeit und Veränderung.";
+    }
+  }
+
+  if (p1 == P_MOND && p2 == P_NEPTUN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mond und Neptun vereint schenken tiefe Sensibilität, Intuition "
+             "und künstlerische Begabung. Sie sind wie ein Schwamm für "
+             "Stimmungen. Grenzenlosigkeit kann aber auch zu Verwirrung führen.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mond und Neptun begünstigt "
+             "Einfühlungsvermögen, Kreativität und spirituelle Offenheit. Sie "
+             "haben ein feines Gespür für die unsichtbaren Strömungen des Lebens.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mond und Neptun kann zu Illusionen, "
+             "emotionaler Verwirrung oder Abhängigkeitstendenzen führen. "
+             "Unterscheiden Sie zwischen Intuition und Wunschdenken.";
+    case TRIGON:
+      return "Mond und Neptun im Trigon schenken natürliche Empathie und "
+             "einen Zugang zu höheren Gefühlsebenen. Sie können heilen und "
+             "trösten, weil Sie wirklich mitfühlen.";
+    case OPOSITION:
+      return "Die Opposition von Mond und Neptun kann emotionale Täuschung "
+             "oder Selbsttäuschung anzeigen. Sie idealisieren möglicherweise "
+             "Partner oder fliehen vor der Realität in Träume.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mond und Neptun erfordert ständige "
+             "Nachjustierung zwischen Ihrem Bedürfnis nach klaren emotionalen "
+             "Grenzen und Ihrer durchlässigen, empfindsamen Natur.";
+    }
+  }
+
+  if (p1 == P_MOND && p2 == P_PLUTO) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mond und Pluto vereint erzeugen intensive, tiefgründige Gefühle. "
+             "Sie erleben Emotionen mit extremer Intensität und haben die "
+             "Fähigkeit zur emotionalen Transformation. Kontrolle und Macht "
+             "in Beziehungen können Themen sein.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mond und Pluto gibt Ihnen "
+             "emotionale Tiefe und die Fähigkeit, psychologisch zu verstehen. "
+             "Sie können emotionale Krisen als Wachstumschancen nutzen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mond und Pluto kann emotionale Machtkämpfe, "
+             "Eifersucht oder zwanghafte Gefühle anzeigen. Alte Traumata wollen "
+             "verarbeitet werden. Die Kraft zur Transformation liegt in Ihnen.";
+    case TRIGON:
+      return "Mond und Pluto im Trigon schenken emotionale Regenerationskraft. "
+             "Sie können durch tiefe Krisen gehen und gestärkt daraus "
+             "hervorgehen. Ihre emotionale Intuition ist mächtig.";
+    case OPOSITION:
+      return "Die Opposition von Mond und Pluto kann intensive emotionale "
+             "Konflikte in Beziehungen anzeigen. Sie projizieren möglicherweise "
+             "Ihre eigene Intensität auf andere und erleben Machtkämpfe.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mond und Pluto zeigt eine unbequeme "
+             "Verbindung zwischen Ihrem Bedürfnis nach emotionaler Sicherheit "
+             "und tiefen Transformationsprozessen, die Altes sterben lassen.";
+    }
+  }
+
   // === MERKUR-ASPEKTE ===
   if (p1 == P_MERKUR && p2 == P_VENUS) {
     switch (aspect) {
@@ -709,6 +865,14 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return "Merkur und Jupiter im Trigon schenken natürliche Weisheit und die "
              "Gabe, Wissen zu teilen. Sie sind ein geborener Lehrer und Philosoph.";
+    case OPOSITION:
+      return "Die Opposition von Merkur und Jupiter kann zu übertriebenen Versprechungen "
+             "oder Konflikten zwischen Detailarbeit und dem großen Bild führen. Sie "
+             "schwanken zwischen praktischem Denken und philosophischen Höhenflügen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Merkur und Jupiter erfordert ständige Anpassung "
+             "zwischen Ihrem analytischen Verstand und Ihrem Bedürfnis nach Sinnsuche. "
+             "Kleine Fakten und große Wahrheiten wollen integriert werden.";
     }
   }
 
@@ -729,6 +893,14 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return "Merkur und Saturn im Trigon verleihen einen klaren, logischen "
              "Verstand und die Fähigkeit zu konzentrierter geistiger Arbeit.";
+    case OPOSITION:
+      return "Die Opposition von Merkur und Saturn kann zu Kommunikationsblockaden "
+             "oder dem Gefühl führen, nicht gehört zu werden. Sie kämpfen zwischen "
+             "Selbstausdruck und Selbstzensur.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Merkur und Saturn zeigt eine unbequeme Verbindung "
+             "zwischen Ihrem Bedürfnis, frei zu denken, und dem Druck, ernst genommen "
+             "zu werden. Leichtigkeit und Tiefe wollen verbunden werden.";
     }
   }
 
@@ -749,6 +921,14 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return "Merkur und Uranus im Trigon schenken intuitive Intelligenz und "
              "die Gabe, Zukunftstrends zu erkennen. Ihre Ideen sind ihrer Zeit voraus.";
+    case OPOSITION:
+      return "Die Opposition von Merkur und Uranus kann zu Nervosität, rebellischem "
+             "Denken oder Kommunikationschaos führen. Sie provozieren gerne mit Ihren "
+             "Ideen oder fühlen sich von anderen missverstanden.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Merkur und Uranus erfordert Anpassung zwischen "
+             "konventionellem und revolutionärem Denken. Sie müssen lernen, Ihre "
+             "genialen Einfälle so zu vermitteln, dass andere folgen können.";
     }
   }
 
@@ -769,6 +949,14 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return "Merkur und Neptun im Trigon schenken poetische Begabung und "
              "intuitive Einsichten. Sie können das Mystische in Worte fassen.";
+    case OPOSITION:
+      return "Die Opposition von Merkur und Neptun kann zu Missverständnissen, "
+             "Täuschungen oder dem Gefühl führen, nicht klar kommunizieren zu können. "
+             "Unterscheiden Sie zwischen Inspiration und Illusion.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Merkur und Neptun zeigt eine unbehagliche Spannung "
+             "zwischen logischem Denken und intuitiver Wahrnehmung. Sie müssen lernen, "
+             "beiden Seiten Raum zu geben, ohne sich zu verlieren.";
     }
   }
 
@@ -790,6 +978,14 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Merkur und Pluto im Trigon schenken die Fähigkeit, zum Kern "
              "jeder Sache vorzudringen. Ihr Verstand ist ein mächtiges Werkzeug "
              "für Transformation.";
+    case OPOSITION:
+      return "Die Opposition von Merkur und Pluto kann zu mentalen Machtkämpfen oder "
+             "dem Gefühl führen, dass Ihre Gedanken von außen kontrolliert werden. "
+             "Lernen Sie, Ihre geistige Intensität als Stärke zu nutzen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Merkur und Pluto erfordert ständige Anpassung "
+             "zwischen oberflächlicher Kommunikation und dem Drang, alles tiefgründig "
+             "zu analysieren. Nicht alles muss auf den Grund gegangen werden.";
     }
   }
 
@@ -819,6 +1015,10 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
       return "Die Opposition von Venus und Mars zeigt die Polarität zwischen "
              "Geben und Nehmen in Beziehungen. Sie erleben diese Spannung oft "
              "durch Partner, die das verkörpern, was Ihnen fehlt.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Venus und Mars erfordert ständige Nachjustierung "
+             "zwischen Harmoniebedürfnis und Durchsetzungswillen. Sie müssen lernen, "
+             "Ihre sanfte und Ihre kämpferische Seite zu integrieren.";
     }
   }
 
@@ -839,6 +1039,14 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return "Venus und Jupiter im Trigon schenken natürliches Glück in "
              "Beziehungen und ein Talent, Schönheit und Fülle anzuziehen.";
+    case OPOSITION:
+      return "Die Opposition von Venus und Jupiter kann zu Beziehungskonflikten "
+             "durch unterschiedliche Wertvorstellungen oder Lebensstile führen. "
+             "Sie schwanken zwischen Bescheidenheit und dem Wunsch nach mehr.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Venus und Jupiter erfordert Anpassung zwischen "
+             "persönlichen Beziehungen und größeren Lebensplänen. Liebe und Freiheit, "
+             "Nähe und Expansion wollen ausbalanciert werden.";
     }
   }
 
@@ -860,6 +1068,90 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return "Venus und Saturn im Trigon verbinden Liebe mit Verantwortung. "
              "Ihre Beziehungen sind solide und beständig.";
+    case OPOSITION:
+      return "Die Opposition von Venus und Saturn kann zu Beziehungskrisen oder "
+             "dem Gefühl führen, zwischen Liebe und Pflicht wählen zu müssen. Sie "
+             "projizieren möglicherweise emotionale Kälte auf Partner.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Venus und Saturn erfordert ständige Anpassung "
+             "zwischen Ihrem Bedürfnis nach Liebe und Leichtigkeit und den Anforderungen "
+             "der Realität. Genießen und Arbeiten wollen ausbalanciert werden.";
+    }
+  }
+
+  if (p1 == P_VENUS && p2 == P_URANUS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Venus und Uranus vereint schenken ungewöhnliche Anziehungskraft und "
+             "ein Bedürfnis nach Freiheit in Beziehungen. Sie lieben das Außergewöhnliche "
+             "und langweilen sich schnell mit Routine.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Venus und Uranus begünstigt kreative "
+             "und unkonventionelle Beziehungen. Sie schätzen Freundschaft in der Liebe.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Venus und Uranus kann zu plötzlichen Trennungen, "
+             "Bindungsangst oder emotionaler Unruhe in Beziehungen führen. Sie brauchen "
+             "sowohl Nähe als auch Freiraum.";
+    case TRIGON:
+      return "Venus und Uranus im Trigon schenken magnetische Ausstrahlung und die "
+             "Fähigkeit, Liebe und Freiheit harmonisch zu verbinden.";
+    case OPOSITION:
+      return "Die Opposition von Venus und Uranus kann zu Beziehungschaos oder dem "
+             "Gefühl führen, zwischen Sicherheit und Aufregung wählen zu müssen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Venus und Uranus zeigt eine unbehagliche Spannung "
+             "zwischen Harmoniebedarf und Freiheitsdrang. Sie müssen lernen, beide "
+             "Bedürfnisse zu integrieren.";
+    }
+  }
+
+  if (p1 == P_VENUS && p2 == P_NEPTUN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Venus und Neptun vereint schenken romantische Idealismus und künstlerische "
+             "Sensibilität. Sie lieben das Schöne und Transzendente, neigen aber auch "
+             "zu Illusionen in der Liebe.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Venus und Neptun begünstigt künstlerische "
+             "Begabung, spirituelle Liebe und ein feines Gespür für Ästhetik.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Venus und Neptun kann zu Täuschungen in der Liebe, "
+             "unrealistischen Erwartungen oder Abhängigkeitsmustern führen. Unterscheiden "
+             "Sie zwischen Ideal und Realität.";
+    case TRIGON:
+      return "Venus und Neptun im Trigon schenken natürliche Romantik, künstlerisches "
+             "Talent und die Fähigkeit zu bedingungsloser Liebe.";
+    case OPOSITION:
+      return "Die Opposition von Venus und Neptun kann zu Enttäuschungen in Beziehungen "
+             "führen, wenn Ideale auf Realität treffen. Sie projizieren Traumbilder auf Partner.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Venus und Neptun erfordert ständige Anpassung zwischen "
+             "realistischen Beziehungsbedürfnissen und romantischen Träumen.";
+    }
+  }
+
+  if (p1 == P_VENUS && p2 == P_PLUTO) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Venus und Pluto vereint erzeugen intensive, leidenschaftliche Anziehung. "
+             "Liebe ist für Sie transformativ und tiefgreifend. Eifersuch, Besitzdenken "
+             "und Machtspiele können Themen sein.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Venus und Pluto gibt Ihren Beziehungen "
+             "Tiefe und Intensität. Sie können durch Liebe heilen und transformiert werden.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Venus und Pluto kann zu Machtkämpfen in Beziehungen, "
+             "obsessiver Liebe oder schmerzlichen Trennungen führen. Transformation ist "
+             "der Schlüssel.";
+    case TRIGON:
+      return "Venus und Pluto im Trigon schenken magnetische Anziehungskraft und die "
+             "Fähigkeit, tiefe, transformative Beziehungen zu führen.";
+    case OPOSITION:
+      return "Die Opposition von Venus und Pluto kann zu intensiven Beziehungskonflikten, "
+             "Machtkämpfen oder projizierter Eifersucht führen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Venus und Pluto erfordert ständige Anpassung zwischen "
+             "dem Wunsch nach Harmonie und tiefen, transformativen Kräften in Beziehungen.";
     }
   }
 
@@ -882,6 +1174,14 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return "Mars und Jupiter im Trigon schenken natürlichen Erfolg bei "
              "mutigen Unternehmungen. Sie haben das Glück des Tüchtigen.";
+    case OPOSITION:
+      return "Die Opposition von Mars und Jupiter kann zu übertriebenem Ehrgeiz, "
+             "Konflikten mit Autoritäten oder rechtlichen Problemen führen. Ihr "
+             "Tatendrang braucht maßvolle Kanäle.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mars und Jupiter erfordert Anpassung zwischen "
+             "Ihrem Drang zu handeln und dem Bedürfnis, das große Bild zu sehen. "
+             "Aktion und Vision wollen integriert werden.";
     }
   }
 
@@ -904,6 +1204,286 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     case TRIGON:
       return "Mars und Saturn im Trigon verbinden Energie mit Ausdauer. "
              "Sie können Großes aufbauen, weil Sie Kraft mit Geduld verbinden.";
+    case OPOSITION:
+      return "Die Opposition von Mars und Saturn kann zu Frustration, blockierter "
+             "Energie oder Konflikten zwischen Antrieb und Hemmung führen. Sie "
+             "erleben diese Spannung oft durch äußere Widersacher.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mars und Saturn erfordert ständige Nachjustierung "
+             "zwischen Ihrem Drang loszulegen und der Notwendigkeit, geduldig zu sein. "
+             "Tempo und Timing wollen ausbalanciert werden.";
+    }
+  }
+
+  if (p1 == P_MARS && p2 == P_URANUS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mars und Uranus vereint erzeugen explosive Energie und revolutionären "
+             "Tatendrang. Sie sind unabhängig, erfinderisch, aber auch unberechenbar. "
+             "Plötzliche Aktionen sind möglich.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mars und Uranus begünstigt innovative "
+             "Unternehmungen und die Fähigkeit, schnell auf Veränderungen zu reagieren.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mars und Uranus kann zu Impulsivität, Unfällen "
+             "oder plötzlichen Auseinandersetzungen führen. Ihre Energie ist elektrisch "
+             "und braucht sichere Kanäle.";
+    case TRIGON:
+      return "Mars und Uranus im Trigon schenken natürliche Originalität im Handeln "
+             "und die Fähigkeit, Innovationen durchzusetzen.";
+    case OPOSITION:
+      return "Die Opposition von Mars und Uranus kann zu plötzlichen Konflikten, "
+             "Rebellion oder Unfällen führen. Sie projizieren möglicherweise "
+             "Ihre eigene Unruhe auf andere.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mars und Uranus erfordert Anpassung zwischen "
+             "direktem Handeln und ungewöhnlichen Methoden. Tradition und Innovation "
+             "wollen verbunden werden.";
+    }
+  }
+
+  if (p1 == P_MARS && p2 == P_NEPTUN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mars und Neptun vereint verbinden Aktion mit Inspiration, können aber auch "
+             "Energie zerstreuen oder zu Verwirrung im Handeln führen. Kreative oder "
+             "spirituelle Tätigkeiten sind begünstigt.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mars und Neptun begünstigt künstlerisches "
+             "Schaffen und die Fähigkeit, für Ideale zu kämpfen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mars und Neptun kann zu Energieverlust, Täuschungen "
+             "oder fehlgeleiteten Aktionen führen. Unterscheiden Sie zwischen Inspiration "
+             "und Illusion.";
+    case TRIGON:
+      return "Mars und Neptun im Trigon schenken die Fähigkeit, Träume in die Tat "
+             "umzusetzen und für höhere Ziele zu kämpfen.";
+    case OPOSITION:
+      return "Die Opposition von Mars und Neptun kann zu Verwirrung im Handeln, "
+             "Opferrolle oder versteckter Aggression führen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mars und Neptun zeigt eine unbequeme Verbindung "
+             "zwischen direktem Handeln und intuitivem Fließen. Sie müssen lernen, "
+             "wann Sie kämpfen und wann Sie loslassen sollten.";
+    }
+  }
+
+  if (p1 == P_MARS && p2 == P_PLUTO) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Mars und Pluto vereint erzeugen gewaltige Willenskraft und "
+             "Durchsetzungsvermögen. Sie haben die Fähigkeit, Berge zu versetzen, "
+             "aber auch destruktives Potenzial. Macht will weise eingesetzt werden.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Mars und Pluto gibt Ihnen die Fähigkeit, "
+             "tief zu graben und große Veränderungen durchzusetzen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Mars und Pluto kann zu Machtkämpfen, zwanghaftem "
+             "Ehrgeiz oder zerstörerischer Wut führen. Transformation der Aggression "
+             "ist gefragt.";
+    case TRIGON:
+      return "Mars und Pluto im Trigon schenken enorme Willensstärke und die Fähigkeit, "
+             "Hindernisse zu überwinden und sich völlig zu erneuern.";
+    case OPOSITION:
+      return "Die Opposition von Mars und Pluto kann zu intensiven Machtkämpfen oder "
+             "Konflikten mit mächtigen Gegnern führen. Sie projizieren möglicherweise "
+             "Ihre eigene Intensität auf andere.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Mars und Pluto erfordert ständige Anpassung zwischen "
+             "oberflächlichem Handeln und tiefgreifender Transformation. Kontrolle und "
+             "Loslassen wollen ausbalanciert werden.";
+    }
+  }
+
+  // === ÄUSSERE PLANETEN ===
+  if (p1 == P_JUPITER && p2 == P_SATURN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Jupiter und Saturn vereint verbinden Expansion mit Konsolidierung. "
+             "Dieser wichtige Zyklus zeigt, wie Sie Wachstum und Struktur in Einklang "
+             "bringen. Große Projekte brauchen Zeit und Planung.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Jupiter und Saturn begünstigt nachhaltige "
+             "Erfolge und die Fähigkeit, Visionen praktisch umzusetzen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Jupiter und Saturn zeigt einen Konflikt zwischen "
+             "Expansion und Begrenzung. Sie schwanken zwischen Optimismus und "
+             "Pessimismus.";
+    case TRIGON:
+      return "Jupiter und Saturn im Trigon schenken die seltene Fähigkeit, große "
+             "Ziele mit Geduld und Ausdauer zu verwirklichen.";
+    case OPOSITION:
+      return "Die Opposition von Jupiter und Saturn zeigt den klassischen Konflikt "
+             "zwischen Wachstum und Beschränkung, Freiheit und Verantwortung.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Jupiter und Saturn erfordert ständige Anpassung "
+             "zwischen Ihrem Optimismus und den Realitäten. Träume und Praktikabilität "
+             "wollen integriert werden.";
+    }
+  }
+
+  if (p1 == P_JUPITER && p2 == P_URANUS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Jupiter und Uranus vereint bringen plötzliche Glücksfälle, "
+             "ungewöhnliche Chancen und den Drang nach radikaler Erneuerung.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Jupiter und Uranus begünstigt innovative "
+             "Durchbrüche und die Fähigkeit, Zukunftstrends zu erkennen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Jupiter und Uranus kann zu Übertreibung in der "
+             "Rebellion oder unrealistischen Erwartungen an Veränderungen führen.";
+    case TRIGON:
+      return "Jupiter und Uranus im Trigon schenken natürliches Glück bei "
+             "ungewöhnlichen Unternehmungen und fortschrittlichen Ideen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Jupiter und Uranus erfordert Anpassung zwischen "
+             "traditionellen Werten und revolutionären Impulsen.";
+    }
+  }
+
+  if (p1 == P_JUPITER && p2 == P_NEPTUN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Jupiter und Neptun vereint steigern Idealismus, spirituelle Sehnsucht "
+             "und künstlerische Vision. Achten Sie auf Übertreibung und Realitätsflucht.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Jupiter und Neptun begünstigt spirituelles "
+             "Wachstum, Mitgefühl und künstlerische Inspiration.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Jupiter und Neptun kann zu übertriebenem Idealismus, "
+             "Enttäuschungen oder Täuschungen führen.";
+    case TRIGON:
+      return "Jupiter und Neptun im Trigon schenken natürliche Weisheit und einen "
+             "Zugang zu höheren spirituellen Wahrheiten.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Jupiter und Neptun zeigt eine unbequeme Verbindung "
+             "zwischen praktischem Wachstum und spiritueller Sehnsucht.";
+    }
+  }
+
+  if (p1 == P_JUPITER && p2 == P_PLUTO) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Jupiter und Pluto vereint bringen enormes Wachstumspotenzial und "
+             "transformative Kraft. Macht und Einfluss sind Themen - nutzen Sie sie weise.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Jupiter und Pluto begünstigt tiefgreifende "
+             "Erfolge und die Fähigkeit, große Veränderungen herbeizuführen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Jupiter und Pluto kann zu Machtmissbrauch, "
+             "extremem Ehrgeiz oder Konflikten mit mächtigen Strukturen führen.";
+    case TRIGON:
+      return "Jupiter und Pluto im Trigon schenken natürlichen Einfluss und die "
+             "Fähigkeit, große Projekte erfolgreich durchzusetzen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Jupiter und Pluto erfordert Anpassung zwischen "
+             "Expansion und tiefgreifender Transformation.";
+    }
+  }
+
+  if (p1 == P_SATURN && p2 == P_URANUS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Saturn und Uranus vereint verbinden Tradition mit Innovation. Dieser "
+             "seltene Aspekt zeigt die Spannung zwischen Alt und Neu, Ordnung und Chaos.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Saturn und Uranus begünstigt praktische "
+             "Innovationen und die Fähigkeit, Veränderungen strukturiert umzusetzen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Saturn und Uranus zeigt den Konflikt zwischen "
+             "Sicherheit und Freiheit, Struktur und Rebellion.";
+    case TRIGON:
+      return "Saturn und Uranus im Trigon schenken die seltene Fähigkeit, revolutionäre "
+             "Ideen praktisch und dauerhaft umzusetzen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Saturn und Uranus erfordert ständige Anpassung "
+             "zwischen Stabilität und Veränderung, Regeln und Freiheit.";
+    }
+  }
+
+  if (p1 == P_SATURN && p2 == P_NEPTUN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Saturn und Neptun vereint verbinden Realität mit Traum. Dieser Aspekt "
+             "kann zur Materialisierung von Visionen führen, aber auch zu Desillusionierung.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Saturn und Neptun begünstigt die "
+             "Verwirklichung spiritueller Ziele und künstlerischer Visionen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Saturn und Neptun kann zu Desillusion, Angst oder "
+             "dem Gefühl führen, dass Ihre Träume unmöglich sind.";
+    case TRIGON:
+      return "Saturn und Neptun im Trigon schenken die Fähigkeit, Träume in die "
+             "Realität zu bringen und spirituelle Prinzipien praktisch anzuwenden.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Saturn und Neptun zeigt eine unbehagliche Spannung "
+             "zwischen praktischen Anforderungen und spirituellen Sehnsüchten.";
+    }
+  }
+
+  if (p1 == P_SATURN && p2 == P_PLUTO) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Saturn und Pluto vereint bringen tiefgreifende strukturelle Transformation. "
+             "Altes muss sterben, damit Neues entstehen kann. Ausdauer und Tiefe sind gefragt.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Saturn und Pluto begünstigt nachhaltige "
+             "Transformation und die Fähigkeit, durch Krisen zu wachsen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Saturn und Pluto kann schwere Prüfungen, "
+             "Machtkämpfe mit Strukturen oder existenzielle Krisen anzeigen.";
+    case TRIGON:
+      return "Saturn und Pluto im Trigon schenken enorme Ausdauer und die Fähigkeit, "
+             "auch die schwersten Herausforderungen zu meistern.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Saturn und Pluto erfordert ständige Anpassung "
+             "zwischen Kontrolle und Loslassen, Struktur und Transformation.";
+    }
+  }
+
+  if (p1 == P_URANUS && p2 == P_NEPTUN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Uranus und Neptun vereint (alle ~171 Jahre) markieren eine Generation mit "
+             "ungewöhnlicher spiritueller Offenheit und dem Drang nach neuen Idealen.";
+    case SEXTIL:
+      return "Das Sextil zwischen Uranus und Neptun begünstigt progressive spirituelle "
+             "Entwicklung und innovative künstlerische Strömungen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Uranus und Neptun zeigt generationelle Spannungen "
+             "zwischen Revolution und Transzendenz.";
+    }
+  }
+
+  if (p1 == P_URANUS && p2 == P_PLUTO) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Uranus und Pluto vereint (alle ~127 Jahre) markieren Zeiten radikaler "
+             "gesellschaftlicher Umwälzungen und tiefgreifender Transformation.";
+    case SEXTIL:
+      return "Das Sextil zwischen Uranus und Pluto begünstigt nachhaltige "
+             "Erneuerung und die Integration revolutionärer Veränderungen.";
+    case QUADRATUR:
+      return "Das Quadrat zwischen Uranus und Pluto erzeugt intensive Spannungen "
+             "zwischen Freiheitsdrang und Machtstrukturen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Uranus und Pluto erfordert Anpassung zwischen "
+             "plötzlichen Veränderungen und tiefgreifender Transformation.";
+    }
+  }
+
+  if (p1 == P_NEPTUN && p2 == P_PLUTO) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Neptun und Pluto vereint (alle ~493 Jahre) markieren epochale "
+             "spirituelle und zivilisatorische Wendepunkte.";
+    case SEXTIL:
+      return "Das Sextil zwischen Neptun und Pluto begünstigt spirituelle Evolution "
+             "und die Integration kollektiver Schattenthemen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Neptun und Pluto zeigt generationelle Herausforderungen "
+             "bei der Integration von Spiritualität und Macht.";
     }
   }
 
