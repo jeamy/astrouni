@@ -594,6 +594,16 @@ void PdfExporter::renderPage(QPainter &painter, QPrinter &printer,
   AstroTextAnalyzer analyzer;
   QString html = analyzer.analyzeRadix(radix);
 
+  html.replace(
+      "</head>",
+      "<style>"
+      "body { font-family: 'DejaVu Sans'; font-size: 9pt; } "
+      "h1 { font-size: 14pt; font-weight: bold; } "
+      "h2 { font-size: 10pt; font-weight: bold; } "
+      "h3 { font-size: 9pt; font-weight: bold; } "
+      "p { font-size: 9pt; }"
+      "</style></head>");
+
   // Titel für Textanalyse
   painter.setFont(titleFont);
   painter.setPen(Qt::black);
@@ -604,13 +614,15 @@ void PdfExporter::renderPage(QPainter &painter, QPrinter &printer,
 
   // HTML rendern
   QTextDocument doc;
-  doc.setDefaultFont(QFont("DejaVu Sans", 16));
-  // CSS für größere Schrift
+  doc.documentLayout()->setPaintDevice(&printer);
+  doc.setDefaultFont(normalFont);
+  // CSS: gleiche Schriftgrößen wie in den Tabellen (Positionen/Häuser)
   doc.setDefaultStyleSheet(
-      "body { font-family: 'DejaVu Sans'; font-size: 16pt; } h1 { font-size: "
-      "20pt; font-weight: bold; } h2 { font-size: 18pt; font-weight: bold; } "
-      "h3 { font-size: 17pt; font-weight: bold; } p { margin-bottom: 10px; "
-      "}");
+      "body { font-family: 'DejaVu Sans'; font-size: 9pt; } "
+      "h1 { font-size: 14pt; font-weight: bold; } "
+      "h2 { font-size: 10pt; font-weight: bold; } "
+      "h3 { font-size: 9pt; font-weight: bold; } "
+      "p { margin-bottom: 10px; }");
   doc.setHtml(html);
   doc.setTextWidth(pageWidth - 2 * marginX);
   doc.setPageSize(QSizeF(pageWidth - 2 * marginX, pageHeight - 2 * marginY));
