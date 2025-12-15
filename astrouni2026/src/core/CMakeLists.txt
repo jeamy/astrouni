@@ -17,6 +17,8 @@ add_library(astrouni_core STATIC
     astro_font_provider.cpp
     astro_text_analyzer.h
     astro_text_analyzer.cpp
+    astro_text_store.h
+    astro_text_store.cpp
 )
 
 target_include_directories(astrouni_core PUBLIC

@@ -18,6 +18,7 @@
 #include "dialogs/orben_dialog.h"
 #include "dialogs/farben_dialog.h"
 #include "dialogs/settings_dialog.h"
+#include "dialogs/text_editor_dialog.h"
 #include "../data/legacy_io.h"
 #include "../data/orte_db.h"
 #include "../data/person_db.h"
@@ -144,6 +145,10 @@ void MainWindow::setupActions() {
     m_exitAction = new QAction(tr("&Beenden"), this);
     m_exitAction->setShortcut(QKeySequence::Quit);
     connect(m_exitAction, &QAction::triggered, this, &MainWindow::onFileExit);
+
+    // Bearbeiten-Menü Aktionen
+    m_editTextsAction = new QAction(tr("&Texte editieren..."), this);
+    connect(m_editTextsAction, &QAction::triggered, this, &MainWindow::onEditTexts);
     
     // Erfassen-Menü Aktionen
     m_personAction = new QAction(tr("&Person erfassen"), this);
@@ -183,6 +188,11 @@ void MainWindow::setupMenus() {
     m_fileMenu->addAction(m_exitAction);
     m_fileMenu->setMinimumWidth(200);  // Mindestbreite für vollständige Texte
 
+    // Bearbeiten-Menü
+    m_editMenu = menuBar()->addMenu(tr("&Bearbeiten"));
+    m_editMenu->addAction(m_editTextsAction);
+    m_editMenu->setMinimumWidth(200);
+
     // Erfassen-Menü (Port von MAINMENU -> "&Erfassen")
     m_erfassenMenu = menuBar()->addMenu(tr("&Erfassen"));
     m_erfassenMenu->addAction(m_personAction);
@@ -204,6 +214,11 @@ void MainWindow::setupMenus() {
     m_hilfeMenu->addAction(m_helpAboutAction);
     m_hilfeMenu->setMinimumWidth(250);  // Mindestbreite für vollständige Texte
 
+}
+
+void MainWindow::onEditTexts() {
+    TextEditorDialog dlg(this);
+    dlg.exec();
 }
 
 //==============================================================================
