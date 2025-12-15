@@ -209,7 +209,7 @@ void ChartCalc::calcHouseAspects(Radix& radix, const QVector<float>& orben, int1
                 
                 double exakterWinkel;
                 if (Calculations::checkAspekt(posPlanet, posHaus, aspekt, orb, exakterWinkel)) {
-                    radix.aspHaus[idx] = static_cast<int8_t>(aspekt);
+                    radix.aspHaus[idx] = static_cast<int16_t>(aspekt);
                     radix.winkelHaus[idx] = exakterWinkel;
                     break;  // Engsten Aspekt speichern
                 }
@@ -254,7 +254,7 @@ void ChartCalc::calcAspects(Radix& radix, const QVector<float>& orben) {
                 
                 double exakterWinkel;
                 if (Calculations::checkAspekt(pos1, pos2, aspekt, orb, exakterWinkel)) {
-                    radix.aspPlanet[idx] = static_cast<int8_t>(aspekt);
+                    radix.aspPlanet[idx] = static_cast<int16_t>(aspekt);
                     radix.winkelPlanet[idx] = exakterWinkel;
                     break;  // Nur den engsten Aspekt speichern
                 }
