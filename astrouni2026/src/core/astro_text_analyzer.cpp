@@ -434,6 +434,57 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
   int p1 = qMin(planet1, planet2);
   int p2 = qMax(planet1, planet2);
 
+  // === GLEICHE PLANETEN (für Synastrie/Transit) ===
+  if (planet1 == planet2) {
+    QString planetName = getPlanetName(planet1);
+    switch (aspect) {
+    case KONJUNKTION:
+      if (planet1 == P_SONNE)
+        return "Sonne auf Sonne in Synastrie zeigt eine starke Identifikation. "
+               "Sie erkennen sich im anderen und teilen grundlegende Lebensziele. "
+               "Diese Verbindung kann sehr stärkend, aber auch konkurrierend wirken.";
+      if (planet1 == P_MOND)
+        return "Mond auf Mond in Synastrie zeigt emotionale Verwandtschaft. "
+               "Sie verstehen intuitiv die Gefühle des anderen und fühlen sich "
+               "emotional zu Hause miteinander.";
+      if (planet1 == P_MERKUR)
+        return "Merkur auf Merkur in Synastrie begünstigt geistigen Austausch. "
+               "Sie denken ähnlich und kommunizieren mühelos miteinander.";
+      if (planet1 == P_VENUS)
+        return "Venus auf Venus in Synastrie zeigt geteilte Werte und Ästhetik. "
+               "Sie mögen dieselben Dinge und haben ein harmonisches Verhältnis.";
+      if (planet1 == P_MARS)
+        return "Mars auf Mars in Synastrie kann große Leidenschaft oder Konflikte "
+               "erzeugen. Sie teilen dieselbe Energie und Antriebsart.";
+      if (planet1 == P_JUPITER)
+        return "Jupiter auf Jupiter in Synastrie zeigt gemeinsame Überzeugungen "
+               "und Wachstumsziele. Sie inspirieren sich gegenseitig.";
+      if (planet1 == P_SATURN)
+        return "Saturn auf Saturn in Synastrie verbindet durch gemeinsame "
+               "Verantwortung und Reifeprozesse. Sie teilen ähnliche Prüfungen.";
+      return QString("%1 auf %1 in Synastrie zeigt eine starke Resonanz "
+             "in diesem Lebensbereich.").arg(planetName);
+    case SEXTIL:
+      return QString("Das Sextil zwischen %1 und %1 (Synastrie/Transit) "
+             "ermöglicht harmonischen Austausch in diesem Lebensbereich.").arg(planetName);
+    case QUADRATUR:
+      return QString("Das Quadrat zwischen %1 und %1 (Synastrie/Transit) "
+             "zeigt Spannungen und Herausforderungen, die Wachstum fördern.").arg(planetName);
+    case TRIGON:
+      return QString("Das Trigon zwischen %1 und %1 (Synastrie/Transit) "
+             "schenkt natürliche Harmonie und gegenseitige Unterstützung.").arg(planetName);
+    case OPOSITION:
+      return QString("Die Opposition zwischen %1 und %1 (Synastrie/Transit) "
+             "zeigt Polaritäten, die durch den anderen gespiegelt werden.").arg(planetName);
+    case QUINCUNX:
+      return QString("Der Quincunx zwischen %1 und %1 (Synastrie/Transit) "
+             "erfordert ständige Anpassung und gegenseitiges Verständnis.").arg(planetName);
+    case HALBSEX:
+      return QString("Das Halbsextil zwischen %1 und %1 (Synastrie/Transit) "
+             "zeigt eine subtile Verbindung, die Aufmerksamkeit erfordert.").arg(planetName);
+    }
+  }
+
   // === SONNE-ASPEKTE ===
   if (p1 == P_SONNE && p2 == P_MOND) {
     switch (aspect) {
@@ -461,16 +512,43 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
              "Polarität zwischen Ihrem bewussten Ich und Ihrem emotionalen Selbst. "
              "Sie erleben oft Spannungen zwischen Beruf und Privatleben, zwischen "
              "Selbstverwirklichung und Geborgenheit. Integration ist die Aufgabe.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Sonne und Mond erfordert ständige Anpassung "
+             "zwischen Ihrem bewussten Willen und Ihren emotionalen Bedürfnissen. "
+             "Es fällt Ihnen schwer, beide Seiten gleichzeitig zu erfüllen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Sonne und Mond zeigt eine subtile Spannung "
+             "zwischen Bewusstsein und Gefühl, die sanfte Integration erfordert.";
     }
   }
 
   if (p1 == P_SONNE && p2 == P_MERKUR) {
+    // Sonne-Merkur kann maximal 28° auseinander sein (nur Konjunktion möglich in Radix)
+    // Für Synastrie/Transit sind andere Aspekte möglich
     switch (aspect) {
     case KONJUNKTION:
       return "Sonne und Merkur vereint verbinden Ihr Selbstbewusstsein mit Ihrem "
              "Denken und Ihrer Kommunikation. Sie drücken sich klar und selbstsicher "
              "aus. Ihre Gedanken sind eng mit Ihrer Identität verknüpft - Sie sind, "
              "was Sie denken und sagen.";
+    case SEXTIL:
+      return "Das Sextil zwischen Sonne und Merkur (in Synastrie/Transit) begünstigt "
+             "geistigen Austausch und die Fähigkeit, Ideen klar zu kommunizieren.";
+    case QUADRATUR:
+      return "Das Quadrat zwischen Sonne und Merkur (in Synastrie/Transit) kann "
+             "Missverständnisse oder Meinungsverschiedenheiten anzeigen.";
+    case TRIGON:
+      return "Das Trigon zwischen Sonne und Merkur (in Synastrie/Transit) schenkt "
+             "fließende Kommunikation und geistiges Verständnis.";
+    case OPOSITION:
+      return "Die Opposition von Sonne und Merkur (in Synastrie/Transit) kann "
+             "zu geistigen Konflikten oder unterschiedlichen Denkweisen führen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Sonne und Merkur erfordert Anpassung zwischen "
+             "Selbstausdruck und geistiger Kommunikation.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Sonne und Merkur zeigt eine feine Verbindung "
+             "zwischen Identität und Denken.";
     }
   }
 
@@ -490,6 +568,18 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
              "Liebesbeziehungen führen oder ein übermäßiges Bedürfnis nach Anerkennung "
              "anzeigen. Lernen Sie, sich selbst wertzuschätzen, unabhängig von "
              "äußerer Bestätigung.";
+    case TRIGON:
+      return "Sonne und Venus im Trigon (in Synastrie/Transit) schenken natürlichen "
+             "Charme und harmonische Beziehungen.";
+    case OPOSITION:
+      return "Die Opposition von Sonne und Venus (in Synastrie/Transit) kann "
+             "Beziehungskonflikte oder übertriebenes Harmoniebedarf anzeigen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Sonne und Venus erfordert Anpassung zwischen "
+             "Selbstverwirklichung und Beziehungsbedürfnissen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Sonne und Venus zeigt eine subtile Verbindung "
+             "zwischen Identität und Liebe.";
     }
   }
 
@@ -519,6 +609,13 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
              "Autoritätspersonen oder Konkurrenten. Sie projizieren Ihre eigene "
              "Kampfnatur möglicherweise auf andere. Lernen Sie, Ihre Durchsetzungskraft "
              "als Teil Ihrer selbst anzunehmen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Sonne und Mars erfordert ständige Anpassung "
+             "zwischen Ihrem Selbstbild und Ihrem Durchsetzungsvermögen. Energie und "
+             "Identität wollen integriert werden.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Sonne und Mars zeigt eine feine Spannung "
+             "zwischen Wille und Aktion.";
     }
   }
 
@@ -547,6 +644,12 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
              "persönlichen Zielen und gesellschaftlichen Erwartungen führen. Sie "
              "schwanken zwischen Selbstverwirklichung und dem Bedürfnis nach "
              "Anerkennung durch andere.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Sonne und Jupiter erfordert Anpassung zwischen "
+             "persönlicher Identität und dem Streben nach Wachstum und Sinn.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Sonne und Jupiter zeigt eine subtile Verbindung "
+             "zwischen Selbstausdruck und Expansion.";
     }
   }
 
@@ -575,6 +678,99 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
              "Vaterfiguren oder Autoritäten. Sie fühlen sich möglicherweise "
              "eingeschränkt oder nicht anerkannt. Lernen Sie, Ihre eigene Autorität "
              "zu leben.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Sonne und Saturn erfordert ständige Anpassung "
+             "zwischen Selbstentfaltung und den Anforderungen der Realität.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Sonne und Saturn zeigt eine feine Spannung "
+             "zwischen Lebensfreude und Verantwortung.";
+    }
+  }
+
+  // === SONNE MIT ÄUSSEREN PLANETEN ===
+  if (p1 == P_SONNE && p2 == P_URANUS) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Sonne und Uranus vereint prägen eine originelle, unabhängige "
+             "Persönlichkeit. Sie sind ein Individualist, der seinen eigenen Weg geht. "
+             "Rebellion gegen Konventionen und plötzliche Veränderungen sind möglich.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Sonne und Uranus begünstigt Originalität "
+             "und die Fähigkeit, neue Ideen zu integrieren, ohne alles umzuwerfen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Sonne und Uranus kann zu Rebellion, Ruhelosigkeit "
+             "oder plötzlichen Umbrüchen führen. Sie schwanken zwischen Anpassung und "
+             "radikaler Unabhängigkeit.";
+    case TRIGON:
+      return "Sonne und Uranus im Trigon schenken natürliche Originalität und die "
+             "Fähigkeit, Ihre Einzigartigkeit mühelos auszuleben.";
+    case OPOSITION:
+      return "Die Opposition von Sonne und Uranus zeigt Konflikte zwischen "
+             "Selbstverwirklichung und Freiheitsdrang. Sie projizieren möglicherweise "
+             "Ihre eigene Rebellion auf andere.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Sonne und Uranus erfordert Anpassung zwischen "
+             "stabiler Identität und dem Drang nach Veränderung.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Sonne und Uranus zeigt eine subtile Verbindung "
+             "zwischen Selbstausdruck und Innovation.";
+    }
+  }
+
+  if (p1 == P_SONNE && p2 == P_NEPTUN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Sonne und Neptun vereint schenken künstlerische Sensibilität und "
+             "spirituelle Empfindsamkeit. Ihre Identität ist durchlässig und empfänglich. "
+             "Achten Sie auf klare Grenzen und Realitätsbezug.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Sonne und Neptun begünstigt Kreativität, "
+             "Empathie und einen Zugang zu höheren Inspirationen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Sonne und Neptun kann zu Identitätsverwirrung, "
+             "Realitätsflucht oder Täuschungen führen. Unterscheiden Sie zwischen "
+             "Vision und Illusion.";
+    case TRIGON:
+      return "Sonne und Neptun im Trigon schenken natürliche Intuition, künstlerisches "
+             "Talent und spirituelle Offenheit.";
+    case OPOSITION:
+      return "Die Opposition von Sonne und Neptun kann zu Verwirrung über die eigene "
+             "Identität oder Täuschung durch andere führen.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Sonne und Neptun erfordert Anpassung zwischen "
+             "klarer Selbstdefinition und spiritueller Durchlässigkeit.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Sonne und Neptun zeigt eine feine Verbindung "
+             "zwischen Ego und Transzendenz.";
+    }
+  }
+
+  if (p1 == P_SONNE && p2 == P_PLUTO) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return "Sonne und Pluto vereint verleihen intensive Willenskraft und "
+             "Transformationskraft. Sie gehen den Dingen auf den Grund und haben "
+             "ein starkes Bedürfnis nach Kontrolle und Macht. Tiefgreifende "
+             "Selbsterneuerung ist möglich.";
+    case SEXTIL:
+      return "Die harmonische Verbindung von Sonne und Pluto gibt Ihnen die Fähigkeit, "
+             "sich tiefgreifend zu erneuern und verborgene Ressourcen zu nutzen.";
+    case QUADRATUR:
+      return "Die Spannung zwischen Sonne und Pluto kann zu Machtkämpfen, "
+             "Kontrollbedürfnis oder intensiven Krisen führen. Transformation "
+             "geschieht durch Loslassen.";
+    case TRIGON:
+      return "Sonne und Pluto im Trigon schenken natürliche Intensität, Führungsqualitäten "
+             "und die Fähigkeit zur Selbsterneuerung.";
+    case OPOSITION:
+      return "Die Opposition von Sonne und Pluto kann intensive Machtkämpfe oder "
+             "Projektionen anzeigen. Sie erleben Ihre eigene Intensität durch andere.";
+    case QUINCUNX:
+      return "Der Quincunx zwischen Sonne und Pluto erfordert Anpassung zwischen "
+             "bewusstem Selbstausdruck und tieferen Transformationsprozessen.";
+    case HALBSEX:
+      return "Das Halbsextil zwischen Sonne und Pluto zeigt eine subtile Verbindung "
+             "zwischen Identität und Transformation.";
     }
   }
 
