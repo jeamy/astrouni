@@ -32,6 +32,8 @@ Bei SmartScreen ggf. „Weitere Informationen → Trotzdem ausführen“ wählen
 
 ### 🐧 Linux (64‑bit)
 
+Hinweis: Um GLIBC‑Kompatibilitätsprobleme zu vermeiden, sollte der Linux‑Release idealerweise in einer Ubuntu 20.04 Umgebung (glibc 2.31) gebaut werden (Docker‑Build: `build_linux_release_docker_ubuntu2004.sh`).
+
 **Datei:** `astrouni2026-linux-release.zip`  
 
 **Inhalt:**

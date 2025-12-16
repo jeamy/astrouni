@@ -53,6 +53,15 @@ cd astrouni
 bash build_linux_release.sh
 ```
 
+For maximum compatibility (glibc 2.31, Ubuntu 20.04), the Linux release can also be built via Docker:
+
+```bash
+cd astrouni
+bash build_linux_release_docker_ubuntu2004.sh
+```
+
+(optional, if the Docker image has already been built: `bash build_linux_release_docker_ubuntu2004.sh --skip-build`)
+
 The script:
 
 - checks/installs dependencies (via `apt`, if available)
