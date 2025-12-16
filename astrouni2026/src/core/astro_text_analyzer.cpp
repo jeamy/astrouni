@@ -6,6 +6,7 @@
 #include "astro_text_analyzer.h"
 #include "constants.h"
 #include "astro_text_store.h"
+#include "astro_font_provider.h"
 #include "calculations.h"
 #include <QStringList>
 
@@ -80,16 +81,20 @@ QString AstroTextAnalyzer::analyzeTransit(const Radix &radix) const {
   astroTextStore().ensureLoaded();
   const QString lang = analyzerLang();
 
-  // HTML-Header mit Style-Definitionen (wie bei Radix)
+  // Font-Namen vom AstroFontProvider holen
+  QString signFont = astroFont().fontName();  // AstroUniverse für Sternzeichen
+  QString planetFont = astroFont().getPlanetSymbolFont().family();  // DejaVu Sans für Planeten/Asteroiden
+
+  // HTML-Header mit korrekten Font-Zuordnungen
   html += "<html><head><style>";
   html += "body { font-family: Arial, sans-serif; font-size: 11pt; }";
   html += "h1 { color: #2c3e50; font-size: 16pt; margin-top: 20px; }";
   html += "h2 { color: #34495e; font-size: 14pt; margin-top: 15px; }";
   html += "h3 { color: #7f8c8d; font-size: 12pt; margin-top: 10px; }";
   html += "p { margin: 8px 0; line-height: 1.5; }";
-  html += ".planet-symbol { font-size: 14pt; color: #e74c3c; }";
-  html += ".sign-symbol { font-size: 14pt; color: #3498db; }";
-  html += ".aspect-symbol { font-size: 12pt; color: #9b59b6; }";
+  html += QString(".planet-symbol { font-family: '%1'; font-size: 14pt; color: #e74c3c; }").arg(planetFont);
+  html += QString(".sign-symbol { font-family: '%1'; font-size: 17pt; color: #3498db; }").arg(signFont);
+  html += QString(".aspect-symbol { font-family: '%1'; font-size: 12pt; color: #9b59b6; }").arg(planetFont);
   html += "</style></head><body>";
 
   // Bei Transit: radix.synastrie enthält das Radix (Geburtsdatum), radix enthält Transit-Datum
@@ -212,16 +217,20 @@ QString AstroTextAnalyzer::analyzeSynastry(const Radix &radix) const {
   astroTextStore().ensureLoaded();
   const QString lang = analyzerLang();
 
-  // HTML-Header mit Style-Definitionen (wie bei Radix)
+  // Font-Namen vom AstroFontProvider holen
+  QString signFont = astroFont().fontName();  // AstroUniverse für Sternzeichen
+  QString planetFont = astroFont().getPlanetSymbolFont().family();  // DejaVu Sans für Planeten/Asteroiden
+
+  // HTML-Header mit korrekten Font-Zuordnungen
   html += "<html><head><style>";
   html += "body { font-family: Arial, sans-serif; font-size: 11pt; }";
   html += "h1 { color: #2c3e50; font-size: 16pt; margin-top: 20px; }";
   html += "h2 { color: #34495e; font-size: 14pt; margin-top: 15px; }";
   html += "h3 { color: #7f8c8d; font-size: 12pt; margin-top: 10px; }";
   html += "p { margin: 8px 0; line-height: 1.5; }";
-  html += ".planet-symbol { font-size: 14pt; color: #e74c3c; }";
-  html += ".sign-symbol { font-size: 14pt; color: #3498db; }";
-  html += ".aspect-symbol { font-size: 12pt; color: #9b59b6; }";
+  html += QString(".planet-symbol { font-family: '%1'; font-size: 14pt; color: #e74c3c; }").arg(planetFont);
+  html += QString(".sign-symbol { font-family: '%1'; font-size: 17pt; color: #3498db; }").arg(signFont);
+  html += QString(".aspect-symbol { font-family: '%1'; font-size: 12pt; color: #9b59b6; }").arg(planetFont);
   html += "</style></head><body>";
 
   html += QString("<h1>%1</h1>")
@@ -296,16 +305,20 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
 
   QString html;
 
-  // Header
+  // Font-Namen vom AstroFontProvider holen
+  QString signFont = astroFont().fontName();  // AstroUniverse für Sternzeichen
+  QString planetFont = astroFont().getPlanetSymbolFont().family();  // DejaVu Sans für Planeten/Asteroiden
+
+  // Header mit korrekten Font-Zuordnungen
   html += "<html><head><style>";
   html += "body { font-family: Arial, sans-serif; font-size: 11pt; }";
   html += "h1 { color: #2c3e50; font-size: 16pt; margin-top: 20px; }";
   html += "h2 { color: #34495e; font-size: 14pt; margin-top: 15px; }";
   html += "h3 { color: #7f8c8d; font-size: 12pt; margin-top: 10px; }";
   html += "p { margin: 8px 0; line-height: 1.5; }";
-  html += ".planet-symbol { font-size: 14pt; color: #e74c3c; }";
-  html += ".sign-symbol { font-size: 14pt; color: #3498db; }";
-  html += ".aspect-symbol { font-size: 12pt; color: #9b59b6; }";
+  html += QString(".planet-symbol { font-family: '%1'; font-size: 14pt; color: #e74c3c; }").arg(planetFont);
+  html += QString(".sign-symbol { font-family: '%1'; font-size: 17pt; color: #3498db; }").arg(signFont);
+  html += QString(".aspect-symbol { font-family: '%1'; font-size: 12pt; color: #9b59b6; }").arg(planetFont);
   html += "</style></head><body>";
 
   // Titel

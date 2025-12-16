@@ -595,15 +595,22 @@ void PdfExporter::renderPage(QPainter &painter, QPrinter &printer,
   analyzer.setOrben(&auinit);
   QString html = analyzer.analyzeRadix(radix);
 
+  // Font-Namen vom AstroFontProvider holen
+  QString signFont = astroFont().fontName();  // AstroUniverse für Sternzeichen
+  QString planetFont = astroFont().getPlanetSymbolFont().family();  // DejaVu Sans für Planeten/Asteroiden
+  
   html.replace(
       "</head>",
-      "<style>"
+      QString("<style>"
       "body { font-family: 'DejaVu Sans'; font-size: 9pt; } "
       "h1 { font-size: 14pt; font-weight: bold; } "
       "h2 { font-size: 10pt; font-weight: bold; } "
       "h3 { font-size: 9pt; font-weight: bold; } "
-      "p { font-size: 9pt; }"
-      "</style></head>");
+      "p { font-size: 9pt; } "
+      ".planet-symbol { font-family: '%1'; } "
+      ".sign-symbol { font-family: '%2'; } "
+      ".aspect-symbol { font-family: '%1'; }"
+      "</style></head>").arg(planetFont).arg(signFont));
 
   // Titel für Textanalyse
   painter.setFont(titleFont);
