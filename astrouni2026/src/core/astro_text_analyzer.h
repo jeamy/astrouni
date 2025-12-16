@@ -123,6 +123,9 @@ private:
 
   QString defaultGenericAspectTemplate(int16_t aspect) const;
   
+  // ASC-Aspekt-Text abrufen
+  QString getAscAspectText(int planet, int16_t aspect) const;
+  
   // Orben-Einstellungen (optional)
   const AuInit* m_auinit = nullptr;
   
