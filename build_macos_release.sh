@@ -178,7 +178,7 @@ fi
 #  - default.dat                             (Standard-Orben)
 # NICHT nötig für Start: astronam.dat, astroini.dat, astrorad.dat, astronot.dat
 mkdir -p "$DIST_DIR/data"
-for f in astroorg.dat astroger.dat europa.dat default.dat astrotext.dat astroini.dat; do
+for f in astroorg.dat astroger.dat europa.dat default.dat astrotext.dat astroini.dat astronam.dat; do
   if [ -f "$PROJECT_DIR/data/$f" ]; then
     cp "$PROJECT_DIR/data/$f" "$DIST_DIR/data/"
   fi

@@ -165,7 +165,7 @@ rem   - astroorg.dat, astroger.dat, europa.dat  (Orte - mind. eine muss existier
 rem   - default.dat                             (Standard-Orben)
 rem NICHT noetig fuer Start: astronam.dat, astroini.dat, astrorad.dat, astronot.dat
 mkdir "%DIST_DIR%\data" 2>NUL
-for %%F in (astroorg.dat astroger.dat europa.dat default.dat astrotext.dat astroini.dat) do (
+for %%F in (astroorg.dat astroger.dat europa.dat default.dat astrotext.dat astroini.dat astronam.dat) do (
   if exist "%PROJECT_DIR%\data\%%F" copy /Y "%PROJECT_DIR%\data\%%F" "%DIST_DIR%\data" >NUL
 )
 
