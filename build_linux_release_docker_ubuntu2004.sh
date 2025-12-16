@@ -29,11 +29,15 @@ else
 fi
 
 echo "[2/2] Release-Build im Container ausführen..."
+USER_ID="$(id -u 2>/dev/null || echo 0)"
+GROUP_ID="$(id -g 2>/dev/null || echo 0)"
+
 docker run --rm \
+  -u "$USER_ID:$GROUP_ID" \
   -v "$SCRIPT_DIR:/work" \
   -w /work \
   "$IMAGE_NAME" \
-  bash build_linux_release.sh
+  bash -lc "rm -rf astrouni2026/build-linux-release && bash build_linux_release.sh"
 
 echo ""
 echo "Fertig. Output unter:"

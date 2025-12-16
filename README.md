@@ -62,6 +62,22 @@ bash build_linux_release_docker_ubuntu2004.sh
 
 (optional, falls das Docker-Image bereits gebaut wurde: `bash build_linux_release_docker_ubuntu2004.sh --skip-build`)
 
+Linux-Kompatibilität (Binary-Release):
+
+- **Architektur:** x86_64
+- **glibc:** mindestens **2.31** (Release-Build-Baseline: Ubuntu 20.04)
+- **Hinweis:** Das Release bündelt Qt-Libs und Qt-Plugins (u.a. `xcb`) in `lib/` und `plugins/`.
+
+Typische Distributionen/Versionen mit glibc ≥ 2.31:
+
+- **Ubuntu:** 20.04, 22.04, 24.04
+- **Debian:** 11 (bullseye), 12 (bookworm)
+- **Linux Mint:** 20.x, 21.x
+- **Pop!_OS:** 20.04, 22.04
+- **Fedora:** 34+
+- **Arch/Manjaro:** Rolling Releases
+- **RHEL/Rocky/Alma:** 9+
+
 Das Skript:
 
 - prüft/ installiert Abhängigkeiten (über `apt`, falls vorhanden)

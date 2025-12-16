@@ -175,11 +175,31 @@ EOF
   linuxdeployqt "$DESKTOP_FILE" -bundle-non-qt-libs -executable="$DIST_DIR/astrouni2026" || {
     echo "WARNUNG: linuxdeployqt konnte die Qt-Libs nicht bündeln." >&2
   }
-elif command -v qtpaths6 &>/dev/null && command -v patchelf &>/dev/null; then
+elif (command -v qtpaths6 &>/dev/null || command -v qtpaths &>/dev/null) && command -v patchelf &>/dev/null; then
   echo "Bündele Qt-Libs manuell (Fallback ohne linuxdeployqt)..."
-  QT_PLUGIN_DIR="$(qtpaths6 --plugin-dir 2>/dev/null || true)"
-  QT_PREFIX="$(qtpaths6 --install-prefix 2>/dev/null || true)"
-  QT_LIB_DIR="$QT_PREFIX/lib"
+  QT_PATHS_CMD="qtpaths6"
+  if ! command -v qtpaths6 &>/dev/null; then
+    QT_PATHS_CMD="qtpaths"
+  fi
+
+  QT_PLUGIN_DIR="$("$QT_PATHS_CMD" --plugin-dir 2>/dev/null || true)"
+  QT_PREFIX="$("$QT_PATHS_CMD" --install-prefix 2>/dev/null || true)"
+  QT_LIB_DIR="$("$QT_PATHS_CMD" --library-dir 2>/dev/null || true)"
+
+  # Fallback: manche Distributionen liefern qtpaths, aber ohne erkannte Qt-Installation.
+  # In diesem Fall qmake6 als Quelle für Installationspfade verwenden.
+  if [ -z "$QT_PLUGIN_DIR" ] && command -v qmake6 &>/dev/null; then
+    QT_PLUGIN_DIR="$(qmake6 -query QT_INSTALL_PLUGINS 2>/dev/null || true)"
+  fi
+  if [ -z "$QT_LIB_DIR" ] && command -v qmake6 &>/dev/null; then
+    QT_LIB_DIR="$(qmake6 -query QT_INSTALL_LIBS 2>/dev/null || true)"
+  fi
+  if [ -z "$QT_PREFIX" ] && command -v qmake6 &>/dev/null; then
+    QT_PREFIX="$(qmake6 -query QT_INSTALL_PREFIX 2>/dev/null || true)"
+  fi
+  if [ -z "$QT_LIB_DIR" ]; then
+    QT_LIB_DIR="$QT_PREFIX/lib"
+  fi
 
   mkdir -p "$DIST_DIR/lib" "$DIST_DIR/plugins"
 
@@ -239,6 +259,18 @@ elif command -v qtpaths6 &>/dev/null && command -v patchelf &>/dev/null; then
   # Qt-abhängige libs des Binaries kopieren (Qt6::Core/Gui/Widgets/PrintSupport)
   for lib in $(ldd "$DIST_DIR/astrouni2026" | awk '/Qt6/ {print $3}'); do
     [ -e "$lib" ] && copy_lib "$lib"
+  done
+
+  # Fallback: Qt-Kernmodule explizit aus Qt-Lib-Verzeichnis kopieren
+  for base in libQt6Core.so libQt6Gui.so libQt6Widgets.so libQt6PrintSupport.so; do
+    if [ -e "$QT_LIB_DIR/$base" ]; then
+      copy_lib "$QT_LIB_DIR/$base"
+    fi
+    if ls "$QT_LIB_DIR/${base}."* >/dev/null 2>&1; then
+      for cand in "$QT_LIB_DIR/${base}."*; do
+        [ -e "$cand" ] && copy_lib "$cand"
+      done
+    fi
   done
 
   # Zusätzlich alle Nicht-Qt-Dependencies des Hauptbinaries einsammeln (z.B. libicu, libxcb)

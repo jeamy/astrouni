@@ -22,6 +22,7 @@ if(EXISTS "${SWISSEPH_SRC_DIR}/swephexp.h")
     # Plattform-spezifische Definitionen
     if(UNIX)
         target_compile_definitions(swisseph PRIVATE _GNU_SOURCE)
+        target_link_libraries(swisseph PUBLIC ${CMAKE_DL_LIBS})
     endif()
     
     if(WIN32)
