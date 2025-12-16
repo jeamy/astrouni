@@ -183,6 +183,31 @@ elif command -v qtpaths6 &>/dev/null && command -v patchelf &>/dev/null; then
   mkdir -p "$DIST_DIR/lib" "$DIST_DIR/plugins"
 
   # Hilfsfunktion: alle relevanten Dependencies eines Binaries via ldd einsammeln
+  copy_lib() {
+    local src="$1"
+    [ -z "$src" ] && return 0
+    [ ! -e "$src" ] && return 0
+
+    local base
+    base="$(basename "$src")"
+
+    if [ ! -e "$DIST_DIR/lib/$base" ]; then
+      cp -P "$src" "$DIST_DIR/lib/" 2>/dev/null || true
+    fi
+
+    if [ -L "$src" ]; then
+      local real
+      real="$(readlink -f "$src" 2>/dev/null || true)"
+      if [ -n "$real" ] && [ -f "$real" ]; then
+        local real_base
+        real_base="$(basename "$real")"
+        if [ ! -e "$DIST_DIR/lib/$real_base" ]; then
+          cp -P "$real" "$DIST_DIR/lib/" 2>/dev/null || true
+        fi
+      fi
+    fi
+  }
+
   copy_deps() {
     local target="$1"
     [ -z "$target" ] && return 0
@@ -205,14 +230,14 @@ elif command -v qtpaths6 &>/dev/null && command -v patchelf &>/dev/null; then
       esac
 
       if [ ! -f "$DIST_DIR/lib/$base" ]; then
-        cp -L "$dep" "$DIST_DIR/lib/" 2>/dev/null || true
+        copy_lib "$dep"
       fi
     done < <(ldd "$target" 2>/dev/null | awk '/=>/ {print $(NF-1)}' | grep -E '^/' || true)
   }
 
   # Qt-abhängige libs des Binaries kopieren (Qt6::Core/Gui/Widgets/PrintSupport)
   for lib in $(ldd "$DIST_DIR/astrouni2026" | awk '/Qt6/ {print $3}'); do
-    [ -f "$lib" ] && cp -L "$lib" "$DIST_DIR/lib/"
+    [ -e "$lib" ] && copy_lib "$lib"
   done
 
   # Zusätzlich alle Nicht-Qt-Dependencies des Hauptbinaries einsammeln (z.B. libicu, libxcb)
@@ -259,8 +284,22 @@ else
   echo "Installiere entweder linuxdeployqt oder qtpaths6 + patchelf, um eine portable App zu erzeugen."
 fi
 
+# Launcher-Script: immer relativ zum Programmverzeichnis starten (unabhängig vom aktuellen Working Directory)
+cat > "$DIST_DIR/run_astrouni2026.sh" <<'EOF'
+#!/bin/bash
+set -e
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+export LD_LIBRARY_PATH="$DIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export QT_PLUGIN_PATH="$DIR/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}"
+export QT_QPA_PLATFORM_PLUGIN_PATH="$DIR/plugins/platforms"
+
+exec "$DIR/astrouni2026" "$@"
+EOF
+chmod +x "$DIST_DIR/run_astrouni2026.sh" 2>/dev/null || true
+
 # Release-Zip im dist-Verzeichnis erstellen (optional)
-ZIP_NAME="astrouni2026-linux-release.zip"
 if command -v zip &>/dev/null; then
   echo ""
   echo "Erzeuge Release-Zip: $ZIP_NAME"

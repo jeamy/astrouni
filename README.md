@@ -1,5 +1,7 @@
 # AstroUniverse 2026 - Astrology Software
 
+[English README](README_EN.md)
+
 Portierung der Legacy-Astrologie-Software **AstroUnivers v0.04Beta (1996)** aus dem
 Verzeichnis `legacy/` (16-bit Borland C++ / Windows) nach C++20/Qt6
 Cross-Platform-Architektur.
@@ -64,6 +66,18 @@ Das Skript:
   `astrouni2026/dist/astrouni2026-linux-release.zip`
 
 Start des Releases:
+
+```bash
+cd astrouni2026/dist/linux
+./run_astrouni2026.sh
+```
+
+Warum `run_astrouni2026.sh`:
+
+- **Start unabhängig vom aktuellen Working Directory** (Pfadauflösung immer relativ zum Programmverzeichnis)
+- **Setzt** `LD_LIBRARY_PATH` und Qt-Plugin-Pfade auf die mitgelieferten `lib/` und `plugins/` Ordner
+
+Alternativ (falls das System bereits passende Qt6-Libs bereitstellt oder RPATH ausreicht):
 
 ```bash
 cd astrouni2026/dist/linux

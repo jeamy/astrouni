@@ -2,6 +2,8 @@
 
 Vorhandene `.dat`‑Dateien aus der Legacy‑Installation (AstroUnivers v0.04Beta) können weiterverwendet werden, indem sie in das Verzeichnis `astrouni2026/data/` kopiert werden.
 
+[English Release Notes](RELEASE_NOTES_EN.md)
+
 ## Downloads
 
 ### 🪟 Windows (64‑bit)
@@ -35,6 +37,7 @@ Bei SmartScreen ggf. „Weitere Informationen → Trotzdem ausführen“ wählen
 **Inhalt:**
 
 - `astrouni2026`
+- `run_astrouni2026.sh` (Launcher)
 - minimale Datendateien (`data/…`)
 - Swiss‑Ephemeris‑Dateien (`swisseph/ephe/*.se1`)
 - Ressourcen (Icons etc.)
@@ -47,8 +50,11 @@ Bei SmartScreen ggf. „Weitere Informationen → Trotzdem ausführen“ wählen
 unzip astrouni2026-linux-release.zip
 cd <entpackter_ordner>/dist/linux
 chmod +x astrouni2026
-./astrouni2026
+chmod +x run_astrouni2026.sh
+./run_astrouni2026.sh
 ```
+
+`run_astrouni2026.sh` wird empfohlen, da es unabhängig vom aktuellen Working Directory startet und die Pfade für mitgelieferte Qt‑Bibliotheken und Qt‑Plugins (`lib/`, `plugins/`) setzt.
 
 Falls die mitgelieferten Qt‑Libs nicht ausreichen oder nicht gebündelt wurden, muß Qt6 vom System bereitgestellt werden, z.B. unter Debian/Ubuntu:
 
