@@ -82,6 +82,12 @@ public:
   QString contextAspectText(int planet1, int8_t sign1, int planet2, int8_t sign2, int16_t aspect) const;
   QString planetPairText(int planet1, int planet2, int16_t aspect) const;
   QString genericAspectTemplate(int16_t aspect) const;
+  
+  // ASC-Aspekt-Text abrufen
+  QString getAscAspectText(int planet, int16_t aspect) const;
+  
+  // MC-Aspekt-Text abrufen
+  QString getMcAspectText(int planet, int16_t aspect) const;
 
 private:
   // Texte für Sonnenzeichen
@@ -122,9 +128,6 @@ private:
                                int8_t sign2, int16_t aspect) const;
 
   QString defaultGenericAspectTemplate(int16_t aspect) const;
-  
-  // ASC-Aspekt-Text abrufen
-  QString getAscAspectText(int planet, int16_t aspect) const;
   
   // Orben-Einstellungen (optional)
   const AuInit* m_auinit = nullptr;

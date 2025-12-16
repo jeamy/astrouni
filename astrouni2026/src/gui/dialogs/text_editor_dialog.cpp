@@ -230,6 +230,8 @@ void TextEditorDialog::setTypeComboItems() {
     m_typeCombo->addItem(tr("Aspekt-Text (Generisch)"), static_cast<int>(TextType::AspectGeneric));
     m_typeCombo->addItem(tr("Aspekt-Text (Kontext)"), static_cast<int>(TextType::ContextAspect));
     m_typeCombo->addItem(tr("Analyse-Text"), static_cast<int>(TextType::AnalysisTemplate));
+    m_typeCombo->addItem(tr("Aspekt-Text (Planet zu ASC)"), static_cast<int>(TextType::AspectToAsc));
+    m_typeCombo->addItem(tr("Aspekt-Text (Planet zu MC)"), static_cast<int>(TextType::AspectToMc));
 }
 
 void TextEditorDialog::setSignComboItems(QComboBox* combo) {
@@ -366,6 +368,12 @@ QString TextEditorDialog::currentKey() const {
     }
     if (type == TextType::AnalysisTemplate) {
         return m_analysisKeyCombo->currentData().toString();
+    }
+    if (type == TextType::AspectToAsc) {
+        return QString("aspect.asc.%1.%2").arg(planet1).arg(static_cast<int>(aspect));
+    }
+    if (type == TextType::AspectToMc) {
+        return QString("aspect.mc.%1.%2").arg(planet1).arg(static_cast<int>(aspect));
     }
 
     return QString();
@@ -537,6 +545,12 @@ QString TextEditorDialog::currentDefaultText() const {
         }
         return QString();
     }
+    if (type == TextType::AspectToAsc) {
+        return analyzer.getAscAspectText(planet1, aspect);
+    }
+    if (type == TextType::AspectToMc) {
+        return analyzer.getMcAspectText(planet1, aspect);
+    }
 
     return QString();
 }
@@ -702,13 +716,14 @@ void TextEditorDialog::refreshUiForType() {
     const TextType type = currentType();
 
     const bool isAnalysis = (type == TextType::AnalysisTemplate);
+    const bool isAscMc = (type == TextType::AspectToAsc || type == TextType::AspectToMc);
 
     m_analysisKeyLabel->setEnabled(isAnalysis);
     m_analysisKeyCombo->setEnabled(isAnalysis);
 
     const bool enableSign1 = (type == TextType::SunSign || type == TextType::Ascendant || type == TextType::MoonSign || type == TextType::SignName || type == TextType::ContextAspect);
-    const bool enablePlanet1 = (type == TextType::PlanetName || type == TextType::AspectSpecific || type == TextType::ContextAspect);
-    const bool enableAspect = (type == TextType::AspectName || type == TextType::AspectSpecific || type == TextType::AspectGeneric || type == TextType::ContextAspect);
+    const bool enablePlanet1 = (type == TextType::PlanetName || type == TextType::AspectSpecific || type == TextType::ContextAspect || isAscMc);
+    const bool enableAspect = (type == TextType::AspectName || type == TextType::AspectSpecific || type == TextType::AspectGeneric || type == TextType::ContextAspect || isAscMc);
     const bool enablePlanet2 = (type == TextType::AspectSpecific || type == TextType::ContextAspect);
     const bool enableSign2 = (type == TextType::ContextAspect);
 
@@ -726,6 +741,15 @@ void TextEditorDialog::refreshUiForType() {
 
     m_label5->setEnabled(enableSign2);
     m_combo5->setEnabled(enableSign2);
+
+    // Labels für ASC/MC anpassen
+    if (isAscMc) {
+        m_label2->setText(tr("Planet"));
+        m_label4->setText(type == TextType::AspectToAsc ? tr("ASC") : tr("MC"));
+    } else {
+        m_label2->setText(tr("Objekt 1"));
+        m_label4->setText(tr("Objekt 2"));
+    }
 
     if (isAnalysis) {
         m_combo1->setEnabled(false);

@@ -455,6 +455,44 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
     }
   }
 
+  // 6. MC-Aspekte (Planeten zum Medium Coeli)
+  if (radix.haus.size() > 9 && radix.planet.size() > 0) {
+    double mcPos = radix.haus[9];  // MC = Hausspitze 10
+    static const int aspekte[] = { KONJUNKTION, HALBSEX, SEXTIL, QUADRATUR, TRIGON, QUINCUNX, OPOSITION };
+    static const double aspWinkel[] = { 0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0 };
+    
+    int mcAspectCount = 0;
+    QString mcAspectHtml;
+    
+    for (int p = 0; p < radix.anzahlPlanet && p < MAX_PLANET; p++) {
+      double planetPos = radix.planet[p];
+      double diff = std::abs(planetPos - mcPos);
+      if (diff > 180.0) diff = 360.0 - diff;
+      
+      // Aspekt prüfen mit Standard-Orb 8°
+      for (int a = 0; a < ASPEKTE; ++a) {
+        double orb = 8.0;
+        if (std::abs(diff - aspWinkel[a]) <= orb) {
+          int16_t asp = aspekte[a];
+          mcAspectHtml += QString("<h3><span class='planet-symbol'>%1</span> %2 <span "
+                          "class='aspect-symbol'>%3</span> MC</h3>")
+                      .arg(PLANET_SYMBOLS[p])
+                      .arg(getPlanetName(p))
+                      .arg(getAspectName(asp));
+          mcAspectHtml += "<p>" + getMcAspectText(p, asp) + "</p>";
+          mcAspectCount++;
+          break;  // Nur engsten Aspekt
+        }
+      }
+    }
+    
+    if (mcAspectCount > 0) {
+      html += QString("<h2>%1</h2>")
+                  .arg(astroTextStore().text(lang, "analysis.label.mc_aspects", "Aspekte zum MC"));
+      html += mcAspectHtml;
+    }
+  }
+
   html += "</body></html>";
   return html;
 }
@@ -638,6 +676,20 @@ QString AstroTextAnalyzer::getAscAspectText(int planet, int16_t aspect) const {
   
   // Fallback: Generischer Text
   return QString("Der Aspekt zwischen %1 und dem Aszendenten beeinflusst Ihr äußeres Auftreten.")
+             .arg(getPlanetName(planet));
+}
+
+QString AstroTextAnalyzer::getMcAspectText(int planet, int16_t aspect) const {
+  astroTextStore().ensureLoaded();
+  const QString lang = analyzerLang();
+  const QString key = QString("aspect.mc.%1.%2").arg(planet).arg(static_cast<int>(aspect));
+  const QString text = astroTextStore().text(lang, key, QString());
+  if (!text.isEmpty()) {
+    return text;
+  }
+  
+  // Fallback: Generischer Text
+  return QString("Der Aspekt zwischen %1 und dem MC beeinflusst Ihre Karriere und öffentliche Rolle.")
              .arg(getPlanetName(planet));
 }
 

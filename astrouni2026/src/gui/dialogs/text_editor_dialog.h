@@ -37,7 +37,9 @@ private:
         AspectSpecific,
         AspectGeneric,
         ContextAspect,
-        AnalysisTemplate
+        AnalysisTemplate,
+        AspectToAsc,
+        AspectToMc
     };
 
     void setupUI();
