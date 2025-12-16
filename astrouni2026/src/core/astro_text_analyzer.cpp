@@ -415,15 +415,9 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
 
           html += getContextAspectText(i, sign1, j, sign2, aspect);
           aspectCount++;
-
-          // Maximal 10 Aspekte anzeigen
-          if (aspectCount >= 10)
-            break;
         }
       }
     }
-    if (aspectCount >= 10)
-      break;
   }
 
   if (aspectCount == 0) {
