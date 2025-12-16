@@ -147,7 +147,7 @@ void MainWindow::setupActions() {
     connect(m_exitAction, &QAction::triggered, this, &MainWindow::onFileExit);
 
     // Bearbeiten-Menü Aktionen
-    m_editTextsAction = new QAction(tr("&Texte editieren..."), this);
+    m_editTextsAction = new QAction(tr("&Texte erfassen..."), this);
     connect(m_editTextsAction, &QAction::triggered, this, &MainWindow::onEditTexts);
     
     // Erfassen-Menü Aktionen
@@ -188,15 +188,11 @@ void MainWindow::setupMenus() {
     m_fileMenu->addAction(m_exitAction);
     m_fileMenu->setMinimumWidth(200);  // Mindestbreite für vollständige Texte
 
-    // Bearbeiten-Menü
-    m_editMenu = menuBar()->addMenu(tr("&Bearbeiten"));
-    m_editMenu->addAction(m_editTextsAction);
-    m_editMenu->setMinimumWidth(200);
-
     // Erfassen-Menü (Port von MAINMENU -> "&Erfassen")
     m_erfassenMenu = menuBar()->addMenu(tr("&Erfassen"));
     m_erfassenMenu->addAction(m_personAction);
     m_erfassenMenu->addAction(m_ortAction);
+    m_erfassenMenu->addAction(m_editTextsAction);
     m_erfassenMenu->setMinimumWidth(200);  // Mindestbreite für vollständige Texte
     
     // Horoskop-Menü (Port von MAINMENU -> "&Horoskop")

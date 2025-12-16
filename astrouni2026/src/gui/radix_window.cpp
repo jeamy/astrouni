@@ -799,16 +799,41 @@ void RadixWindow::fillAspekteList() {
             }
         }
     } else {
-        // STRICT LEGACY: Synastrie/Transit-Aspekte anzeigen (Person1/Radix zu Person2/Transit)
+        // Synastrie/Transit: Nur Cross-Aspekte zwischen den beiden Radix anzeigen
         const Radix& syn = *m_radix.synastrie;
         int numSyn = qMin(syn.anzahlPlanet, static_cast<int16_t>(syn.planet.size()));
         
-        // Planeten-Aspekte Header
-        QListWidgetItem* headerItem = new QListWidgetItem("<span style='color:#FFFFFF'>" + tr("-Planeten-") + "</span>");
-        headerItem->setBackground(QColor(0, 0, 128));
-        m_listWidget->addItem(headerItem);
+        // Orben aus Einstellungen verwenden
+        // Index: [Planet1 * MAX_PLANET + Planet2] * ASPEKTE + Aspekt
+        const QVector<float>& orben = (m_radix.horoTyp == TYP_SYNASTRIE) ? 
+            m_auinit.orbenSPlanet : m_auinit.orbenTPlanet;
+        static const int aspekte[] = { KONJUNKTION, HALBSEX, SEXTIL, QUADRATUR, TRIGON, QUINCUNX, OPOSITION };
+        static const double aspWinkel[] = { 0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0 };
         
-        // Synastrie/Transit-Aspekte: Alle Kombinationen (Person1/Radix zu Person2/Transit)
+        // Lambda für Aspekt-Prüfung mit konfigurierten Orben
+        auto checkAspekt = [&](int p1, int p2, double pos1, double pos2) -> int16_t {
+            double diff = std::abs(pos1 - pos2);
+            if (diff > 180.0) diff = 360.0 - diff;
+            for (int a = 0; a < ASPEKTE; ++a) {
+                int idx = (p1 * MAX_PLANET + p2) * ASPEKTE + a;
+                float orb = (idx < orben.size() && orben[idx] > 0.0f) ? orben[idx] : 8.0f;
+                if (std::abs(diff - aspWinkel[a]) <= orb) {
+                    return aspekte[a];
+                }
+            }
+            return KEIN_ASP;
+        };
+        
+        // ===== BEREICH 3: Aspekte ZWISCHEN Radix 1 und 2 =====
+        QString crossHeader = (m_radix.horoTyp == TYP_SYNASTRIE) 
+            ? tr("-Synastrie Aspekte-") 
+            : tr("-Transit zu Radix-");
+        QListWidgetItem* header3 = new QListWidgetItem(
+            QString("<span style='color:#FFFFFF'>%1</span>").arg(crossHeader));
+        header3->setBackground(QColor(128, 0, 128));  // Lila für Cross-Aspekte
+        m_listWidget->addItem(header3);
+        
+        // Cross-Aspekte zwischen Radix 1 und 2 (wie in Textanalyse)
         for (int i = 0; i < numSyn; ++i) {
             for (int j = 0; j < numPlanets; ++j) {
                 // Filter anhand TransitSelection (TransSelDialog)
@@ -819,43 +844,26 @@ void RadixWindow::fillAspekteList() {
                         }
                     }
                 }
+                
                 double pos1 = syn.planet[i];
                 double pos2 = m_radix.planet[j];
-                double diff = std::abs(pos1 - pos2);
-                if (diff > 180.0) diff = 360.0 - diff;
-                
-                // Aspekt prüfen mit passenden Orben
-                const QVector<float>& orben = (m_radix.horoTyp == TYP_SYNASTRIE) ? 
-                    m_auinit.orbenSPlanet : m_auinit.orbenTPlanet;
-                
-                int16_t asp = KEIN_ASP;
-                if (diff <= orben[0]) asp = KONJUNKTION;
-                else if (std::abs(diff - 30.0) <= orben[1]) asp = HALBSEX;
-                else if (std::abs(diff - 60.0) <= orben[2]) asp = SEXTIL;
-                else if (std::abs(diff - 90.0) <= orben[3]) asp = QUADRATUR;
-                else if (std::abs(diff - 120.0) <= orben[4]) asp = TRIGON;
-                else if (std::abs(diff - 150.0) <= orben[5]) asp = QUINCUNX;
-                else if (std::abs(diff - 180.0) <= orben[6]) asp = OPOSITION;
+                int16_t asp = checkAspekt(i, j, pos1, pos2);
                 
                 if (asp == KEIN_ASP) continue;
                 
                 QString symbol1 = astroFont().planetSymbol(i);
                 QString symbol2 = astroFont().planetSymbol(j);
-                
                 int stz1 = static_cast<int>(pos1 / 30.0) % 12;
                 int stz2 = static_cast<int>(pos2 / 30.0) % 12;
                 QString stzSymbol1 = astroFont().sternzeichenSymbol(stz1);
                 QString stzSymbol2 = astroFont().sternzeichenSymbol(stz2);
-                
                 int aspSymIdx = getAspektSymbolIndex(asp);
                 QString aspSymbol = astroFont().aspektSymbol(aspSymIdx);
                 
-                QString p1Color = colorToHtml(sColor[COL_PLAN_T]);  // Synastrie/Transit-Farbe
+                QString p1Color = colorToHtml(sColor[COL_PLAN_T]);
                 QString p2Color = colorToHtml(sColor[COL_PLAN]);
-                int element1 = stz1 % 4;
-                int element2 = stz2 % 4;
-                QString stzColor1 = colorToHtml(sColor[COL_FEUER + element1]);
-                QString stzColor2 = colorToHtml(sColor[COL_FEUER + element2]);
+                QString stzColor1 = colorToHtml(sColor[COL_FEUER + (stz1 % 4)]);
+                QString stzColor2 = colorToHtml(sColor[COL_FEUER + (stz2 % 4)]);
                 QString aspColor = colorToHtml(sColor[getAspektColorIndex(asp)]);
                 
                 QString html = QString("%1 in %2 %3 %4 in %5")
@@ -866,7 +874,6 @@ void RadixWindow::fillAspekteList() {
                     .arg(zodiacSpan(stzSymbol2, stzColor2));
                 
                 QListWidgetItem* item = new QListWidgetItem(html);
-                // Synastrie/Transit-Aspekt: i+1000/2000 und j
                 int offset = (m_radix.horoTyp == TYP_SYNASTRIE) ? 2000 : 1000;
                 item->setData(Qt::UserRole, QPoint(i + offset, j));
                 item->setBackground(sColor[COL_LBREC_NORM]);
@@ -1194,8 +1201,9 @@ void RadixWindow::onTextAnalyseClicked() {
     QTextBrowser* textBrowser = new QTextBrowser(dialog);
     textBrowser->setOpenExternalLinks(false);
     
-    // Textanalyse generieren
+    // Textanalyse generieren mit Orben aus Einstellungen
     AstroTextAnalyzer analyzer;
+    analyzer.setOrben(&m_auinit);
     QString analysisHtml = analyzer.analyzeRadix(m_radix);
     textBrowser->setHtml(analysisHtml);
     

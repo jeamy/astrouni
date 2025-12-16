@@ -6,6 +6,7 @@
 #include "astro_text_analyzer.h"
 #include "constants.h"
 #include "astro_text_store.h"
+#include "calculations.h"
 #include <QStringList>
 
 namespace astro {
@@ -16,7 +17,7 @@ static QString analyzerLang() {
   return AstroTextStore::systemLanguageCode();
 }
 
-AstroTextAnalyzer::AstroTextAnalyzer() {
+AstroTextAnalyzer::AstroTextAnalyzer() : m_auinit(nullptr) {
   initializePlanetNames();
   initializeSignNames();
   initializeAspectNames();
@@ -26,29 +27,127 @@ AstroTextAnalyzer::AstroTextAnalyzer() {
   initializeAspectTexts();
 }
 
+void AstroTextAnalyzer::setOrben(const AuInit* auinit) {
+  m_auinit = auinit;
+}
+
+bool AstroTextAnalyzer::checkAspektWithOrben(double pos1, double pos2, int p1, int p2, 
+                                             int aspekt, int horoTyp, double& exakterWinkel) const {
+  double diff = std::abs(pos1 - pos2);
+  if (diff > 180.0) diff = 360.0 - diff;
+  exakterWinkel = diff;
+  
+  double orb = 8.0;  // Default-Orb
+  
+  if (m_auinit) {
+    // Orben aus Einstellungen verwenden
+    // Index: [Planet1 * MAX_PLANET + Planet2] * ASPEKTE + Aspekt
+    const QVector<float>* orben = nullptr;
+    if (horoTyp == TYP_SYNASTRIE) {
+      orben = &m_auinit->orbenSPlanet;
+    } else if (horoTyp == TYP_TRANSIT) {
+      orben = &m_auinit->orbenTPlanet;
+    } else {
+      orben = &m_auinit->orbenPlanet;
+    }
+    
+    // Aspekt-Index ermitteln
+    int aspIdx = 0;
+    switch (aspekt) {
+      case KONJUNKTION: aspIdx = 0; break;
+      case HALBSEX:     aspIdx = 1; break;
+      case SEXTIL:      aspIdx = 2; break;
+      case QUADRATUR:   aspIdx = 3; break;
+      case TRIGON:      aspIdx = 4; break;
+      case QUINCUNX:    aspIdx = 5; break;
+      case OPOSITION:   aspIdx = 6; break;
+      default: return false;
+    }
+    
+    int idx = (p1 * MAX_PLANET + p2) * ASPEKTE + aspIdx;
+    if (orben && idx < orben->size() && (*orben)[idx] > 0.0f) {
+      orb = (*orben)[idx];
+    }
+  }
+  
+  double abweichung = std::abs(diff - static_cast<double>(aspekt));
+  return abweichung <= orb;
+}
+
 QString AstroTextAnalyzer::analyzeTransit(const Radix &radix) const {
   QString html;
 
   astroTextStore().ensureLoaded();
   const QString lang = analyzerLang();
 
-  // Header
-  // Transit-Datum formatieren
-  int stunde = static_cast<int>(radix.rFix.zeit);
-  int minute = static_cast<int>((radix.rFix.zeit - stunde) * 60);
-  QString dateTemplate = astroTextStore().text(lang, "analysis.transit.date_line",
-                                              "Datum: %1.%2.%3 um %4:%5 Uhr");
-  QString datumStr = dateTemplate
-                         .arg(radix.rFix.tag, 2, 10, QChar('0'))
-                         .arg(radix.rFix.monat, 2, 10, QChar('0'))
-                         .arg(radix.rFix.jahr)
-                         .arg(stunde, 2, 10, QChar('0'))
-                         .arg(minute, 2, 10, QChar('0'));
+  // HTML-Header mit Style-Definitionen (wie bei Radix)
+  html += "<html><head><style>";
+  html += "body { font-family: Arial, sans-serif; font-size: 11pt; }";
+  html += "h1 { color: #2c3e50; font-size: 16pt; margin-top: 20px; }";
+  html += "h2 { color: #34495e; font-size: 14pt; margin-top: 15px; }";
+  html += "h3 { color: #7f8c8d; font-size: 12pt; margin-top: 10px; }";
+  html += "p { margin: 8px 0; line-height: 1.5; }";
+  html += ".planet-symbol { font-size: 14pt; color: #e74c3c; }";
+  html += ".sign-symbol { font-size: 14pt; color: #3498db; }";
+  html += ".aspect-symbol { font-size: 12pt; color: #9b59b6; }";
+  html += "</style></head><body>";
+
+  // Bei Transit: radix.synastrie enthält das Radix (Geburtsdatum), radix enthält Transit-Datum
+  // Aber die Struktur ist so aufgebaut, dass radix.rFix das Geburtsdatum enthält
+  // und radix.synastrie->rFix das Transit-Datum
+  
+  // Radix-Person und Geburtsdatum (aus radix.rFix - das ist die Hauptperson)
+  QString name = radix.rFix.vorname;
+  if (!radix.rFix.name.isEmpty()) {
+    if (!name.isEmpty()) name += " ";
+    name += radix.rFix.name;
+  }
+  if (name.isEmpty()) {
+    name = astroTextStore().text(lang, "analysis.transit.person", "Person");
+  }
+  
+  int nStunde = static_cast<int>(radix.rFix.zeit);
+  int nMinute = static_cast<int>((radix.rFix.zeit - nStunde) * 60);
+  QString natalDatum = QString("%1.%2.%3 um %4:%5 Uhr")
+                           .arg(radix.rFix.tag, 2, 10, QChar('0'))
+                           .arg(radix.rFix.monat, 2, 10, QChar('0'))
+                           .arg(radix.rFix.jahr)
+                           .arg(nStunde, 2, 10, QChar('0'))
+                           .arg(nMinute, 2, 10, QChar('0'));
+  QString ort = radix.rFix.ort;
+  if (ort.isEmpty()) ort = "---";
+  
+  // Transit-Datum (aus radix.synastrie->rFix - das ist das Transit-Horoskop)
+  QString transitDatumStr;
+  if (radix.synastrie) {
+    const Radix& transitRadix = *radix.synastrie;
+    int tStunde = static_cast<int>(transitRadix.rFix.zeit);
+    int tMinute = static_cast<int>((transitRadix.rFix.zeit - tStunde) * 60);
+    QString dateTemplate = astroTextStore().text(lang, "analysis.transit.date_line",
+                                                "Transit-Datum: %1.%2.%3 um %4:%5 Uhr");
+    transitDatumStr = dateTemplate
+                           .arg(transitRadix.rFix.tag, 2, 10, QChar('0'))
+                           .arg(transitRadix.rFix.monat, 2, 10, QChar('0'))
+                           .arg(transitRadix.rFix.jahr)
+                           .arg(tStunde, 2, 10, QChar('0'))
+                           .arg(tMinute, 2, 10, QChar('0'));
+  }
 
   QString title = astroTextStore().text(lang, "analysis.transit.title",
                                        "Horoskop-Analyse: Transit");
   html += QString("<h1>%1</h1>").arg(title);
-  html += QString("<h3>%1</h3>").arg(datumStr);
+  
+  // Radix-Person mit Geburtsdatum
+  html += QString("<p><i>%1: %2, geboren am %3</i></p>")
+              .arg(astroTextStore().text(lang, "analysis.transit.for_person", "Für"))
+              .arg(name)
+              .arg(natalDatum);
+  
+  // Transit-Datum
+  if (!transitDatumStr.isEmpty()) {
+    html += QString("<h3>%1</h3>").arg(transitDatumStr);
+  }
+  
   html += astroTextStore().text(lang, "analysis.transit.intro",
                                "<p>Diese Analyse beschreibt die aktuellen planetaren Einflüsse auf Ihr Geburtshoroskop.</p>");
   html += "<hr>";
@@ -60,40 +159,39 @@ QString AstroTextAnalyzer::analyzeTransit(const Radix &radix) const {
   html += astroTextStore().text(lang, "analysis.transit.definition",
                                "<p>Transite zeigen zeitweilige Einflüsse der aktuellen Planetenstände auf Ihr Geburtshoroskop.</p>");
 
-  // Aspekte
+  // Aspekte zwischen Transit-Planeten (radix) und Radix-Planeten (radix.synastrie)
   int aspectCount = 0;
+  static const int aspekte[] = { KONJUNKTION, HALBSEX, SEXTIL, QUADRATUR, TRIGON, QUINCUNX, OPOSITION };
 
-  // Annahme: radix enthält die Transit-Planeten und deren Aspekte
-  for (int i = 0; i < radix.anzahlPlanet && i < MAX_PLANET; i++) {
-    for (int j = 0; j < radix.anzahlPlanet && j < MAX_PLANET; j++) {
-      // Indexierung prüfen
-      int aspIndex = i * MAX_PLANET + j;
-      if (aspIndex < radix.aspPlanet.size()) {
-        int16_t aspect = radix.aspPlanet[aspIndex];
-        if (aspect != KEIN_ASP) {
+  // Transit-Planeten sind in radix, Radix-Planeten sind in radix.synastrie
+  if (radix.synastrie) {
+    const Radix& natalRadix = *radix.synastrie;
+    
+    for (int tp = 0; tp < radix.anzahlPlanet && tp < MAX_PLANET; tp++) {
+      for (int rp = 0; rp < natalRadix.anzahlPlanet && rp < MAX_PLANET; rp++) {
+        // Aspekt zwischen Transit-Planet tp und Radix-Planet rp berechnen
+        double transitPos = radix.planet[tp];
+        double radixPos = natalRadix.planet[rp];
+        
+        for (int a = 0; a < ASPEKTE; ++a) {
+          double exakterWinkel;
+          if (checkAspektWithOrben(transitPos, radixPos, tp, rp, aspekte[a], TYP_TRANSIT, exakterWinkel)) {
+            int8_t sign1 = (tp < radix.stzPlanet.size()) ? radix.stzPlanet[tp] : -1;
+            int8_t sign2 = (rp < natalRadix.stzPlanet.size()) ? natalRadix.stzPlanet[rp] : -1;
 
-          int8_t sign1 = -1;
-          int8_t sign2 = -1;
-          if (i < radix.stzPlanet.size())
-            sign1 = radix.stzPlanet[i];
-          // Für den zweiten Planeten (Radix) müsste man idealerweise das
-          // Radix-Objekt haben. Falls nicht verfügbar, nutzen wir den
-          // Planet-Index ohne Zeichen oder raten.
-          if (j < radix.stzPlanet.size())
-            sign2 = radix.stzPlanet[j];
+            html += QString("<h3><span class='planet-symbol'>%1</span> %2 (T) "
+                            "<span class='aspect-symbol'>%3</span> <span "
+                            "class='planet-symbol'>%4</span> %5 (R)</h3>")
+                        .arg(PLANET_SYMBOLS[tp])
+                        .arg(getPlanetName(tp))
+                        .arg(getAspectName(aspekte[a]))
+                        .arg(PLANET_SYMBOLS[rp])
+                        .arg(getPlanetName(rp));
 
-          html += QString("<h3><span class='planet-symbol'>%1</span> %2 (T) "
-                          "<span class='aspect-symbol'>%3</span> <span "
-                          "class='planet-symbol'>%4</span> %5 (R)</h3>")
-                      .arg(PLANET_SYMBOLS[i])
-                      .arg(getPlanetName(i))
-                      .arg(getAspectName(aspect))
-                      .arg(PLANET_SYMBOLS[j])
-                      .arg(getPlanetName(j));
-
-          // Kontext-sensitiver Text
-          html += getContextAspectText(i, sign1, j, sign2, aspect);
-          aspectCount++;
+            html += getContextAspectText(tp, sign1, rp, sign2, aspekte[a]);
+            aspectCount++;
+            break;  // Nur engsten Aspekt
+          }
         }
       }
     }
@@ -104,6 +202,7 @@ QString AstroTextAnalyzer::analyzeTransit(const Radix &radix) const {
                                  "<p><i>Keine signifikanten Transite für diesen Tag.</i></p>");
   }
 
+  html += "</body></html>";
   return html;
 }
 
@@ -112,6 +211,18 @@ QString AstroTextAnalyzer::analyzeSynastry(const Radix &radix) const {
 
   astroTextStore().ensureLoaded();
   const QString lang = analyzerLang();
+
+  // HTML-Header mit Style-Definitionen (wie bei Radix)
+  html += "<html><head><style>";
+  html += "body { font-family: Arial, sans-serif; font-size: 11pt; }";
+  html += "h1 { color: #2c3e50; font-size: 16pt; margin-top: 20px; }";
+  html += "h2 { color: #34495e; font-size: 14pt; margin-top: 15px; }";
+  html += "h3 { color: #7f8c8d; font-size: 12pt; margin-top: 10px; }";
+  html += "p { margin: 8px 0; line-height: 1.5; }";
+  html += ".planet-symbol { font-size: 14pt; color: #e74c3c; }";
+  html += ".sign-symbol { font-size: 14pt; color: #3498db; }";
+  html += ".aspect-symbol { font-size: 12pt; color: #9b59b6; }";
+  html += "</style></head><body>";
 
   html += QString("<h1>%1</h1>")
               .arg(astroTextStore().text(lang, "analysis.synastry.title",
@@ -122,27 +233,38 @@ QString AstroTextAnalyzer::analyzeSynastry(const Radix &radix) const {
               .arg(astroTextStore().text(lang, "analysis.synastry.section_relationship",
                                         "Beziehungs-Aspekte"));
 
+  // Aspekte zwischen Person A (radix) und Person B (radix.synastrie) berechnen
   int aspectCount = 0;
-  for (int i = 0; i < radix.anzahlPlanet && i < MAX_PLANET; i++) {
-    for (int j = 0; j < radix.anzahlPlanet && j < MAX_PLANET; j++) {
-      int aspIndex = i * MAX_PLANET + j;
-      if (aspIndex < radix.aspPlanet.size()) {
-        int16_t aspect = radix.aspPlanet[aspIndex];
-        if (aspect != KEIN_ASP) {
-          int8_t sign1 = (i < radix.stzPlanet.size()) ? radix.stzPlanet[i] : -1;
-          int8_t sign2 = (j < radix.stzPlanet.size()) ? radix.stzPlanet[j] : -1;
+  static const int aspekte[] = { KONJUNKTION, HALBSEX, SEXTIL, QUADRATUR, TRIGON, QUINCUNX, OPOSITION };
 
-          html += QString("<h3><span class='planet-symbol'>%1</span> %2 (A) "
-                          "<span class='aspect-symbol'>%3</span> <span "
-                          "class='planet-symbol'>%4</span> %5 (B)</h3>")
-                      .arg(PLANET_SYMBOLS[i])
-                      .arg(getPlanetName(i))
-                      .arg(getAspectName(aspect))
-                      .arg(PLANET_SYMBOLS[j])
-                      .arg(getPlanetName(j));
+  if (radix.synastrie) {
+    const Radix& partnerRadix = *radix.synastrie;
+    
+    for (int pa = 0; pa < radix.anzahlPlanet && pa < MAX_PLANET; pa++) {
+      for (int pb = 0; pb < partnerRadix.anzahlPlanet && pb < MAX_PLANET; pb++) {
+        // Aspekt zwischen Planet pa (Person A) und Planet pb (Person B) berechnen
+        double posA = radix.planet[pa];
+        double posB = partnerRadix.planet[pb];
+        
+        for (int a = 0; a < ASPEKTE; ++a) {
+          double exakterWinkel;
+          if (checkAspektWithOrben(posA, posB, pa, pb, aspekte[a], TYP_SYNASTRIE, exakterWinkel)) {
+            int8_t sign1 = (pa < radix.stzPlanet.size()) ? radix.stzPlanet[pa] : -1;
+            int8_t sign2 = (pb < partnerRadix.stzPlanet.size()) ? partnerRadix.stzPlanet[pb] : -1;
 
-          html += getContextAspectText(i, sign1, j, sign2, aspect);
-          aspectCount++;
+            html += QString("<h3><span class='planet-symbol'>%1</span> %2 (A) "
+                            "<span class='aspect-symbol'>%3</span> <span "
+                            "class='planet-symbol'>%4</span> %5 (B)</h3>")
+                        .arg(PLANET_SYMBOLS[pa])
+                        .arg(getPlanetName(pa))
+                        .arg(getAspectName(aspekte[a]))
+                        .arg(PLANET_SYMBOLS[pb])
+                        .arg(getPlanetName(pb));
+
+            html += getContextAspectText(pa, sign1, pb, sign2, aspekte[a]);
+            aspectCount++;
+            break;  // Nur engsten Aspekt
+          }
         }
       }
     }
@@ -153,6 +275,7 @@ QString AstroTextAnalyzer::analyzeSynastry(const Radix &radix) const {
                                  "<p><i>Keine starken Verbindungsaspekte gefunden.</i></p>");
   }
 
+  html += "</body></html>";
   return html;
 }
 
@@ -198,9 +321,20 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
   QString titleTemplate = astroTextStore().text(lang, "analysis.radix.title", "Horoskop-Analyse: %1");
   html += QString("<h1>%1</h1>").arg(titleTemplate.arg(name));
 
+  // Geburtsdatum und -zeit aus rFix formatieren
+  int stunde = static_cast<int>(radix.rFix.zeit);
+  int minute = static_cast<int>((radix.rFix.zeit - stunde) * 60);
+  QString datumStr = QString("%1.%2.%3")
+                         .arg(radix.rFix.tag, 2, 10, QChar('0'))
+                         .arg(radix.rFix.monat, 2, 10, QChar('0'))
+                         .arg(radix.rFix.jahr);
+  QString zeitStr = QString("%1:%2")
+                        .arg(stunde, 2, 10, QChar('0'))
+                        .arg(minute, 2, 10, QChar('0'));
+  
   QString bornTemplate = astroTextStore().text(lang, "analysis.radix.born_line",
                                               "<p><i>Geboren am %1 um %2 Uhr in %3</i></p>");
-  html += bornTemplate.arg(radix.datum).arg(radix.zeit).arg(radix.rFix.ort);
+  html += bornTemplate.arg(datumStr).arg(zeitStr).arg(radix.rFix.ort);
 
   html += "<hr>";
 

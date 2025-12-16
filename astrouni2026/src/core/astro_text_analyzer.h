@@ -21,12 +21,12 @@ namespace astro {
 class AstroTextAnalyzer {
 public:
   AstroTextAnalyzer();
-
+  
   /**
-   * @brief Erstellt vollständige Radix-Analyse
-   * @param radix Das Radix-Horoskop
-   * @return HTML-formatierter Text
+   * @brief Setzt die Orben-Einstellungen für Aspekt-Prüfung
    */
+  void setOrben(const AuInit* auinit);
+
   /**
    * @brief Erstellt vollständige Radix-Analyse
    * @param radix Das Radix-Horoskop
@@ -122,6 +122,13 @@ private:
                                int8_t sign2, int16_t aspect) const;
 
   QString defaultGenericAspectTemplate(int16_t aspect) const;
+  
+  // Orben-Einstellungen (optional)
+  const AuInit* m_auinit = nullptr;
+  
+  // Hilfsfunktion für Aspekt-Prüfung mit konfigurierten Orben
+  bool checkAspektWithOrben(double pos1, double pos2, int p1, int p2, int aspekt, 
+                            int horoTyp, double& exakterWinkel) const;
 };
 
 } // namespace astro

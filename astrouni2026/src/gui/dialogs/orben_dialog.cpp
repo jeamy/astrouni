@@ -25,7 +25,7 @@
 namespace astro {
 
 // Anzahl der Planeten für Orben-Dialog
-static const int NUM_PLANETS = 13;
+static const int NUM_PLANETS = 17;
 
 // Planeten-Farben (wie im Legacy)
 static const QColor PLANET_COLORS[] = {
@@ -41,7 +41,11 @@ static const QColor PLANET_COLORS[] = {
     QColor(128, 0, 0),      // Pluto - Dunkelrot
     QColor(128, 128, 128),  // Mondknoten - Grau
     QColor(64, 64, 64),     // Lilith - Dunkelgrau
-    QColor(255, 128, 0)     // Chiron - Orange
+    QColor(255, 128, 0),    // Chiron - Orange
+    QColor(139, 90, 43),    // Ceres - Erdbraun
+    QColor(100, 149, 237),  // Pallas - Kornblumenblau
+    QColor(255, 20, 147),   // Juno - Pink
+    QColor(255, 69, 0)      // Vesta - Orangerot
 };
 
 // Aspekt-Farben
@@ -59,7 +63,7 @@ static const QColor ASPEKT_COLORS[] = {
 static const char* PLANET_TEXT_NAMES[] = {
     "Sonne", "Mond", "Merkur", "Venus", "Mars",
     "Jupiter", "Saturn", "Uranus", "Neptun", "Pluto",
-    "Mondknoten", "Lilith", "Chiron"
+    "Mondknoten", "Lilith", "Chiron", "Ceres", "Pallas", "Juno", "Vesta"
 };
 
 OrbenDialog::OrbenDialog(AuInit& auinit, QWidget* parent)

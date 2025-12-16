@@ -1049,34 +1049,23 @@ void ChartWidget::drawAspects(QPainter &painter) {
         if (diff > 180.0)
           diff = 360.0 - diff;
 
-        // Aspekt prüfen mit konfigurierten Orben aus m_auinit
+        // Aspekt prüfen mit konfigurierten Orben aus Einstellungen
+        // Index: [Planet1 * MAX_PLANET + Planet2] * ASPEKTE + Aspekt
         const QVector<float> &orben = (m_radix.horoTyp == TYP_SYNASTRIE)
                                           ? m_auinit.orbenSPlanet
                                           : m_auinit.orbenTPlanet;
+        static const int aspekte[] = { KONJUNKTION, HALBSEX, SEXTIL, QUADRATUR, TRIGON, QUINCUNX, OPOSITION };
+        static const double aspWinkel[] = { 0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0 };
 
         int16_t asp = KEIN_ASP;
-        float orb0 = orben.size() > 0 ? orben[0] : 8.0f;
-        float orb1 = orben.size() > 1 ? orben[1] : 2.0f;
-        float orb2 = orben.size() > 2 ? orben[2] : 4.0f;
-        float orb3 = orben.size() > 3 ? orben[3] : 6.0f;
-        float orb4 = orben.size() > 4 ? orben[4] : 6.0f;
-        float orb5 = orben.size() > 5 ? orben[5] : 2.0f;
-        float orb6 = orben.size() > 6 ? orben[6] : 8.0f;
-
-        if (diff <= orb0)
-          asp = KONJUNKTION;
-        else if (std::abs(diff - 30.0) <= orb1)
-          asp = HALBSEX;
-        else if (std::abs(diff - 60.0) <= orb2)
-          asp = SEXTIL;
-        else if (std::abs(diff - 90.0) <= orb3)
-          asp = QUADRATUR;
-        else if (std::abs(diff - 120.0) <= orb4)
-          asp = TRIGON;
-        else if (std::abs(diff - 150.0) <= orb5)
-          asp = QUINCUNX;
-        else if (std::abs(diff - 180.0) <= orb6)
-          asp = OPOSITION;
+        for (int a = 0; a < ASPEKTE; ++a) {
+          int idx = (i * MAX_PLANET + j) * ASPEKTE + a;
+          float orb = (idx < orben.size() && orben[idx] > 0.0f) ? orben[idx] : 8.0f;
+          if (std::abs(diff - aspWinkel[a]) <= orb) {
+            asp = aspekte[a];
+            break;
+          }
+        }
 
         if (asp == KEIN_ASP)
           continue;

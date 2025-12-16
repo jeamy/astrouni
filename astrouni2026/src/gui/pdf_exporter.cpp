@@ -592,6 +592,7 @@ void PdfExporter::renderPage(QPainter &painter, QPrinter &printer,
   y = marginY;
 
   AstroTextAnalyzer analyzer;
+  analyzer.setOrben(&auinit);
   QString html = analyzer.analyzeRadix(radix);
 
   html.replace(
@@ -1215,16 +1216,36 @@ void PdfExporter::renderPage(QPainter &painter, QPrinter &printer,
     pageNum++;
     y = marginY;
 
+    // Temporäres Radix mit synastrie-Pointer für die Analyse erstellen
+    // analyzeSynastry erwartet radix.synastrie als Partner-Radix
+    Radix tempRadix = radix1;
+    tempRadix.synastrie = std::make_shared<Radix>(radix2);
+    tempRadix.horoTyp = TYP_SYNASTRIE;
+
     AstroTextAnalyzer analyzer;
-    QString html = analyzer.analyzeSynastry(radix2);
+    analyzer.setOrben(&auinit);
+    QString html = analyzer.analyzeSynastry(tempRadix);
+
+    // CSS-Styles wie bei Radix-Textanalyse
+    html.replace(
+        "</head>",
+        "<style>"
+        "body { font-family: 'DejaVu Sans'; font-size: 9pt; } "
+        "h1 { font-size: 14pt; font-weight: bold; } "
+        "h2 { font-size: 10pt; font-weight: bold; } "
+        "h3 { font-size: 9pt; font-weight: bold; } "
+        "p { font-size: 9pt; }"
+        "</style></head>");
 
     QTextDocument doc;
-    doc.setDefaultFont(QFont("DejaVu Sans", 16));
+    doc.documentLayout()->setPaintDevice(&printer);
+    doc.setDefaultFont(QFont("DejaVu Sans", 9));
     doc.setDefaultStyleSheet(
-        "body { font-family: 'DejaVu Sans'; font-size: 16pt; } h1 { font-size: "
-        "20pt; font-weight: bold; } h2 { font-size: 18pt; font-weight: bold; } "
-        "h3 { font-size: 17pt; font-weight: bold; } p { margin-bottom: 10px; "
-        "}");
+        "body { font-family: 'DejaVu Sans'; font-size: 9pt; } "
+        "h1 { font-size: 14pt; font-weight: bold; } "
+        "h2 { font-size: 10pt; font-weight: bold; } "
+        "h3 { font-size: 9pt; font-weight: bold; } "
+        "p { margin-bottom: 10px; }");
     doc.setHtml(html);
     doc.setTextWidth(pageWidth - 2 * marginX);
     doc.setPageSize(QSizeF(pageWidth - 2 * marginX, pageHeight - 2 * marginY));
@@ -1727,17 +1748,37 @@ void PdfExporter::renderTransitPage(
     pageNum++;
     y = marginY;
 
+    // Temporäres Radix mit synastrie-Pointer für die Analyse erstellen
+    // analyzeTransit erwartet radix.synastrie als Transit-Radix
+    Radix tempRadix = radix;
+    tempRadix.synastrie = std::make_shared<Radix>(transit);
+    tempRadix.horoTyp = TYP_TRANSIT;
+
     AstroTextAnalyzer analyzer;
-    // Transit-Analyse: Wir übergeben das Transit-Radix
-    QString html = analyzer.analyzeTransit(transit);
+    analyzer.setOrben(&auinit);
+    // Transit-Analyse: Wir übergeben das kombinierte Radix
+    QString html = analyzer.analyzeTransit(tempRadix);
+
+    // CSS-Styles wie bei Radix-Textanalyse
+    html.replace(
+        "</head>",
+        "<style>"
+        "body { font-family: 'DejaVu Sans'; font-size: 9pt; } "
+        "h1 { font-size: 14pt; font-weight: bold; } "
+        "h2 { font-size: 10pt; font-weight: bold; } "
+        "h3 { font-size: 9pt; font-weight: bold; } "
+        "p { font-size: 9pt; }"
+        "</style></head>");
 
     QTextDocument doc;
-    doc.setDefaultFont(QFont("DejaVu Sans", 16));
+    doc.documentLayout()->setPaintDevice(&printer);
+    doc.setDefaultFont(QFont("DejaVu Sans", 9));
     doc.setDefaultStyleSheet(
-        "body { font-family: 'DejaVu Sans'; font-size: 16pt; } h1 { font-size: "
-        "20pt; font-weight: bold; } h2 { font-size: 18pt; font-weight: bold; } "
-        "h3 { font-size: 17pt; font-weight: bold; } p { margin-bottom: 10px; "
-        "}");
+        "body { font-family: 'DejaVu Sans'; font-size: 9pt; } "
+        "h1 { font-size: 14pt; font-weight: bold; } "
+        "h2 { font-size: 10pt; font-weight: bold; } "
+        "h3 { font-size: 9pt; font-weight: bold; } "
+        "p { margin-bottom: 10px; }");
     doc.setHtml(html);
     doc.setTextWidth(pageWidth - 2 * marginX);
     doc.setPageSize(QSizeF(pageWidth - 2 * marginX, pageHeight - 2 * marginY));

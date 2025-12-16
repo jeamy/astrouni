@@ -80,7 +80,6 @@ private:
     
     // Menüs
     QMenu* m_fileMenu;
-    QMenu* m_editMenu;
     QMenu* m_erfassenMenu;
     QMenu* m_horoskopMenu;
     QMenu* m_hilfeMenu;
