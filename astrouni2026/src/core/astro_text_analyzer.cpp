@@ -357,7 +357,7 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
     QString sunLabel = astroTextStore().text(lang, "analysis.label.sun_sign", "Sonnenzeichen");
     html += "<h2>" + QString(PLANET_SYMBOLS[P_SONNE]) + " " + sunLabel + ": " + getSignName(sunSign) + "</h2>";
     html += QString("<p class='sign-symbol'>%1</p>")
-                .arg(STERNZEICHEN_SYMBOLS[sunSign]);
+                .arg(astroFont().sternzeichenSymbol(sunSign));
     html += analyzeSunSign(sunSign);
   }
 
@@ -367,7 +367,7 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
     QString ascLabel = astroTextStore().text(lang, "analysis.label.ascendant", "Aszendent");
     html += "<h2>ASC " + ascLabel + ": " + getSignName(ascSign) + "</h2>";
     html += QString("<p class='sign-symbol'>%1</p>")
-                .arg(STERNZEICHEN_SYMBOLS[ascSign]);
+                .arg(astroFont().sternzeichenSymbol(ascSign));
     html += analyzeAscendant(ascSign);
   }
 
@@ -377,7 +377,7 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
     QString moonLabel = astroTextStore().text(lang, "analysis.label.moon_sign", "Mondzeichen");
     html += "<h2>" + QString(PLANET_SYMBOLS[P_MOND]) + " " + moonLabel + ": " + getSignName(moonSign) + "</h2>";
     html += QString("<p class='sign-symbol'>%1</p>")
-                .arg(STERNZEICHEN_SYMBOLS[moonSign]);
+                .arg(astroFont().sternzeichenSymbol(moonSign));
     html += analyzeMoonSign(moonSign);
   }
 
