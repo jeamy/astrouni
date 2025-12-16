@@ -390,9 +390,10 @@ QString AstroTextAnalyzer::analyzeRadix(const Radix &radix) const {
 
   // Aspekte durchgehen
   int aspectCount = 0;
-  for (int i = 0; i < radix.anzahlPlanet && i < MAX_PLANET; i++) {
-    for (int j = i + 1; j < radix.anzahlPlanet && j < MAX_PLANET; j++) {
-      int aspIndex = i * MAX_PLANET + j;
+  int numPlanets = radix.anzahlPlanet;
+  for (int i = 0; i < numPlanets && i < MAX_PLANET; i++) {
+    for (int j = i + 1; j < numPlanets && j < MAX_PLANET; j++) {
+      int aspIndex = i * numPlanets + j;
       if (aspIndex < radix.aspPlanet.size()) {
         int16_t aspect = radix.aspPlanet[aspIndex];
         if (aspect != KEIN_ASP) {
