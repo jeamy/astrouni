@@ -2088,6 +2088,40 @@ QString AstroTextAnalyzer::getPlanetPairText(int planet1, int planet2,
     }
   }
 
+  if (p2 == P_NKNOTEN) {
+    switch (aspect) {
+    case KONJUNKTION:
+      return QString("Die Konjunktion von %1 und Mondknoten verbindet diese "
+             "Planetenenergie mit Ihrem karmischen Lebensweg. Begegnungen und "
+             "Erfahrungen in diesem Bereich können schicksalhaft sein.")
+             .arg(getPlanetName(p1));
+    case SEXTIL:
+      return QString("Das Sextil zwischen %1 und Mondknoten öffnet Möglichkeiten, "
+             "diese Energie konstruktiv in Ihren Lebensweg zu integrieren.")
+             .arg(getPlanetName(p1));
+    case QUADRATUR:
+      return QString("Das Quadrat zwischen %1 und Mondknoten zeigt Herausforderungen "
+             "auf Ihrem karmischen Weg. Alte Muster in diesem Bereich wollen "
+             "überwunden werden.").arg(getPlanetName(p1));
+    case TRIGON:
+      return QString("Das Trigon zwischen %1 und Mondknoten schenkt einen "
+             "natürlichen Fluss zwischen dieser Energie und Ihrem Lebensweg. "
+             "Sie finden hier leicht Ihren Platz.").arg(getPlanetName(p1));
+    case OPOSITION:
+      return QString("Die Opposition zwischen %1 und Mondknoten zeigt eine "
+             "Spannung zwischen vergangenen Mustern und zukünftigem Wachstum "
+             "in diesem Bereich.").arg(getPlanetName(p1));
+    case QUINCUNX:
+      return QString("Der Quincunx zwischen %1 und Mondknoten erfordert ständige "
+             "Anpassung zwischen dieser Energie und Ihrem karmischen Weg.")
+             .arg(getPlanetName(p1));
+    case HALBSEX:
+      return QString("Das Halbsextil zwischen %1 und Mondknoten zeigt eine "
+             "subtile Verbindung zwischen dieser Energie und Ihrem Lebensweg.")
+             .arg(getPlanetName(p1));
+    }
+  }
+
   // Kein spezifischer Text gefunden
   return QString();
 }
